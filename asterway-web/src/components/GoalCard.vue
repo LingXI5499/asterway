@@ -10,14 +10,33 @@ import Icon from './Icon.vue'
 const props = defineProps<{ goal: Goal; compact?: boolean }>()
 const store = useAppStore()
 const progress = computed(() => goalProgress(store.data, props.goal.id))
-const milestones = computed(() => store.data.milestones.filter(m => m.goalId === props.goal.id).sort((a, b) => a.order - b.order))
+const milestones = computed(() =>
+  store.data.milestones.filter((m) => m.goalId === props.goal.id).sort((a, b) => a.order - b.order),
+)
 </script>
 <template>
   <button :class="['goal-card', { compact }]" @click="ui.open('goalDetail', { id: goal.id })">
-    <div class="goal-card-top"><span :class="['category-icon', goal.category]"><Icon :name="goal.category" /></span><span :class="['category-label', goal.category]">{{ categories[goal.category] }}</span><Icon class="push-right" name="external" :size="17" /></div>
-    <h3>{{ goal.title }}</h3><p v-if="!compact" class="goal-description">{{ goal.description || '从一个小行动开始，让方向变得清晰。' }}</p>
-    <div class="progress-caption"><span>{{ goal.status === 'active' ? (milestones[0]?.title || '准备启程') : ({ paused: '已暂停', completed: '已标记完成', archived: '已归档' }[goal.status]) }}</span><strong>{{ progress.percent === null ? '待规划' : `${progress.percent}%` }}</strong></div>
+    <div class="goal-card-top">
+      <span :class="['category-icon', goal.category]"><Icon :name="goal.category" /></span
+      ><span :class="['category-label', goal.category]">{{ categories[goal.category] }}</span
+      ><Icon class="push-right" name="external" :size="17" />
+    </div>
+    <h3>{{ goal.title }}</h3>
+    <p v-if="!compact" class="goal-description">
+      {{ goal.description || '从一个小行动开始，让方向变得清晰。' }}
+    </p>
+    <div class="progress-caption">
+      <span>{{
+        goal.status === 'active'
+          ? milestones[0]?.title || '准备启程'
+          : { paused: '已暂停', completed: '已标记完成', archived: '已归档' }[goal.status]
+      }}</span
+      ><strong>{{ progress.percent === null ? '待规划' : `${progress.percent}%` }}</strong>
+    </div>
     <div class="progress-track"><span :style="{ width: `${progress.percent || 0}%` }" /></div>
-    <div class="goal-card-bottom"><span>{{ progress.done }}/{{ progress.total }} 项行动</span><span>{{ shortDate(goal.targetDate) }} 截止</span></div>
+    <div class="goal-card-bottom">
+      <span>{{ progress.done }}/{{ progress.total }} 项行动</span
+      ><span>{{ shortDate(goal.targetDate) }} 截止</span>
+    </div>
   </button>
 </template>
