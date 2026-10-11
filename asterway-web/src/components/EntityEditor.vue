@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
-import type { Category, Priority, Task } from '../domain/types'
-import { categories, priorities } from '../domain/types'
-import { addDays, now, uid } from '../domain/dates'
-import { makeTask } from '../domain/mutations'
-import { conflictingIds } from '../domain/selectors'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import Modal from './Modal.vue'
-import Icon from './Icon.vue'
+import { computed, reactive, ref } from 'vue';
+import type { Category, Priority, Task } from '../domain/types';
+import { categories, priorities } from '../domain/types';
+import { addDays, now, uid } from '../domain/dates';
+import { makeTask } from '../domain/mutations';
+import { conflictingIds } from '../domain/selectors';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import Modal from './Modal.vue';
+import Icon from './Icon.vue';
 const store = useAppStore(),
   context = { ...ui.modal! },
   kind = context.kind,
-  id = context.id
+  id = context.id;
 const existing =
   kind === 'goal'
     ? store.data.goals.find((v) => v.id === id)
     : kind === 'task'
       ? store.data.tasks.find((v) => v.id === id)
-      : store.data.habits.find((v) => v.id === id)
-const initial = existing as any
+      : store.data.habits.find((v) => v.id === id);
+const initial = existing as any;
 const form = reactive({
   title: initial?.title || '',
   description: initial?.description || '',
@@ -36,32 +36,37 @@ const form = reactive({
   isTodayFocus: initial?.isTodayFocus || false,
   frequency: initial?.frequency.kind || 'daily',
   times: initial?.frequency.times || 3,
-})
-const error = ref('')
-const title = `${id ? '编辑' : '新建'}${kind === 'goal' ? '目标' : kind === 'task' ? '任务' : '习惯'}`
+});
+const error = ref('');
+const title = `${id ? '编辑' : '新建'}${kind === 'goal' ? '目标' : kind === 'task' ? '任务' : '习惯'}`;
 const milestones = computed(() =>
   store.data.milestones.filter((m) => m.goalId === form.goalId).sort((a, b) => a.order - b.order),
-)
-const completed = kind === 'task' && initial?.status === 'done'
-const templateNames = ['备考计划', '阅读提升', '每周运动', '个人项目开发']
+);
+const completed = kind === 'task' && initial?.status === 'done';
+const templateNames = ['备考计划', '阅读提升', '每周运动', '个人项目开发'];
 function template(index: number) {
-  const titles = ['30 天完成核心知识复习', '养成每日阅读的节奏', '每周运动三次', '完成个人项目 MVP']
-  form.title = titles[index]!
-  form.category = (['study', 'study', 'health', 'work'] as Category[])[index]!
-  form.weeklyHours = [7, 3, 2, 6][index]!
-  form.description = '把长期目标变成今天可以执行的小行动。'
+  const titles = [
+    '30 天完成核心知识复习',
+    '养成每日阅读的节奏',
+    '每周运动三次',
+    '完成个人项目 MVP',
+  ];
+  form.title = titles[index]!;
+  form.category = (['study', 'study', 'health', 'work'] as Category[])[index]!;
+  form.weeklyHours = [7, 3, 2, 6][index]!;
+  form.description = '把长期目标变成今天可以执行的小行动。';
 }
 function save() {
-  error.value = ''
+  error.value = '';
   if (form.title.trim().length < 2 || form.title.trim().length > 60) {
-    error.value = '名称需为 2–60 个字符。'
-    return
+    error.value = '名称需为 2–60 个字符。';
+    return;
   }
-  const timestamp = now()
+  const timestamp = now();
   if (kind === 'goal') {
     if (form.targetDate < form.startDate) {
-      error.value = '截止日期不能早于开始日期。'
-      return
+      error.value = '截止日期不能早于开始日期。';
+      return;
     }
     const goal = {
       id: id || uid(),
@@ -74,12 +79,12 @@ function save() {
       weeklyHours: Number(form.weeklyHours),
       status: initial?.status || 'active',
       createdAt: initial?.createdAt || timestamp,
-    }
-    if (id) store.data.goals[store.data.goals.findIndex((v) => v.id === id)] = goal
-    else store.data.goals.push(goal)
-    store.toast(id ? '目标已更新' : '目标已创建，添加一个里程碑或行动吧')
-    ui.open('goalDetail', { id: goal.id })
-    return
+    };
+    if (id) store.data.goals[store.data.goals.findIndex((v) => v.id === id)] = goal;
+    else store.data.goals.push(goal);
+    store.toast(id ? '目标已更新' : '目标已创建，添加一个里程碑或行动吧');
+    ui.open('goalDetail', { id: goal.id });
+    return;
   } else if (kind === 'task') {
     const values: Partial<Task> & { title: string } = {
       title: form.title.trim(),
@@ -91,12 +96,12 @@ function save() {
       scheduledDate: form.scheduledDate || undefined,
       startTime: form.startTime || undefined,
       isTodayFocus: form.isTodayFocus,
-    }
-    if (id) Object.assign(initial, values, { updatedAt: timestamp })
-    else store.data.tasks.push(makeTask(values))
+    };
+    if (id) Object.assign(initial, values, { updatedAt: timestamp });
+    else store.data.tasks.push(makeTask(values));
     if (conflictingIds(store.tasks).size)
-      store.toast('已保存；部分任务时段重叠，请在日程中检查', true)
-    else store.toast('任务已保存')
+      store.toast('已保存；部分任务时段重叠，请在日程中检查', true);
+    else store.toast('任务已保存');
   } else {
     const habit = {
       id: id || uid(),
@@ -109,12 +114,12 @@ function save() {
       startDate: form.startDate,
       status: initial?.status || 'active',
       createdAt: initial?.createdAt || timestamp,
-    }
-    if (id) store.data.habits[store.data.habits.findIndex((v) => v.id === id)] = habit
-    else store.data.habits.push(habit)
-    store.toast('习惯已保存')
+    };
+    if (id) store.data.habits[store.data.habits.findIndex((v) => v.id === id)] = habit;
+    else store.data.habits.push(habit);
+    store.toast('习惯已保存');
   }
-  ui.close()
+  ui.close();
 }
 function remove() {
   ui.confirm(
@@ -123,18 +128,21 @@ function remove() {
       ? '关联任务将保留并解除关联，历史 XP 不受影响。'
       : '从行动列表移除，已有完成记录和 XP 将保留用于历史统计。',
     () => {
-      if (kind === 'goal') store.deleteGoal(id!)
-      else if (kind === 'habit') initial.status = 'archived'
-      else initial.deletedAt = now()
-      store.toast('操作完成')
+      if (kind === 'goal') store.deleteGoal(id!);
+      else if (kind === 'habit') initial.status = 'archived';
+      else initial.deletedAt = now();
+      store.toast('操作完成');
     },
-  )
+  );
 }
 </script>
 <template>
   <Modal :title="title" @close="ui.close()">
     <form class="editor-form" @submit.prevent="save">
       <div v-if="kind === 'goal' && !id" class="template-picker">
+        <RouterLink class="text-button" to="/templates" @click="ui.close()"
+          >浏览完整成长模板库<Icon name="arrow" :size="14"
+        /></RouterLink>
         <span class="field-label">从模板开始</span>
         <div class="chip-row">
           <button

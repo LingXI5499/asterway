@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ title: string; subtitle: string; eyebrow?: string }>()
+defineProps<{ title: string; subtitle: string; eyebrow?: string }>();
 </script>
 <template>
   <header class="page-header">

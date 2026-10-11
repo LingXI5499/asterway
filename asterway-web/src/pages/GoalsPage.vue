@@ -1,28 +1,30 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { categories } from '../domain/types'
-import PageHeader from '../components/PageHeader.vue'
-import Icon from '../components/Icon.vue'
-import GoalCard from '../components/GoalCard.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { computed, ref } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { categories } from '../domain/types';
+import PageHeader from '../components/PageHeader.vue';
+import Icon from '../components/Icon.vue';
+import GoalCard from '../components/GoalCard.vue';
+import EmptyState from '../components/EmptyState.vue';
 const store = useAppStore(),
   category = ref('all'),
-  status = ref('active')
+  status = ref('active');
 const goals = computed(() =>
   store.data.goals.filter(
     (g) =>
       (category.value === 'all' || g.category === category.value) &&
       (status.value === 'all' || g.status === status.value),
   ),
-)
+);
 </script>
 <template>
   <PageHeader
     title="我的目标"
     subtitle="先有方向，再走好每一步。让长期愿望变成可执行的成长路线。"
     eyebrow="CHOOSE YOUR DIRECTION"
+    ><RouterLink class="button secondary" to="/templates"
+      ><Icon name="library" :size="17" />从模板开始</RouterLink
     ><button class="button primary" @click="ui.open('goal')">
       <Icon name="plus" :size="17" />新建目标
     </button></PageHeader

@@ -1,68 +1,68 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { goalProgress } from '../domain/selectors'
-import { categories } from '../domain/types'
-import { shortDate, now, uid } from '../domain/dates'
-import type { Milestone } from '../domain/types'
-import Modal from './Modal.vue'
-import Icon from './Icon.vue'
-import TaskRow from './TaskRow.vue'
+import { computed, ref } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { goalProgress } from '../domain/selectors';
+import { categories } from '../domain/types';
+import { shortDate, now, uid } from '../domain/dates';
+import type { Milestone } from '../domain/types';
+import Modal from './Modal.vue';
+import Icon from './Icon.vue';
+import TaskRow from './TaskRow.vue';
 const store = useAppStore(),
-  id = ui.modal!.id
-const goal = computed(() => store.data.goals.find((g) => g.id === id)!)
-const progress = computed(() => goalProgress(store.data, id!))
+  id = ui.modal!.id;
+const goal = computed(() => store.data.goals.find((g) => g.id === id)!);
+const progress = computed(() => goalProgress(store.data, id!));
 const milestones = computed(() =>
   store.data.milestones.filter((m) => m.goalId === id).sort((a, b) => a.order - b.order),
-)
-const tasks = computed(() => store.tasks.filter((t) => t.goalId === id))
+);
+const tasks = computed(() => store.tasks.filter((t) => t.goalId === id));
 const newTitle = ref(''),
   editing = ref(''),
-  editTitle = ref('')
+  editTitle = ref('');
 function addMilestone() {
-  if (newTitle.value.trim().length < 2) return
+  if (newTitle.value.trim().length < 2) return;
   store.data.milestones.push({
     id: uid(),
     goalId: id!,
     title: newTitle.value.trim(),
     order: milestones.value.length,
     createdAt: now(),
-  })
-  newTitle.value = ''
-  store.toast('里程碑已添加')
+  });
+  newTitle.value = '';
+  store.toast('里程碑已添加');
 }
 function move(milestoneId: string, delta: number) {
   const index = milestones.value.findIndex((m) => m.id === milestoneId),
-    next = milestones.value[index + delta]
-  if (!next) return
-  const values = [...milestones.value]
-  ;[values[index], values[index + delta]] = [values[index + delta]!, values[index]!]
-  values.forEach((m, i) => (m.order = i))
+    next = milestones.value[index + delta];
+  if (!next) return;
+  const values = [...milestones.value];
+  [values[index], values[index + delta]] = [values[index + delta]!, values[index]!];
+  values.forEach((m, i) => (m.order = i));
 }
 function deleteMilestone(milestoneId: string) {
   ui.confirm('删除里程碑？', '任务会保留在当前目标下，解除此里程碑关联。', () => {
-    store.data.milestones = store.data.milestones.filter((m) => m.id !== milestoneId)
+    store.data.milestones = store.data.milestones.filter((m) => m.id !== milestoneId);
     store.data.tasks.forEach((t) => {
       if (t.milestoneId === milestoneId) {
-        delete t.milestoneId
-        t.updatedAt = now()
+        delete t.milestoneId;
+        t.updatedAt = now();
       }
-    })
-    ui.open('goalDetail', { id })
-  })
+    });
+    ui.open('goalDetail', { id });
+  });
 }
 function markCompleted() {
-  goal.value.status = 'completed'
-  store.toast('已标记目标完成；行动进度仍按实际记录计算')
+  goal.value.status = 'completed';
+  store.toast('已标记目标完成；行动进度仍按实际记录计算');
 }
 function editMilestone(milestone: Milestone) {
-  editing.value = milestone.id
-  editTitle.value = milestone.title
+  editing.value = milestone.id;
+  editTitle.value = milestone.title;
 }
 function saveMilestone(milestone: Milestone) {
-  milestone.title = editTitle.value.trim()
-  editing.value = ''
+  milestone.title = editTitle.value.trim();
+  editing.value = '';
 }
 </script>
 <template>
@@ -79,6 +79,9 @@ function saveMilestone(milestone: Milestone) {
     </div>
     <div class="progress-track large"><span :style="{ width: `${progress.percent || 0}%` }" /></div>
     <div class="chip-row detail-actions">
+      <RouterLink class="button secondary" :to="`/community?shareGoal=${id}`" @click="ui.close()"
+        ><Icon name="globe" :size="16" />分享成长计划</RouterLink
+      >
       <button class="button secondary" @click="ui.open('goal', { id })">
         <Icon name="pencil" :size="16" />编辑目标</button
       ><button
@@ -86,11 +89,7 @@ function saveMilestone(milestone: Milestone) {
         @click="goal.status = goal.status === 'active' ? 'paused' : 'active'"
       >
         {{ goal.status === 'active' ? '暂停目标' : '恢复目标' }}</button
-      ><button
-        v-if="goal.status !== 'completed'"
-        class="button secondary"
-        @click="markCompleted"
-      >
+      ><button v-if="goal.status !== 'completed'" class="button secondary" @click="markCompleted">
         标记完成
       </button>
     </div>
@@ -103,10 +102,7 @@ function saveMilestone(milestone: Milestone) {
         <div v-for="(milestone, index) in milestones" :key="milestone.id" class="milestone-item">
           <span class="milestone-number">{{ String(index + 1).padStart(2, '0') }}</span>
           <div class="milestone-main">
-            <form
-              v-if="editing === milestone.id"
-              @submit.prevent="saveMilestone(milestone)"
-            >
+            <form v-if="editing === milestone.id" @submit.prevent="saveMilestone(milestone)">
               <input
                 v-model="editTitle"
                 minlength="2"
@@ -128,11 +124,7 @@ function saveMilestone(milestone: Milestone) {
             </button>
           </div>
           <div class="milestone-tools">
-            <button
-              class="icon-button"
-              aria-label="编辑里程碑"
-              @click="editMilestone(milestone)"
-            >
+            <button class="icon-button" aria-label="编辑里程碑" @click="editMilestone(milestone)">
               <Icon name="pencil" :size="14" /></button
             ><button
               class="icon-button"

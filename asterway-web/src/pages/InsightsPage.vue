@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { useAppStore } from '../store/app'
-import { addDays, localDate, weekStart, shortDate, now } from '../domain/dates'
-import { rangeStats } from '../domain/selectors'
-import { categories, type Category } from '../domain/types'
-import PageHeader from '../components/PageHeader.vue'
-import Icon from '../components/Icon.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { computed, reactive, ref, watch } from 'vue';
+import { useAppStore } from '../store/app';
+import { addDays, localDate, weekStart, shortDate, now } from '../domain/dates';
+import { rangeStats } from '../domain/selectors';
+import { categories, type Category } from '../domain/types';
+import PageHeader from '../components/PageHeader.vue';
+import Icon from '../components/Icon.vue';
+import EmptyState from '../components/EmptyState.vue';
 const store = useAppStore(),
   range = ref(7),
   reviewWeek = ref(weekStart(store.today)),
-  saved = ref(false)
+  saved = ref(false);
 const stats = computed(() =>
   rangeStats(store.data, addDays(store.today, 1 - range.value), store.today),
-)
+);
 const points = computed(() =>
   Array.from({ length: range.value }, (_, i) => {
-    const date = addDays(store.today, i + 1 - range.value)
-    return { date, count: rangeStats(store.data, date, date).completed }
+    const date = addDays(store.today, i + 1 - range.value);
+    return { date, count: rangeStats(store.data, date, date).completed };
   }),
-)
-const maximum = computed(() => Math.max(1, ...points.value.map((p) => p.count)))
+);
+const maximum = computed(() => Math.max(1, ...points.value.map((p) => p.count)));
 const categoryStats = computed(() =>
   (Object.keys(categories) as Category[])
     .map((category) => {
-      const goals = store.data.goals.filter((g) => g.category === category).map((g) => g.id)
+      const goals = store.data.goals.filter((g) => g.category === category).map((g) => g.id);
       const tasks = store.tasks.filter(
         (t) =>
           t.goalId &&
@@ -32,37 +32,37 @@ const categoryStats = computed(() =>
           t.scheduledDate &&
           t.scheduledDate >= addDays(store.today, 1 - range.value) &&
           t.scheduledDate <= store.today,
-      )
+      );
       return {
         category,
         label: categories[category],
         done: tasks.filter((t) => t.status === 'done').length,
         total: tasks.length,
-      }
+      };
     })
     .filter((c) => c.total > 0),
-)
-const review = reactive({ wins: '', blockers: '', changes: '' })
+);
+const review = reactive({ wins: '', blockers: '', changes: '' });
 watch(
   [reviewWeek, () => store.data.weeklyReviews],
   () => {
-    const value = store.data.weeklyReviews.find((r) => r.weekStartDate === reviewWeek.value)
+    const value = store.data.weeklyReviews.find((r) => r.weekStartDate === reviewWeek.value);
     Object.assign(review, {
       wins: value?.wins || '',
       blockers: value?.blockers || '',
       changes: value?.changes || '',
-    })
-    saved.value = false
+    });
+    saved.value = false;
   },
   { immediate: true },
-)
+);
 function save() {
-  const value = { weekStartDate: reviewWeek.value, ...review, updatedAt: now() }
-  const index = store.data.weeklyReviews.findIndex((r) => r.weekStartDate === reviewWeek.value)
-  if (index >= 0) store.data.weeklyReviews[index] = value
-  else store.data.weeklyReviews.push(value)
-  saved.value = true
-  store.toast('这一周的想法已保存')
+  const value = { weekStartDate: reviewWeek.value, ...review, updatedAt: now() };
+  const index = store.data.weeklyReviews.findIndex((r) => r.weekStartDate === reviewWeek.value);
+  if (index >= 0) store.data.weeklyReviews[index] = value;
+  else store.data.weeklyReviews.push(value);
+  saved.value = true;
+  store.toast('这一周的想法已保存');
 }
 </script>
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 import {
   Sparkles,
   LayoutDashboard,
@@ -40,8 +40,21 @@ import {
   ArrowUp,
   ArrowDown,
   CheckCheck,
-} from '@lucide/vue'
-const props = withDefaults(defineProps<{ name: string; size?: number }>(), { size: 20 })
+  Users,
+  MessageCircle,
+  Trophy,
+  Award,
+  Crown,
+  Globe,
+  Library,
+  NotebookPen,
+  UserRound,
+  Heart,
+  Bookmark,
+  Video,
+  Sprout,
+} from '@lucide/vue';
+const props = withDefaults(defineProps<{ name: string; size?: number }>(), { size: 20 });
 const icons: Record<string, typeof Sparkles> = {
   sparkles: Sparkles,
   dashboard: LayoutDashboard,
@@ -82,8 +95,21 @@ const icons: Record<string, typeof Sparkles> = {
   up: ArrowUp,
   down: ArrowDown,
   doubleCheck: CheckCheck,
-}
-const component = computed(() => icons[props.name] || Circle)
+  users: Users,
+  message: MessageCircle,
+  trophy: Trophy,
+  award: Award,
+  crown: Crown,
+  globe: Globe,
+  library: Library,
+  notebook: NotebookPen,
+  user: UserRound,
+  heart: Heart,
+  bookmark: Bookmark,
+  video: Video,
+  sprout: Sprout,
+};
+const component = computed(() => icons[props.name] || Circle);
 </script>
 <template>
   <component :is="component" :size="size" :stroke-width="1.8" aria-hidden="true" />

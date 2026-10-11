@@ -1,66 +1,89 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { validateData } from '../domain/schema'
-import { now } from '../domain/dates'
-import type { AppData } from '../domain/types'
-import PageHeader from '../components/PageHeader.vue'
-import Icon from '../components/Icon.vue'
-import Modal from '../components/Modal.vue'
+import { ref, watch } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { validateBackup } from '../domain/backup';
+import { usePrototypeStore } from '../store/prototype';
+import type { PrototypeData } from '../domain/prototype';
+import { now } from '../domain/dates';
+import type { AppData } from '../domain/types';
+import PageHeader from '../components/PageHeader.vue';
+import Icon from '../components/Icon.vue';
+import Modal from '../components/Modal.vue';
 const store = useAppStore(),
+  proto = usePrototypeStore(),
+  persona = ref(proto.data.persona),
+  importPrototype = ref<PrototypeData | null>(null),
   name = ref(store.data.profile.displayName),
   reminder = ref(store.data.profile.reminder),
   importPreview = ref<AppData | null>(null),
-  fileInput = ref<HTMLInputElement>()
+  fileInput = ref<HTMLInputElement>();
+watch(
+  () => proto.data.persona,
+  (value) => {
+    persona.value = value;
+  },
+);
 watch(
   () => store.data.profile,
   (profile) => {
-    name.value = profile.displayName
-    reminder.value = profile.reminder
+    name.value = profile.displayName;
+    reminder.value = profile.reminder;
   },
-)
+);
 function save() {
-  if (!name.value.trim()) return
-  store.data.profile.displayName = name.value.trim()
-  store.data.profile.reminder = reminder.value
-  store.toast('个人偏好已保存')
+  if (!name.value.trim()) return;
+  store.data.profile.displayName = name.value.trim();
+  store.data.profile.reminder = reminder.value;
+  proto.data.persona = persona.value;
+  store.toast('个人偏好已保存');
 }
 function exportData() {
-  const blob = new Blob([JSON.stringify({ ...store.data, exportedAt: now() }, null, 2)], {
-    type: 'application/json',
-  })
+  const blob = new Blob(
+    [JSON.stringify({ ...store.data, prototype: proto.data, exportedAt: now() }, null, 2)],
+    {
+      type: 'application/json',
+    },
+  );
   const url = URL.createObjectURL(blob),
-    link = document.createElement('a')
-  link.href = url
-  link.download = `asterway-${store.today}.json`
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-  store.toast('已导出成长记录')
+    link = document.createElement('a');
+  link.href = url;
+  link.download = `asterway-${store.today}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  store.toast('已导出成长、社区、对话和知识库记录');
 }
 async function readFile(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
   try {
-    if (file.size > 5 * 1024 * 1024) throw new Error('请导入小于 5 MB 的 JSON 文件。')
-    importPreview.value = validateData(JSON.parse(await file.text()))
+    if (file.size > 10 * 1024 * 1024) throw new Error('请导入小于 10 MB 的 JSON 文件。');
+    const checked = validateBackup(JSON.parse(await file.text()));
+    importPreview.value = checked.growth;
+    importPrototype.value = checked.prototype;
   } catch (error) {
-    store.toast(error instanceof Error ? error.message : '无法读取文件', true)
+    store.toast(error instanceof Error ? error.message : '无法读取文件', true);
   } finally {
-    if (fileInput.value) fileInput.value.value = ''
+    if (fileInput.value) fileInput.value.value = '';
   }
 }
 function restore(demo: boolean) {
   ui.confirm(
     demo ? '重置为演示数据？' : '清空我的数据？',
-    '这将覆盖当前浏览器中的所有成长记录。建议先导出备份，再确认操作。',
-    () => store.reset(demo),
-  )
+    '这将覆盖当前浏览器中的成长、社区、对话和个人知识库记录。建议先导出备份，再确认操作。',
+    () => {
+      store.reset(demo);
+      proto.reset(demo);
+    },
+  );
 }
 function confirmImport() {
-  if (!importPreview.value) return
-  store.importData(importPreview.value)
-  importPreview.value = null
+  if (!importPreview.value) return;
+  store.importData(importPreview.value);
+  if (importPrototype.value) proto.importData(importPrototype.value);
+  else proto.data.bundleLogs = [];
+  importPrototype.value = null;
+  importPreview.value = null;
 }
 </script>
 <template>
@@ -89,6 +112,15 @@ function confirmImport() {
             maxlength="30"
             required
             placeholder="怎样称呼你？" /></label
+        ><label
+          >成长身份<select v-model="persona">
+            <option
+              v-for="item in ['大学生', '备考学生', '职场人', '语言学习者', '创作者', '成长探索者']"
+              :key="item"
+            >
+              {{ item }}
+            </option>
+          </select></label
         ><label class="checkbox-label"
           ><input v-model="reminder" type="checkbox" />保存每日提醒偏好</label
         >
@@ -109,7 +141,7 @@ function confirmImport() {
         <span class="data-icon"><Icon name="download" /></span>
         <div>
           <h3>导出数据</h3>
-          <p>下载完整 JSON，保留一份属于自己的备份。</p>
+          <p>备份目标、任务、习惯、社区互动、对话与知识库。</p>
         </div>
         <button class="button secondary" @click="exportData">导出</button>
       </div>
@@ -149,7 +181,7 @@ function confirmImport() {
     <section class="card about-card">
       <span class="brand-symbol"><Icon name="sparkles" :size="28" /></span>
       <div>
-        <h2>Asterway <span class="muted">星行纪</span><small>v0.1.0 · Web MVP</small></h2>
+        <h2>Asterway <span class="muted">星行纪</span><small>v0.2.0 · 成长与社区原型</small></h2>
         <p>AI Personal Growth OS · Find your path. Grow your way.</p>
         <p class="muted">
           一个把长期目标变成每日行动的成长工作台。当前为纯前端可交互原型，伙伴使用本地规则，不连接真实
@@ -171,7 +203,10 @@ function confirmImport() {
         importPreview.tasks.length
       }}
       项任务、{{ importPreview.habits.length }} 个习惯和
-      {{ importPreview.habitLogs.length }} 次打卡。
+      {{ importPreview.habitLogs.length }} 次打卡。<span v-if="importPrototype"
+        >同时包含 {{ importPrototype.posts.length }} 篇社区内容和
+        {{ importPrototype.notes.length }} 条知识。</span
+      ><span v-else>这是旧版成长备份，现有社区记录将保留。</span>
     </p>
     <p class="warning-banner">确认后将覆盖当前数据，建议先导出备份。</p>
     <div class="modal-actions">

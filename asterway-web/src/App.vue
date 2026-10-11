@@ -1,54 +1,78 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { useAppStore } from './store/app'
-import { ui } from './store/ui'
-import { parseDate } from './domain/dates'
-import Icon from './components/Icon.vue'
-import Modal from './components/Modal.vue'
-import EntityEditor from './components/EntityEditor.vue'
-import GoalDetail from './components/GoalDetail.vue'
-import FocusTimer from './components/FocusTimer.vue'
-import SearchPanel from './components/SearchPanel.vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAppStore } from './store/app';
+import { usePrototypeStore } from './store/prototype';
+import { ui } from './store/ui';
+import { parseDate } from './domain/dates';
+import Icon from './components/Icon.vue';
+import Modal from './components/Modal.vue';
+import EntityEditor from './components/EntityEditor.vue';
+import GoalDetail from './components/GoalDetail.vue';
+import FocusTimer from './components/FocusTimer.vue';
+import SearchPanel from './components/SearchPanel.vue';
 const store = useAppStore(),
   route = useRoute(),
   mobileOpen = ref(false),
-  addOpen = ref(false)
-const nav = [
+  addOpen = ref(false);
+const proto = usePrototypeStore();
+const personalNav = [
   { path: '/today', label: '今日总览', icon: 'dashboard' },
   { path: '/goals', label: '我的目标', icon: 'target' },
   { path: '/planner', label: '计划日程', icon: 'calendar' },
   { path: '/habits', label: '习惯追踪', icon: 'checkCircle' },
   { path: '/insights', label: '成长复盘', icon: 'chart' },
   { path: '/assistant', label: '成长伙伴', icon: 'sparkles' },
-]
+  { path: '/templates', label: '成长模板', icon: 'library' },
+  { path: '/knowledge', label: '个人知识库', icon: 'notebook' },
+];
+const navigationGroups = [
+  { title: '个人成长', items: personalNav },
+  {
+    title: '一起成长',
+    items: [
+      { path: '/community', label: '成长社区', icon: 'globe' },
+      { path: '/circles', label: '成长社群', icon: 'users' },
+      { path: '/messages', label: '消息中心', icon: 'message' },
+      { path: '/challenges', label: '挑战与榜单', icon: 'trophy' },
+    ],
+  },
+  {
+    title: '我的身份',
+    items: [
+      { path: '/achievements', label: '段位与成就', icon: 'award' },
+      { path: '/membership', label: '会员与权益', icon: 'crown' },
+      { path: '/profile/me', label: '我的主页', icon: 'user' },
+    ],
+  },
+];
 watch(
   () => route.path,
   () => {
-    mobileOpen.value = false
-    addOpen.value = false
+    mobileOpen.value = false;
+    addOpen.value = false;
   },
-)
+);
 function keyboard(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-    e.preventDefault()
-    ui.open('search')
+    e.preventDefault();
+    ui.open('search');
   }
   if (e.key === 'Escape') {
-    addOpen.value = false
-    mobileOpen.value = false
+    addOpen.value = false;
+    mobileOpen.value = false;
   }
 }
-onMounted(() => window.addEventListener('keydown', keyboard))
-onBeforeUnmount(() => window.removeEventListener('keydown', keyboard))
+onMounted(() => window.addEventListener('keydown', keyboard));
+onBeforeUnmount(() => window.removeEventListener('keydown', keyboard));
 function confirm() {
-  const action = ui.confirmAction
-  ui.close()
-  action?.()
+  const action = ui.confirmAction;
+  ui.close();
+  action?.();
 }
 function openQuick(kind: 'goal' | 'task' | 'habit') {
-  ui.open(kind)
-  addOpen.value = false
+  ui.open(kind);
+  addOpen.value = false;
 }
 </script>
 <template>
@@ -69,18 +93,22 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
         ><span class="brand-symbol"><Icon name="sparkles" :size="25" /></span
         ><span class="brand-name">Asterway<small>星行纪 · 成长由你</small></span></RouterLink
       >
-      <div class="nav-label">你的成长空间</div>
-      <nav aria-label="主导航">
-        <RouterLink v-for="item in nav" :key="item.path" :to="item.path" :title="item.label"
-          ><Icon :name="item.icon" /><span>{{ item.label }}</span
-          ><small v-if="item.path === '/assistant'" class="demo-dot">DEMO</small></RouterLink
-        >
+      <nav aria-label="主导航" class="grouped-nav">
+        <div v-for="group in navigationGroups" :key="group.title" class="nav-group">
+          <div class="nav-label">{{ group.title }}</div>
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.path"
+            :to="item.path"
+            :title="item.label"
+            ><Icon :name="item.icon" /><span>{{ item.label }}</span
+            ><small v-if="item.path === '/assistant'" class="demo-dot">DEMO</small></RouterLink
+          >
+        </div>
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-note">
-          <Icon name="map" :size="24" />
-          <p>不用一口气走很远。<br />今天的一小步，也算数。</p>
-          <span>Find your path. Grow your way.</span>
+        <div class="sidebar-prototype">
+          <span class="demo-dot">v0.2 PROTOTYPE</span><small>个人成长 · AI 伙伴 · 自律社区</small>
         </div>
         <RouterLink to="/settings" class="settings-link"
           ><Icon name="settings" /><span>设置与数据</span></RouterLink
@@ -157,6 +185,10 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
       </header>
       <div v-if="store.storageError" class="error-banner" role="alert">
         {{ store.storageError }} <RouterLink to="/settings">前往导出</RouterLink>
+      </div>
+      <div v-if="proto.storageError || proto.recoveryError" class="error-banner" role="alert">
+        {{ proto.storageError || proto.recoveryError
+        }}<RouterLink to="/settings">数据设置</RouterLink>
       </div>
       <main class="main-content">
         <div v-if="store.recoveryError" class="recovery card">

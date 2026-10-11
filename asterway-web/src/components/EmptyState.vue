@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Icon from './Icon.vue'
-withDefaults(defineProps<{ title: string; text?: string; icon?: string }>(), { icon: 'map' })
+import Icon from './Icon.vue';
+withDefaults(defineProps<{ title: string; text?: string; icon?: string }>(), { icon: 'map' });
 </script>
 <template>
   <div class="empty-state">

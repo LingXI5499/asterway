@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import Modal from './Modal.vue'
-import Icon from './Icon.vue'
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import Modal from './Modal.vue';
+import Icon from './Icon.vue';
 const query = ref(''),
   store = useAppStore(),
-  router = useRouter()
+  router = useRouter();
 const results = computed(() => {
-  const keyword = query.value.trim().toLowerCase()
-  if (!keyword) return []
+  const keyword = query.value.trim().toLowerCase();
+  if (!keyword) return [];
   return [
     ...store.data.goals.map((g) => ({
       id: g.id,
@@ -37,13 +37,13 @@ const results = computed(() => {
       })),
   ]
     .filter((v) => v.title.toLowerCase().includes(keyword))
-    .slice(0, 30)
-})
+    .slice(0, 30);
+});
 function go(item: (typeof results.value)[number]) {
-  router.push(item.path)
-  ui.close()
-  if (item.type === '目标') ui.open('goalDetail', { id: item.id })
-  if (item.type === '任务') ui.open('task', { id: item.id })
+  router.push(item.path);
+  ui.close();
+  if (item.type === '目标') ui.open('goalDetail', { id: item.id });
+  if (item.type === '任务') ui.open('task', { id: item.id });
 }
 </script>
 <template>

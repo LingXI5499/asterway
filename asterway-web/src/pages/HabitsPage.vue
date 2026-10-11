@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { weekStart, weekDays, shortDate, addDays, dayLabel } from '../domain/dates'
-import { canCheckHabit } from '../domain/mutations'
-import { streak, habitWeek } from '../domain/selectors'
-import { categories } from '../domain/types'
-import PageHeader from '../components/PageHeader.vue'
-import Icon from '../components/Icon.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { ref, computed } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { weekStart, weekDays, shortDate, addDays, dayLabel } from '../domain/dates';
+import { canCheckHabit } from '../domain/mutations';
+import { streak, habitWeek } from '../domain/selectors';
+import { categories } from '../domain/types';
+import PageHeader from '../components/PageHeader.vue';
+import Icon from '../components/Icon.vue';
+import EmptyState from '../components/EmptyState.vue';
 const store = useAppStore(),
-  current = ref(weekStart(store.today))
+  current = ref(weekStart(store.today));
 const days = computed(() => weekDays(current.value)),
-  habits = computed(() => store.data.habits.filter((h) => h.status !== 'archived'))
-const summaries = computed(() => habits.value.map((h) => habitWeek(store.data, h, current.value)))
-const weekCount = computed(() => summaries.value.reduce((n, s) => n + s.count, 0))
+  habits = computed(() => store.data.habits.filter((h) => h.status !== 'archived'));
+const summaries = computed(() => habits.value.map((h) => habitWeek(store.data, h, current.value)));
+const weekCount = computed(() => summaries.value.reduce((n, s) => n + s.count, 0));
 const weekRate = computed(() => {
-  const targets = summaries.value.reduce((n, s) => n + s.target, 0)
+  const targets = summaries.value.reduce((n, s) => n + s.target, 0);
   return targets
     ? Math.round(
         (summaries.value.reduce((n, s) => n + Math.min(s.count, s.target), 0) / targets) * 100,
       )
-    : null
-})
+    : null;
+});
 const longest = computed(() =>
   Math.max(0, ...habits.value.map((h) => streak(store.data, h, store.today))),
-)
+);
 const hasLog = (id: string, date: string) =>
-  store.data.habitLogs.some((l) => l.habitId === id && l.date === date)
+  store.data.habitLogs.some((l) => l.habitId === id && l.date === date);
 </script>
 <template>
   <PageHeader

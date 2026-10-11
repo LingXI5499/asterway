@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Task } from '../domain/types'
-import { categories, priorities } from '../domain/types'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import Icon from './Icon.vue'
-defineProps<{ task: Task; compact?: boolean; conflict?: boolean }>()
-const store = useAppStore()
-const goals = computed(() => new Map(store.data.goals.map((g) => [g.id, g])))
+import { computed } from 'vue';
+import type { Task } from '../domain/types';
+import { categories, priorities } from '../domain/types';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import Icon from './Icon.vue';
+defineProps<{ task: Task; compact?: boolean; conflict?: boolean }>();
+const store = useAppStore();
+const goals = computed(() => new Map(store.data.goals.map((g) => [g.id, g])));
 </script>
 <template>
   <div :class="['task-row', { done: task.status === 'done', compact, conflict }]">

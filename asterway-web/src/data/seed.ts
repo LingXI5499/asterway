@@ -1,6 +1,6 @@
-import type { AppData, Goal, Task } from '../domain/types'
-import { addDays, localDate, now, uid } from '../domain/dates'
-import { makeTask } from '../domain/mutations'
+import type { AppData, Goal, Task } from '../domain/types';
+import { addDays, localDate, now, uid } from '../domain/dates';
+import { makeTask } from '../domain/mutations';
 export function emptyData(): AppData {
   return {
     schemaVersion: 1,
@@ -20,11 +20,11 @@ export function emptyData(): AppData {
     weeklyReviews: [],
     agentActionLog: [],
     focusSessions: [],
-  }
+  };
 }
 export function seedDemo(today = localDate()): AppData {
   const data = emptyData(),
-    timestamp = now()
+    timestamp = now();
   const goals: Array<Pick<Goal, 'title' | 'description' | 'category' | 'weeklyHours'>> = [
     {
       title: '软件设计师备考',
@@ -44,7 +44,7 @@ export function seedDemo(today = localDate()): AppData {
       category: 'study',
       weeklyHours: 3,
     },
-  ]
+  ];
   data.goals = goals.map((g, i) => ({
     ...g,
     id: `goal-${i}`,
@@ -53,12 +53,12 @@ export function seedDemo(today = localDate()): AppData {
     startDate: addDays(today, -6),
     targetDate: addDays(today, i === 2 ? 45 : 30),
     createdAt: timestamp,
-  }))
+  }));
   const names = [
     ['基础知识', '专题训练', '真题模拟'],
     ['建立运动节奏', '坚持执行'],
     ['基础词汇', '短文精读', '总结输出'],
-  ]
+  ];
   data.milestones = names.flatMap((list, i) =>
     list.map((title, order) => ({
       id: `milestone-${i}-${order}`,
@@ -67,7 +67,7 @@ export function seedDemo(today = localDate()): AppData {
       order,
       createdAt: timestamp,
     })),
-  )
+  );
   const entries: Array<Partial<Task> & { title: string }> = [
     {
       title: '复习 CPU 与计算机组成原理',
@@ -155,16 +155,16 @@ export function seedDemo(today = localDate()): AppData {
       scheduledDate: undefined,
       durationMinutes: 15,
     },
-  ]
+  ];
   data.tasks = entries.map((entry, i) => {
     const task = makeTask({
       scheduledDate: today,
       ...entry,
       id: `task-${i}`,
       milestoneId: `milestone-${entry.goalId!.slice(-1)}-0`,
-    })
+    });
     if (task.status === 'done') {
-      task.completedAt = new Date(`${task.scheduledDate}T08:30:00`).toISOString()
+      task.completedAt = new Date(`${task.scheduledDate}T08:30:00`).toISOString();
       data.xpEvents.push({
         id: uid(),
         sourceType: 'task',
@@ -172,10 +172,10 @@ export function seedDemo(today = localDate()): AppData {
         sourceDate: task.scheduledDate!,
         amount: 20,
         createdAt: task.completedAt,
-      })
+      });
     }
-    return task
-  })
+    return task;
+  });
   data.habits = [
     {
       id: 'habit-0',
@@ -204,13 +204,13 @@ export function seedDemo(today = localDate()): AppData {
       status: 'active',
       createdAt: timestamp,
     },
-  ]
+  ];
   data.habits.forEach((habit, index) => {
     for (let offset = -6; offset <= 0; offset++) {
-      if ((offset + index) % (index === 1 ? 3 : 4) === 0 || (offset === 0 && index !== 0)) continue
+      if ((offset + index) % (index === 1 ? 3 : 4) === 0 || (offset === 0 && index !== 0)) continue;
       const date = addDays(today, offset),
-        createdAt = new Date(`${date}T08:30:00`).toISOString()
-      data.habitLogs.push({ id: uid(), habitId: habit.id, date, createdAt })
+        createdAt = new Date(`${date}T08:30:00`).toISOString();
+      data.habitLogs.push({ id: uid(), habitId: habit.id, date, createdAt });
       data.xpEvents.push({
         id: uid(),
         sourceType: 'habit',
@@ -218,8 +218,8 @@ export function seedDemo(today = localDate()): AppData {
         sourceDate: date,
         amount: 10,
         createdAt,
-      })
+      });
     }
-  })
-  return data
+  });
+  return data;
 }

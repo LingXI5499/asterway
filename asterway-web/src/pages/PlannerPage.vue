@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { addDays, weekStart, weekDays, shortDate, dayLabel, now } from '../domain/dates'
-import { sortTasks, conflictingIds } from '../domain/selectors'
-import PageHeader from '../components/PageHeader.vue'
-import TaskRow from '../components/TaskRow.vue'
-import Icon from '../components/Icon.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { computed, ref } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { addDays, weekStart, weekDays, shortDate, dayLabel, now } from '../domain/dates';
+import { sortTasks, conflictingIds } from '../domain/selectors';
+import PageHeader from '../components/PageHeader.vue';
+import TaskRow from '../components/TaskRow.vue';
+import Icon from '../components/Icon.vue';
+import EmptyState from '../components/EmptyState.vue';
 const store = useAppStore(),
   current = ref(weekStart(store.today)),
   view = ref('week'),
-  poolFilter = ref('all')
+  poolFilter = ref('all');
 const days = computed(() => weekDays(current.value)),
-  conflicts = computed(() => conflictingIds(store.tasks))
+  conflicts = computed(() => conflictingIds(store.tasks));
 const pool = computed(() =>
   store.tasks.filter(
     (t) =>
@@ -21,19 +21,19 @@ const pool = computed(() =>
       t.status === 'todo' &&
       (poolFilter.value !== 'high' || t.priority === 'high'),
   ),
-)
+);
 const overdue = computed(() =>
   store.tasks.filter(
     (t) => t.scheduledDate && t.scheduledDate < store.today && t.status === 'todo',
   ),
-)
-const dayTasks = (date: string) => sortTasks(store.tasks.filter((t) => t.scheduledDate === date))
+);
+const dayTasks = (date: string) => sortTasks(store.tasks.filter((t) => t.scheduledDate === date));
 function move(id: string, date: string) {
-  const task = store.data.tasks.find((t) => t.id === id)!
-  task.scheduledDate = date
-  delete task.startTime
-  task.updatedAt = now()
-  store.toast('任务已重新安排')
+  const task = store.data.tasks.find((t) => t.id === id)!;
+  task.scheduledDate = date;
+  delete task.startTime;
+  task.updatedAt = now();
+  store.toast('任务已重新安排');
 }
 </script>
 <template>

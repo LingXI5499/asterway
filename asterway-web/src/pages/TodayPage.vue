@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import { weekStart, parseDate, shortDate } from '../domain/dates'
-import { priorityRank } from '../domain/types'
-import { sortTasks, rangeStats, streak } from '../domain/selectors'
-import Icon from '../components/Icon.vue'
-import TaskRow from '../components/TaskRow.vue'
-import GoalCard from '../components/GoalCard.vue'
-import EmptyState from '../components/EmptyState.vue'
+import { computed, ref } from 'vue';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import { weekStart, parseDate, shortDate } from '../domain/dates';
+import { priorityRank } from '../domain/types';
+import { sortTasks, rangeStats, streak } from '../domain/selectors';
+import Icon from '../components/Icon.vue';
+import TaskRow from '../components/TaskRow.vue';
+import GoalCard from '../components/GoalCard.vue';
+import EmptyState from '../components/EmptyState.vue';
 const store = useAppStore(),
   mode = ref('list'),
-  showDone = ref(true)
-const tasks = computed(() => sortTasks(store.tasks.filter((t) => t.scheduledDate === store.today)))
-const done = computed(() => tasks.value.filter((t) => t.status === 'done'))
-const todo = computed(() => tasks.value.filter((t) => t.status === 'todo'))
+  showDone = ref(true);
+const tasks = computed(() => sortTasks(store.tasks.filter((t) => t.scheduledDate === store.today)));
+const done = computed(() => tasks.value.filter((t) => t.status === 'done'));
+const todo = computed(() => tasks.value.filter((t) => t.status === 'todo'));
 const focus = computed(() =>
   [...todo.value]
     .sort(
@@ -24,16 +24,16 @@ const focus = computed(() =>
         (a.startTime || '99').localeCompare(b.startTime || '99'),
     )
     .slice(0, 3),
-)
+);
 const habits = computed(() =>
   store.data.habits.filter((h) => h.status === 'active' && h.startDate <= store.today),
-)
+);
 const checked = computed(
   () =>
     habits.value.filter((h) =>
       store.data.habitLogs.some((l) => l.habitId === h.id && l.date === store.today),
     ).length,
-)
+);
 const longest = computed(() =>
   Math.max(
     0,
@@ -41,21 +41,21 @@ const longest = computed(() =>
       .filter((h) => h.status === 'active')
       .map((h) => streak(store.data, h, store.today)),
   ),
-)
-const weekly = computed(() => rangeStats(store.data, weekStart(store.today), store.today))
-const goals = computed(() => store.data.goals.filter((g) => g.status === 'active').slice(0, 3))
+);
+const weekly = computed(() => rangeStats(store.data, weekStart(store.today), store.today));
+const goals = computed(() => store.data.goals.filter((g) => g.status === 'active').slice(0, 3));
 const milestones = computed(() =>
   store.data.milestones.filter((m) => goals.value.some((g) => g.id === m.goalId)).slice(0, 2),
-)
+);
 const suggestion = computed(() =>
   todo.value.length > 2
     ? `今天还有 ${todo.value.length} 项行动，预估 ${todo.value.reduce((s, t) => s + t.durationMinutes, 0)} 分钟。给变化留一点空间，先做好最重要的一件事。`
     : todo.value.length
       ? '今天的节奏很轻盈。选择一个重要的小行动，按自己的节奏开始。'
       : '今天的行动已完成，给自己一点休息和回顾的时间吧。',
-)
+);
 const greeting =
-  new Date().getHours() < 12 ? '早上好' : new Date().getHours() < 18 ? '下午好' : '晚上好'
+  new Date().getHours() < 12 ? '早上好' : new Date().getHours() < 18 ? '下午好' : '晚上好';
 </script>
 <template>
   <div v-if="!store.data.profile.onboardingDismissed" class="onboarding">

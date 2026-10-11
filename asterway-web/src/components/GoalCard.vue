@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Goal } from '../domain/types'
-import { categories } from '../domain/types'
-import { goalProgress } from '../domain/selectors'
-import { shortDate } from '../domain/dates'
-import { useAppStore } from '../store/app'
-import { ui } from '../store/ui'
-import Icon from './Icon.vue'
-const props = defineProps<{ goal: Goal; compact?: boolean }>()
-const store = useAppStore()
-const progress = computed(() => goalProgress(store.data, props.goal.id))
+import { computed } from 'vue';
+import type { Goal } from '../domain/types';
+import { categories } from '../domain/types';
+import { goalProgress } from '../domain/selectors';
+import { shortDate } from '../domain/dates';
+import { useAppStore } from '../store/app';
+import { ui } from '../store/ui';
+import Icon from './Icon.vue';
+const props = defineProps<{ goal: Goal; compact?: boolean }>();
+const store = useAppStore();
+const progress = computed(() => goalProgress(store.data, props.goal.id));
 const milestones = computed(() =>
   store.data.milestones.filter((m) => m.goalId === props.goal.id).sort((a, b) => a.order - b.order),
-)
+);
 </script>
 <template>
   <button :class="['goal-card', { compact }]" @click="ui.open('goalDetail', { id: goal.id })">

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount } from 'vue'
-import Icon from './Icon.vue'
-defineProps<{ title: string; wide?: boolean }>()
-const emit = defineEmits<{ close: [] }>()
-const dialog = ref<HTMLDialogElement>()
-let previous: HTMLElement | null = null
+import { onMounted, ref, onBeforeUnmount } from 'vue';
+import Icon from './Icon.vue';
+defineProps<{ title: string; wide?: boolean }>();
+const emit = defineEmits<{ close: [] }>();
+const dialog = ref<HTMLDialogElement>();
+let previous: HTMLElement | null = null;
 onMounted(() => {
-  previous = document.activeElement as HTMLElement
-  dialog.value?.showModal()
-})
-onBeforeUnmount(() => previous?.focus())
+  previous = document.activeElement as HTMLElement;
+  dialog.value?.showModal();
+});
+onBeforeUnmount(() => previous?.focus());
 </script>
 <template>
   <dialog
@@ -19,7 +19,7 @@ onBeforeUnmount(() => previous?.focus())
     @cancel.prevent="emit('close')"
     @click="
       (e) => {
-        if (e.target === dialog) emit('close')
+        if (e.target === dialog) emit('close');
       }
     "
   >
