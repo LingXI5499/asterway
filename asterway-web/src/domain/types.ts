@@ -27,6 +27,10 @@ export interface Task {
   milestoneId?: string;
   priority: Priority;
   durationMinutes: number;
+  important?: boolean;
+  urgent?: boolean;
+  dueDate?: string;
+  energy?: 'high' | 'normal' | 'low';
   scheduledDate?: string;
   startTime?: string;
   status: 'todo' | 'done' | 'cancelled';
@@ -68,16 +72,26 @@ export interface Review {
 }
 export type NewTask = Omit<Task, 'id' | 'createdAt' | 'updatedAt'>;
 export type ProposalChange =
-  | { op: 'reschedule'; taskId: string; from?: string; to: string; reason: string }
+  | {
+      op: 'reschedule';
+      taskId: string;
+      from?: string;
+      to: string;
+      reason: string;
+      toStartTime?: string;
+      toFocus?: boolean;
+      expectedUpdatedAt?: string;
+    }
   | { op: 'create_task'; task: NewTask; reason: string };
 export interface AgentProposal {
   id: string;
-  type: 'reschedule' | 'create_tasks' | 'weekly_review';
+  type: 'reschedule' | 'create_tasks' | 'weekly_review' | 'daily_plan';
   title: string;
   explanation: string;
   changes: ProposalChange[];
   keptTaskIds: string[];
   createdAt: string;
+  planningContext?: { date: string; taskIds: string[]; snapshot: string };
 }
 export interface AgentAction {
   id: string;
@@ -97,6 +111,12 @@ export interface AppData {
     sidebarCollapsed: boolean;
     onboardingDismissed: boolean;
     dailyEnergyByDate: Record<string, 'high' | 'normal' | 'low'>;
+    planning?: {
+      dailyMinutes: number;
+      startTime: string;
+      bufferMinutes: number;
+      reservePercent: number;
+    };
   };
   goals: Goal[];
   milestones: Milestone[];
@@ -106,7 +126,13 @@ export interface AppData {
   xpEvents: XpEvent[];
   weeklyReviews: Review[];
   agentActionLog: AgentAction[];
-  focusSessions: { id: string; date: string; minutes: number; createdAt: string }[];
+  focusSessions: {
+    id: string;
+    date: string;
+    minutes: number;
+    createdAt: string;
+    taskId?: string;
+  }[];
 }
 export const categories: Record<Category, string> = {
   study: '学习',

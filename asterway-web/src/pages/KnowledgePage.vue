@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { usePrototypeStore } from '../store/prototype';
 import { useAppStore } from '../store/app';
 import { ui } from '../store/ui';
@@ -32,6 +33,15 @@ function edit(note?: KnowledgeNote) {
   tags.value = note?.tags.join('，') || '';
   editing.value = true;
 }
+const route = useRoute();
+watch(
+  () => route.query.note,
+  (id) => {
+    const note = proto.data.notes.find((n) => n.id === id);
+    if (note) edit(note);
+  },
+  { immediate: true },
+);
 function save() {
   const source = proto.data.notes.find((n) => n.id === noteId.value)?.source || 'manual';
   proto.saveNote(

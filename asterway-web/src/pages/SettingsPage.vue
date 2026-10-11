@@ -5,6 +5,7 @@ import { ui } from '../store/ui';
 import { validateBackup } from '../domain/backup';
 import { usePrototypeStore } from '../store/prototype';
 import type { PrototypeData } from '../domain/prototype';
+import { useFocusStore } from '../store/focus';
 import { now } from '../domain/dates';
 import type { AppData } from '../domain/types';
 import PageHeader from '../components/PageHeader.vue';
@@ -12,6 +13,7 @@ import Icon from '../components/Icon.vue';
 import Modal from '../components/Modal.vue';
 const store = useAppStore(),
   proto = usePrototypeStore(),
+  focusClock = useFocusStore(),
   persona = ref(proto.data.persona),
   importPrototype = ref<PrototypeData | null>(null),
   name = ref(store.data.profile.displayName),
@@ -74,12 +76,14 @@ function restore(demo: boolean) {
     () => {
       store.reset(demo);
       proto.reset(demo);
+      focusClock.clear();
     },
   );
 }
 function confirmImport() {
   if (!importPreview.value) return;
   store.importData(importPreview.value);
+  focusClock.clear();
   if (importPrototype.value) proto.importData(importPrototype.value);
   else proto.data.bundleLogs = [];
   importPrototype.value = null;
@@ -181,7 +185,7 @@ function confirmImport() {
     <section class="card about-card">
       <span class="brand-symbol"><Icon name="sparkles" :size="28" /></span>
       <div>
-        <h2>Asterway <span class="muted">星行纪</span><small>v0.2.0 · 成长与社区原型</small></h2>
+        <h2>Asterway <span class="muted">星行纪</span><small>v0.3.0 · 有方法地成长</small></h2>
         <p>AI Personal Growth OS · Find your path. Grow your way.</p>
         <p class="muted">
           一个把长期目标变成每日行动的成长工作台。当前为纯前端可交互原型，伙伴使用本地规则，不连接真实

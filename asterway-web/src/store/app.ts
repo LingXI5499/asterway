@@ -91,7 +91,7 @@ export const useAppStore = defineStore('asterway', () => {
     return safely(() => {
       const draft = structuredClone(toRaw(data.value));
       applyProposal(draft, proposal);
-      data.value = draft;
+      data.value = validateData(draft);
     }, '方案已应用，可撤销最近一次操作');
   }
   function undo() {

@@ -10,6 +10,7 @@ import { growthTemplates, type GrowthTemplate } from '../data/templates';
 import { templateBundle, knowledgeBundle } from '../agent/bundles';
 import type { GrowthBundle } from '../domain/prototype';
 import { makeTask } from '../domain/mutations';
+import { createDailyPlan } from '../domain/productivity';
 import BundlePreview from '../components/BundlePreview.vue';
 import PageHeader from '../components/PageHeader.vue';
 import Icon from '../components/Icon.vue';
@@ -93,6 +94,33 @@ function applyNewBundle() {
   }
 }
 function assistantPlan(text: string): boolean {
+  if (/四象限|三件事|时间分块|按优先级/.test(text) && /安排|计划|整理|制定/.test(text)) {
+    try {
+      const settings = store.data.profile.planning;
+      const minutes = Number(text.match(/(\d+)\s*分钟/)?.[1] || settings?.dailyMinutes || 120);
+      const result = createDailyPlan(toRaw(store.data), {
+        date: store.today,
+        minutes,
+        startTime: settings?.startTime || '09:00',
+        buffer: settings?.bufferMinutes ?? 5,
+        reserve: settings?.reservePercent ?? 15,
+        limit: /时间分块/.test(text) ? 6 : 3,
+        energy: store.data.profile.dailyEnergyByDate[store.today] || 'normal',
+      });
+      bundle.value = null;
+      proposal.value = result.proposal;
+      messages.value.push(
+        { role: 'user', text },
+        {
+          role: 'assistant',
+          text: `我按重要性、紧急性和可用时间准备了 ${result.slots.length} 项行动，保留 ${result.reserved} 分钟留白。${result.skipped.length ? '装不下的任务保留原安排，不自动延后。' : ''}检查右侧具体时段，确认后排入日程。改期始终需要确认。`,
+        },
+      );
+    } catch (error) {
+      store.toast(error instanceof Error ? error.message : '无法生成计划', true);
+    }
+    return true;
+  }
   if (/记住|记下|记录我的/.test(text)) {
     presentBundle(knowledgeBundle(text), text);
     return true;
@@ -370,7 +398,10 @@ function cancelProposal() {
           @click="assistantPlan('记住：我每天有 40 分钟学习，想先理解框架再做练习')"
         >
           记住我的情况</button
-        ><button class="chip" @click="assistantPlan('看看我的个人知识库')">查看个人记忆</button>
+        ><button class="chip" @click="assistantPlan('看看我的个人知识库')">查看个人记忆</button
+        ><button class="chip" @click="assistantPlan('按四象限帮我安排今天 120 分钟的三件事')">
+          按轻重缓急排今天
+        </button>
       </div>
       <div class="quick-commands">
         <div class="quick-command">
@@ -471,12 +502,22 @@ function cancelProposal() {
           ><h3>{{ proposal.title }}</h3>
           <p class="muted proposal-explanation">{{ proposal.explanation }}</p>
           <div v-if="proposal.keptTaskIds.length" class="kept-tasks">
-            <strong><Icon name="checkCircle" :size="15" />保留在今天</strong>
+            <strong
+              ><Icon name="checkCircle" :size="15" />{{
+                proposal.type === 'daily_plan' ? '准备排入时段' : '保留在今天'
+              }}</strong
+            >
             <p v-for="id in proposal.keptTaskIds" :key="id">{{ taskTitle(id) }}</p>
           </div>
           <div v-for="(change, index) in proposal.changes" :key="index" class="proposal-change">
             <span :class="['change-type', change.op === 'reschedule' ? 'reschedule' : 'create']">{{
-              change.op === 'reschedule' ? '延后' : '新增'
+              change.op === 'reschedule'
+                ? change.toFocus === false
+                  ? '重点'
+                  : change.toStartTime
+                    ? '安排'
+                    : '延后'
+                : '新增'
             }}</span>
             <div>
               <strong>{{
@@ -485,7 +526,9 @@ function cancelProposal() {
               <div class="change-diff">
                 <template v-if="change.op === 'reschedule'"
                   ><span>{{ change.from ? shortDate(change.from) : '待安排' }}</span
-                  ><Icon name="arrow" :size="14" /><b>{{ shortDate(change.to) }}</b></template
+                  ><Icon name="arrow" :size="14" /><b
+                    >{{ shortDate(change.to) }} {{ change.toStartTime || '' }}</b
+                  ></template
                 ><template v-else
                   ><b>{{
                     change.task.scheduledDate ? shortDate(change.task.scheduledDate) : '待安排'

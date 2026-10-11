@@ -2,6 +2,16 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
+    {
+      path: '/methods',
+      component: () => import('./pages/MethodsPage.vue'),
+      meta: { title: '效率计划' },
+    },
+    {
+      path: '/focus',
+      component: () => import('./pages/FocusPage.vue'),
+      meta: { title: '专注空间' },
+    },
     { path: '/', redirect: '/today' },
     {
       path: '/templates',

@@ -1,7 +1,14 @@
 import type { AppData, AgentProposal, Task } from '../domain/types';
 import { now, uid, validDate } from '../domain/dates';
 import { makeTask } from '../domain/mutations';
+import { planningSnapshot, timeMinutes } from '../domain/productivity';
 export function applyProposal(data: AppData, proposal: AgentProposal): void {
+  if (
+    proposal.planningContext &&
+    planningSnapshot(data, proposal.planningContext.date, proposal.planningContext.taskIds) !==
+      proposal.planningContext.snapshot
+  )
+    throw new Error('日程已变化，请重新生成计划，避免覆盖新安排。');
   if (!proposal.changes.length) throw new Error('此方案没有需要应用的变更。');
   const touched = new Set<string>();
   for (const change of proposal.changes) {
@@ -13,6 +20,10 @@ export function applyProposal(data: AppData, proposal: AgentProposal): void {
         task.status !== 'todo' ||
         task.scheduledDate !== change.from ||
         !validDate(change.to) ||
+        (change.expectedUpdatedAt && task.updatedAt !== change.expectedUpdatedAt) ||
+        (change.toStartTime &&
+          (!/^([01]\d|2[0-3]):[0-5]\d$/.test(change.toStartTime) ||
+            timeMinutes(change.toStartTime) + task.durationMinutes > 1440)) ||
         touched.has(task.id)
       )
         throw new Error('任务状态已变化或日期不合法，请重新生成方案。');
@@ -43,7 +54,9 @@ export function applyProposal(data: AppData, proposal: AgentProposal): void {
       const task = data.tasks.find((t) => t.id === change.taskId)!;
       beforeTasks.push(structuredClone(task));
       task.scheduledDate = change.to;
-      delete task.startTime;
+      if (change.toStartTime) task.startTime = change.toStartTime;
+      else delete task.startTime;
+      if (change.toFocus !== undefined) task.isTodayFocus = change.toFocus;
       task.updatedAt = timestamp;
       afterTasks.push(structuredClone(task));
     } else {

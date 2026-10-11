@@ -34,8 +34,12 @@ const form = reactive({
   scheduledDate: initial?.scheduledDate ?? context.date ?? (id ? '' : store.today),
   startTime: initial?.startTime || '',
   isTodayFocus: initial?.isTodayFocus || false,
-  frequency: initial?.frequency.kind || 'daily',
-  times: initial?.frequency.times || 3,
+  important: initial?.important === undefined ? 'auto' : initial.important ? 'yes' : 'no',
+  urgent: initial?.urgent === undefined ? 'auto' : initial.urgent ? 'yes' : 'no',
+  dueDate: initial?.dueDate || '',
+  energy: (initial?.energy || 'normal') as 'high' | 'normal' | 'low',
+  frequency: initial?.frequency?.kind || 'daily',
+  times: initial?.frequency?.times || 3,
 });
 const error = ref('');
 const title = `${id ? '编辑' : '新建'}${kind === 'goal' ? '目标' : kind === 'task' ? '任务' : '习惯'}`;
@@ -94,7 +98,11 @@ function save() {
       priority: form.priority,
       durationMinutes: Number(form.durationMinutes),
       scheduledDate: form.scheduledDate || undefined,
-      startTime: form.startTime || undefined,
+      startTime: form.scheduledDate ? form.startTime || undefined : undefined,
+      important: form.important === 'auto' ? undefined : form.important === 'yes',
+      urgent: form.urgent === 'auto' ? undefined : form.urgent === 'yes',
+      dueDate: form.dueDate || undefined,
+      energy: form.energy,
       isTodayFocus: form.isTodayFocus,
     };
     if (id) Object.assign(initial, values, { updatedAt: timestamp });
@@ -203,7 +211,7 @@ function remove() {
             type="number"
             min="0"
             max="168"
-            step="0.5"
+            step="0.1"
         /></label>
         <template v-if="kind === 'task'">
           <label
@@ -257,6 +265,37 @@ function remove() {
       <label v-if="kind === 'task'" class="checkbox-label"
         ><input v-model="form.isTodayFocus" type="checkbox" />设为今日重点任务</label
       >
+      <details v-if="kind === 'task'" class="task-planning-details">
+        <summary>
+          <Icon name="dashboard" :size="17" />轻重缓急与执行偏好<span>四象限 · 截止 · 精力</span>
+        </summary>
+        <p>安排日期决定哪天做，截止日期决定最晚哪天完成。重要性和紧急性可以分别判断。</p>
+        <div class="form-grid">
+          <label
+            >是否重要<select v-model="form.important">
+              <option value="auto">跟随优先级（中/高为重要）</option>
+              <option value="yes">重要 · 推动长期目标</option>
+              <option value="no">不重要 · 辅助或琐事</option>
+            </select></label
+          ><label
+            >是否紧急<select v-model="form.urgent">
+              <option value="auto">根据截止日自动判断</option>
+              <option value="yes">紧急 · 需要尽快完成</option>
+              <option value="no">不紧急 · 可以主动安排</option>
+            </select></label
+          ><label>任务截止日期<input v-model="form.dueDate" type="date" /></label
+          ><label
+            >需要的精力<select v-model="form.energy">
+              <option value="high">较高 · 深度工作</option>
+              <option value="normal">正常 · 常规任务</option>
+              <option value="low">较低 · 轻量处理</option>
+            </select></label
+          >
+        </div>
+        <RouterLink class="text-button" to="/methods" @click="ui.close()"
+          >去四象限整理行动<Icon name="arrow" :size="14"
+        /></RouterLink>
+      </details>
       <p v-if="error" class="error-message" role="alert">{{ error }}</p>
       <div class="modal-actions">
         <button v-if="id" type="button" class="button danger ghost" @click="remove">

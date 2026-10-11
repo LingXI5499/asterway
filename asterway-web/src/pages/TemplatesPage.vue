@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { growthTemplates, type GrowthTemplate } from '../data/templates';
 import { templateBundle } from '../agent/bundles';
 import { useAppStore } from '../store/app';
 import { usePrototypeStore } from '../store/prototype';
 import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import type { GrowthBundle } from '../domain/prototype';
 import PageHeader from '../components/PageHeader.vue';
 import Icon from '../components/Icon.vue';
@@ -21,6 +22,15 @@ const app = useAppStore(),
   start = ref(app.today),
   days = ref(30);
 const groups = ['全部', ...new Set(growthTemplates.map((t) => t.group))];
+const route = useRoute();
+watch(
+  () => route.query.search,
+  (value) => {
+    query.value = typeof value === 'string' ? value : '';
+    group.value = '全部';
+  },
+  { immediate: true },
+);
 const templates = computed(() =>
   growthTemplates.filter(
     (t) =>

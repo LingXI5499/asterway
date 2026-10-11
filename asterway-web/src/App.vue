@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAppStore } from './store/app';
 import { usePrototypeStore } from './store/prototype';
+import { useFocusStore } from './store/focus';
 import { ui } from './store/ui';
 import { parseDate } from './domain/dates';
 import Icon from './components/Icon.vue';
@@ -16,10 +17,13 @@ const store = useAppStore(),
   mobileOpen = ref(false),
   addOpen = ref(false);
 const proto = usePrototypeStore();
+const focusClock = useFocusStore();
 const personalNav = [
   { path: '/today', label: '今日总览', icon: 'dashboard' },
   { path: '/goals', label: '我的目标', icon: 'target' },
   { path: '/planner', label: '计划日程', icon: 'calendar' },
+  { path: '/methods', label: '效率计划', icon: 'dashboard' },
+  { path: '/focus', label: '专注空间', icon: 'clock' },
   { path: '/habits', label: '习惯追踪', icon: 'checkCircle' },
   { path: '/insights', label: '成长复盘', icon: 'chart' },
   { path: '/assistant', label: '成长伙伴', icon: 'sparkles' },
@@ -108,7 +112,7 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-prototype">
-          <span class="demo-dot">v0.2 PROTOTYPE</span><small>个人成长 · AI 伙伴 · 自律社区</small>
+          <span class="demo-dot">v0.3 PROTOTYPE</span><small>重要的事 · 有方法地成长</small>
         </div>
         <RouterLink to="/settings" class="settings-link"
           ><Icon name="settings" /><span>设置与数据</span></RouterLink
@@ -202,6 +206,23 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
       </main>
     </div>
   </div>
+  <RouterLink
+    v-if="
+      route.path !== '/focus' &&
+      !focusClock.data.recorded &&
+      (focusClock.running || focusClock.elapsed > 0)
+    "
+    to="/focus"
+    class="active-focus-pill"
+    aria-label="回到正在进行的专注"
+    ><span class="timer-status-dot" :class="{ paused: !focusClock.running }" /><Icon
+      name="clock"
+      :size="17" /><strong>{{ focusClock.remaining }}</strong
+    ><span>{{
+      focusClock.data.mode === 'rest' ? '休息' : focusClock.running ? '专注中' : '已暂停'
+    }}</span
+    ><Icon name="arrow" :size="15"
+  /></RouterLink>
   <EntityEditor
     v-if="ui.modal && ['goal', 'task', 'habit'].includes(ui.modal.kind)"
     :key="`${ui.modal.kind}-${ui.modal.id || 'new'}`"

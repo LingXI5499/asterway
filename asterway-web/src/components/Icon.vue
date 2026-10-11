@@ -53,6 +53,7 @@ import {
   Bookmark,
   Video,
   Sprout,
+  Info,
 } from '@lucide/vue';
 const props = withDefaults(defineProps<{ name: string; size?: number }>(), { size: 20 });
 const icons: Record<string, typeof Sparkles> = {
@@ -73,6 +74,8 @@ const icons: Record<string, typeof Sparkles> = {
   collapse: PanelLeftClose,
   more: Ellipsis,
   clock: Clock,
+  leaf: Leaf,
+  info: Info,
   flame: Flame,
   study: BookOpen,
   health: Leaf,

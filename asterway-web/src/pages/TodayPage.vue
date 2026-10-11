@@ -3,8 +3,8 @@ import { computed, ref } from 'vue';
 import { useAppStore } from '../store/app';
 import { ui } from '../store/ui';
 import { weekStart, parseDate, shortDate } from '../domain/dates';
-import { priorityRank } from '../domain/types';
 import { sortTasks, rangeStats, streak } from '../domain/selectors';
+import { rankTasks } from '../domain/productivity';
 import Icon from '../components/Icon.vue';
 import TaskRow from '../components/TaskRow.vue';
 import GoalCard from '../components/GoalCard.vue';
@@ -15,15 +15,15 @@ const store = useAppStore(),
 const tasks = computed(() => sortTasks(store.tasks.filter((t) => t.scheduledDate === store.today)));
 const done = computed(() => tasks.value.filter((t) => t.status === 'done'));
 const todo = computed(() => tasks.value.filter((t) => t.status === 'todo'));
+const explicitFocus = computed(() => tasks.value.filter((t) => t.isTodayFocus));
 const focus = computed(() =>
-  [...todo.value]
-    .sort(
-      (a, b) =>
-        Number(b.isTodayFocus) - Number(a.isTodayFocus) ||
-        priorityRank[a.priority] - priorityRank[b.priority] ||
-        (a.startTime || '99').localeCompare(b.startTime || '99'),
-    )
-    .slice(0, 3),
+  rankTasks(
+    explicitFocus.value.length
+      ? explicitFocus.value.filter((t) => t.status === 'todo')
+      : todo.value,
+    store.today,
+    store.data.profile.dailyEnergyByDate[store.today] || 'normal',
+  ).slice(0, 3),
 );
 const habits = computed(() =>
   store.data.habits.filter((h) => h.status === 'active' && h.startDate <= store.today),
@@ -89,6 +89,25 @@ const greeting =
       </select></label
     >
   </header>
+  <section class="daily-rhythm">
+    <div>
+      <h3><Icon name="dashboard" :size="18" />今天，先给重要的事一个位置</h3>
+      <p>
+        今日待办预估 {{ todo.reduce((sum, task) => sum + task.durationMinutes, 0) }} 分钟 · 可用时间
+        {{ store.data.profile.planning?.dailyMinutes || 120 }} 分钟。{{
+          todo.reduce((sum, task) => sum + task.durationMinutes, 0) >
+          (store.data.profile.planning?.dailyMinutes || 120)
+            ? '计划有一点满，试着收敛到三件关键行动。'
+            : '留出一点空白，按自己的节奏推进。'
+        }}
+      </p>
+    </div>
+    <div class="daily-rhythm-actions">
+      <RouterLink to="/methods?tab=top3" class="button primary"
+        >安排今日三件事<Icon name="arrow" :size="15" /></RouterLink
+      ><RouterLink to="/methods" class="text-button">查看四象限</RouterLink>
+    </div>
+  </section>
   <div class="today-grid">
     <div class="today-main">
       <section class="stats-grid four">
@@ -124,8 +143,8 @@ const greeting =
       <section class="focus-section">
         <div class="section-heading">
           <h2>
-            <span class="heading-icon"><Icon name="target" :size="19" /></span>今天，先做好这
-            {{ focus.length || 3 }} 件事
+            <span class="heading-icon"><Icon name="target" :size="19" /></span
+            >{{ focus.length ? `今天，先做好这 ${focus.length} 件事` : '今天的行动重点' }}
           </h2>
           <span class="subtle-label">少一点，更专注</span>
         </div>
@@ -145,9 +164,15 @@ const greeting =
             </div></button
           ><EmptyState
             v-if="!focus.length"
-            title="给今天选一个小行动"
-            text="你可以创建任务，或从目标拆解行动。"
-            ><button class="button secondary" @click="ui.open('task')">创建任务</button></EmptyState
+            :title="explicitFocus.length ? '今天的重点已完成' : '给今天选一个小行动'"
+            :text="
+              explicitFocus.length
+                ? '回头看看已经走过的路，也可以按剩余时间调整下一步。'
+                : '你可以创建任务，或从目标拆解行动。'
+            "
+            ><RouterLink class="button secondary" to="/methods?tab=top3"
+              >调整今日重点</RouterLink
+            ></EmptyState
           >
         </div>
       </section>

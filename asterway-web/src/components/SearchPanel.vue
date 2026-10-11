@@ -2,16 +2,57 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '../store/app';
+import { usePrototypeStore } from '../store/prototype';
+import { growthTemplates } from '../data/templates';
 import { ui } from '../store/ui';
 import Modal from './Modal.vue';
 import Icon from './Icon.vue';
 const query = ref(''),
   store = useAppStore(),
+  proto = usePrototypeStore(),
   router = useRouter();
 const results = computed(() => {
   const keyword = query.value.trim().toLowerCase();
   if (!keyword) return [];
   return [
+    ...[
+      {
+        id: 'matrix',
+        title: '四象限 · 重要与紧急',
+        type: '方法',
+        path: '/methods',
+        icon: 'dashboard',
+      },
+      {
+        id: 'top3',
+        title: '每日三件事 · 安排行动重点',
+        type: '方法',
+        path: '/methods?tab=top3',
+        icon: 'target',
+      },
+      {
+        id: 'blocks',
+        title: '时间分块 · 具体时段',
+        type: '方法',
+        path: '/methods?tab=blocks',
+        icon: 'calendar',
+      },
+      { id: 'focus', title: '番茄钟 · 专注空间', type: '方法', path: '/focus', icon: 'clock' },
+    ],
+    ...proto.data.notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      type: '知识',
+      path: `/knowledge?note=${n.id}`,
+      icon: 'notebook',
+    })),
+    ...growthTemplates.map((t) => ({
+      id: t.id,
+      title: t.title,
+      type: '模板',
+      path: `/templates?search=${encodeURIComponent(t.title)}`,
+      icon: 'library',
+    })),
     ...store.data.goals.map((g) => ({
       id: g.id,
       title: g.title,
@@ -51,7 +92,7 @@ function go(item: (typeof results.value)[number]) {
     ><input
       v-model="query"
       class="search-input"
-      placeholder="搜索目标、任务或习惯…"
+      placeholder="搜索目标、任务、知识、模板或计划方法…"
       aria-label="搜索关键词"
       autofocus
     />

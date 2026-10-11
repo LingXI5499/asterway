@@ -28,6 +28,8 @@ const goals = computed(() => new Map(store.data.goals.map((g) => [g.id, g])));
           >{{ categories[goals.get(task.goalId)!.category] }} ·
           {{ goals.get(task.goalId)?.title }}</span
         ><span>{{ task.durationMinutes }} 分钟 · {{ task.startTime || '时段待定' }}</span
+        ><span v-if="task.dueDate" :class="{ 'deadline-overdue': task.dueDate < store.today }"
+          >截止 {{ task.dueDate.slice(5) }}</span
         ><span v-if="conflict" class="danger-text">时段重叠</span></span
       >
     </button>

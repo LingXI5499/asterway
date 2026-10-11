@@ -1,7 +1,7 @@
 import type { AgentProposal, AppData, NewTask } from '../domain/types';
-import { priorityRank } from '../domain/types';
 import { addDays, localDate, now, uid, weekStart } from '../domain/dates';
 import { rangeStats, visibleTasks } from '../domain/selectors';
+import { rankTasks } from '../domain/productivity';
 export interface AgentAdapter {
   reschedule(data: AppData, minutes: number, today?: string): AgentProposal;
   decompose(data: AppData, goalId: string, today?: string): AgentProposal;
@@ -24,13 +24,11 @@ export const ruleAgent: AgentAdapter = {
   reschedule(data, minutes, today = localDate()) {
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440)
       throw new Error('可用时间应为 1–1440 分钟。');
-    const tasks = visibleTasks(data)
-      .filter((t) => t.scheduledDate === today && t.status === 'todo')
-      .sort(
-        (a, b) =>
-          priorityRank[a.priority] - priorityRank[b.priority] ||
-          a.durationMinutes - b.durationMinutes,
-      );
+    const tasks = rankTasks(
+      visibleTasks(data).filter((t) => t.scheduledDate === today && t.status === 'todo'),
+      today,
+      data.profile.dailyEnergyByDate[today] || 'normal',
+    );
     const result = proposal(
       'reschedule',
       `让今天适应 ${minutes} 分钟`,

@@ -16,6 +16,10 @@ const taskSchema = z
     milestoneId: id.optional(),
     priority,
     durationMinutes: z.number().int().min(1).max(1440),
+    important: z.boolean().optional(),
+    urgent: z.boolean().optional(),
+    dueDate: date.optional(),
+    energy: z.enum(['high', 'normal', 'low']).optional(),
     scheduledDate: date.optional(),
     startTime: z
       .string()
@@ -37,6 +41,14 @@ const schema = z.object({
     sidebarCollapsed: z.boolean(),
     onboardingDismissed: z.boolean(),
     dailyEnergyByDate: z.record(date, z.enum(['high', 'normal', 'low'])),
+    planning: z
+      .object({
+        dailyMinutes: z.number().int().min(15).max(720),
+        startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+        bufferMinutes: z.number().int().min(0).max(30),
+        reservePercent: z.number().int().min(0).max(50),
+      })
+      .optional(),
   }),
   goals: z.array(
     z
@@ -105,7 +117,13 @@ const schema = z.object({
     }),
   ),
   focusSessions: z.array(
-    z.object({ id, date, minutes: z.number().int().min(1).max(1440), createdAt: timestamp }),
+    z.object({
+      id,
+      date,
+      minutes: z.number().int().min(1).max(1440),
+      createdAt: timestamp,
+      taskId: id.optional(),
+    }),
   ),
 });
 export function validateData(input: unknown): AppData {

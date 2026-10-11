@@ -76,6 +76,9 @@ export function seedDemo(today = localDate()): AppData {
       durationMinutes: 40,
       startTime: '09:00',
       isTodayFocus: true,
+      important: true,
+      dueDate: today,
+      energy: 'high',
     },
     {
       title: '精读一篇英文短文',
@@ -93,6 +96,9 @@ export function seedDemo(today = localDate()): AppData {
     },
     {
       title: '整理本周的学习笔记',
+      important: false,
+      urgent: true,
+      energy: 'low',
       goalId: 'goal-0',
       priority: 'low',
       durationMinutes: 25,
@@ -151,6 +157,8 @@ export function seedDemo(today = localDate()): AppData {
     },
     {
       title: '挑选下一篇精读文章',
+      important: false,
+      urgent: false,
       goalId: 'goal-2',
       scheduledDate: undefined,
       durationMinutes: 15,

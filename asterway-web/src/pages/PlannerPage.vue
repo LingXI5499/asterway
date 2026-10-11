@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAppStore } from '../store/app';
 import { ui } from '../store/ui';
-import { addDays, weekStart, weekDays, shortDate, dayLabel, now } from '../domain/dates';
+import { addDays, weekStart, weekDays, shortDate, dayLabel, now, validDate } from '../domain/dates';
 import { sortTasks, conflictingIds } from '../domain/selectors';
 import PageHeader from '../components/PageHeader.vue';
 import TaskRow from '../components/TaskRow.vue';
@@ -12,6 +13,14 @@ const store = useAppStore(),
   current = ref(weekStart(store.today)),
   view = ref('week'),
   poolFilter = ref('all');
+const route = useRoute();
+watch(
+  () => route.query.date,
+  (value) => {
+    if (typeof value === 'string' && validDate(value)) current.value = weekStart(value);
+  },
+  { immediate: true },
+);
 const days = computed(() => weekDays(current.value)),
   conflicts = computed(() => conflictingIds(store.tasks));
 const pool = computed(() =>
@@ -41,6 +50,8 @@ function move(id: string, date: string) {
     title="计划日程"
     subtitle="给重要的事留出位置，也给生活留一点空白。"
     eyebrow="MAKE ROOM FOR WHAT MATTERS"
+    ><RouterLink class="button secondary" to="/methods?tab=blocks"
+      ><Icon name="sparkles" :size="17" />按方法安排</RouterLink
     ><button class="button primary" @click="ui.open('task')">
       <Icon name="plus" :size="17" />新建任务
     </button></PageHeader
