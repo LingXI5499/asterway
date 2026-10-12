@@ -95,4 +95,4 @@ npm run preview    # 预览 dist 构建产物
 
 按 [演示脚本](docs/DEMO_SCRIPT.md) 体验；本轮升级见 [v0.4 全局伙伴与社区](docs/PROTOTYPE_V4.md)，效率规则见 [v0.3 效率计划](docs/PROTOTYPE_V3.md)，社区需求与布局映射见 [v0.2 原型范围](docs/PROTOTYPE_V2.md)，检查结果见 [验证记录](docs/VALIDATION.md)。最初七页 MVP 范围留存于 [MVP_SCOPE](docs/MVP_SCOPE.md)。
 
-后续所有 Git 分支使用 **LIngXI** 前缀，规则记录于 `AGENTS.md`。
+GitHub 只保留主分支 **`LIngXI-web-mvp`**。后续开发分支仅在本地创建，名称使用 **LIngXI** 前缀；本地测试与构建通过后，合并到主分支，再执行 `git push origin LIngXI-web-mvp`。合并完成后清理本地开发分支，未经明确要求不在 GitHub 创建其他分支。规则记录于 `AGENTS.md`。
