@@ -5,4 +5,5 @@ import { router } from './router';
 import './styles.css';
 import './prototype.css';
 import './productivity.css';
+import './experience.css';
 createApp(App).use(createPinia()).use(router).mount('#app');

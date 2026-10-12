@@ -9,6 +9,18 @@ const date = z.string().refine(validDate);
 const message = z.object({ id, authorId: id, text, createdAt: time });
 const schema = z.object({
   version: z.literal(2),
+  reminders: z
+    .array(
+      z.object({
+        id,
+        title: text,
+        time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+        enabled: z.boolean(),
+        createdAt: time,
+        lastFiredDate: date.optional(),
+      }),
+    )
+    .optional(),
   users: z.array(
     z.object({
       id,
@@ -32,6 +44,7 @@ const schema = z.object({
       topic: text,
       cover: text,
       media: z.string().max(1800000).optional(),
+      images: z.array(z.string().max(1800000)).max(6).optional(),
       templateId: id.optional(),
       planActions: z.array(text).optional(),
       planCategory: z.enum(['study', 'health', 'work', 'life', 'creative', 'other']).optional(),

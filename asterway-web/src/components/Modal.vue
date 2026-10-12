@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, onBeforeUnmount } from 'vue';
+import { onMounted, ref, onBeforeUnmount, useId } from 'vue';
 import Icon from './Icon.vue';
 defineProps<{ title: string; wide?: boolean }>();
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement>();
+const titleId = useId();
 let previous: HTMLElement | null = null;
 onMounted(() => {
   previous = document.activeElement as HTMLElement;
@@ -15,7 +16,7 @@ onBeforeUnmount(() => previous?.focus());
   <dialog
     ref="dialog"
     :class="['modal', { wide }]"
-    aria-labelledby="modal-title"
+    :aria-labelledby="titleId"
     @cancel.prevent="emit('close')"
     @click="
       (e) => {
@@ -24,7 +25,7 @@ onBeforeUnmount(() => previous?.focus());
     "
   >
     <header class="modal-header">
-      <h2 id="modal-title">{{ title }}</h2>
+      <h2 :id="titleId">{{ title }}</h2>
       <button class="icon-button" aria-label="关闭弹窗" @click="emit('close')">
         <Icon name="close" />
       </button>

@@ -25,6 +25,14 @@ const week = computed(() =>
   }),
 );
 const max = computed(() => Math.max(25, ...week.value.map((day) => day.minutes)));
+watch(
+  () => route.query.duration,
+  (value) => {
+    const minutes = Number(value);
+    if ([15, 25, 45, 50].includes(minutes) && timer.elapsed === 0) timer.configure('work', minutes);
+  },
+  { immediate: true },
+);
 const progress = computed(() => Math.min(100, (timer.elapsed / (timer.data.duration * 60)) * 100));
 const recorded = computed(
   () => timer.data.recorded || app.data.focusSessions.some((s) => s.id === timer.data.id),

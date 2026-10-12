@@ -19,6 +19,8 @@ import PageHeader from '../components/PageHeader.vue';
 import Icon from '../components/Icon.vue';
 import EmptyState from '../components/EmptyState.vue';
 import Modal from '../components/Modal.vue';
+import MethodPlanBuilder from '../components/MethodPlanBuilder.vue';
+import { planningMethods } from '../domain/methodPlans';
 const app = useAppStore(),
   route = useRoute(),
   router = useRouter();
@@ -33,6 +35,8 @@ const minutes = ref(settings?.dailyMinutes ?? 120),
   buffer = ref(settings?.bufferMinutes ?? 5),
   reserve = ref(settings?.reservePercent ?? 15);
 const selected = ref<string[]>([]),
+  building = ref(false),
+  buildingMethod = ref('matrix'),
   draft = ref<DailyDraft | null>(null),
   dragging = ref(''),
   pickMode = ref('auto');
@@ -73,10 +77,18 @@ const selectedMinutes = computed(() =>
     .reduce((sum, t) => sum + t.durationMinutes, 0),
 );
 const latest = computed(() => app.data.agentActionLog.at(-1));
+const methodPlans = computed(() =>
+  app.data.goals
+    .filter((g) => g.planningMethod && g.status === 'active')
+    .slice(-6)
+    .reverse(),
+);
 watch(
   () => route.query.tab,
   (value) => {
-    if (['matrix', 'top3', 'blocks', 'library'].includes(String(value))) tab.value = String(value);
+    tab.value = ['matrix', 'top3', 'blocks', 'library'].includes(String(value))
+      ? String(value)
+      : 'matrix';
   },
   { immediate: true },
 );
@@ -196,9 +208,8 @@ const methods = [
   },
 ];
 function useMethod(id: string) {
-  if (id === 'focus') router.push('/focus');
-  else if (id === 'gtd') ui.open('task', { date: '' });
-  else changeTab(id === 'frog' ? 'top3' : id);
+  buildingMethod.value = id;
+  building.value = true;
 }
 </script>
 <template>
@@ -206,8 +217,14 @@ function useMethod(id: string) {
     title="效率计划"
     subtitle="先决定什么值得做，再为它留出时间。让方法成为行动的一部分。"
     eyebrow="LESS NOISE. MORE MEANING."
-    ><button class="button primary" @click="ui.open('task', { date: '' })">
-      <Icon name="plus" :size="17" />收集一个待办
+    ><button
+      class="button primary"
+      @click="
+        buildingMethod = tab;
+        building = true;
+      "
+    >
+      <Icon name="plus" :size="17" />新建方法计划
     </button></PageHeader
   >
   <section class="method-hero">
@@ -238,6 +255,26 @@ function useMethod(id: string) {
       {{ item.name }}
     </button>
   </div>
+  <section v-if="methodPlans.length" class="my-method-plans">
+    <div class="section-heading">
+      <h2>我的方法计划</h2>
+      <small>每份计划保留自己的行动方式</small>
+    </div>
+    <div>
+      <button
+        v-for="plan in methodPlans"
+        :key="plan.id"
+        @click="ui.open('goalDetail', { id: plan.id })"
+      >
+        <span>{{ planningMethods.find((m) => m.id === plan.planningMethod)?.name }}</span
+        ><strong>{{ plan.title }}</strong
+        ><small
+          >{{ app.tasks.filter((t) => t.goalId === plan.id).length }} 项行动
+          <Icon name="arrow" :size="13"
+        /></small>
+      </button>
+    </div>
+  </section>
   <template v-if="tab === 'matrix'">
     <div class="matrix-toolbar">
       <label class="catalog-search"
@@ -531,4 +568,5 @@ function useMethod(id: string) {
       </button>
     </div></Modal
   >
+  <MethodPlanBuilder v-if="building" :initial="buildingMethod" @close="building = false" />
 </template>

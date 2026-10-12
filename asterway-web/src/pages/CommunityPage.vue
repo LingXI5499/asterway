@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAppStore } from '../store/app';
 import { usePrototypeStore } from '../store/prototype';
@@ -14,6 +14,7 @@ import Modal from '../components/Modal.vue';
 import EmptyState from '../components/EmptyState.vue';
 import PostCover from '../components/PostCover.vue';
 import BundlePreview from '../components/BundlePreview.vue';
+import { postImages } from '../domain/postMedia';
 const app = useAppStore(),
   proto = usePrototypeStore(),
   route = useRoute(),
@@ -34,6 +35,7 @@ const posts = computed(() =>
         (tab.value !== '收藏' || p.saved) &&
         (tab.value !== '计划' || p.type === 'plan') &&
         (tab.value !== '视频' || p.type === 'video') &&
+        (tab.value !== '图文' || p.type === 'article') &&
         (topic.value === '全部' || p.topic === topic.value) &&
         `${p.title}${p.content}`.includes(query.value.trim()),
     )
@@ -50,6 +52,7 @@ const draft = ref({
   goalId: '',
   circleId: '',
   media: '',
+  images: [] as string[],
 });
 function templateFor(post: Post): GrowthTemplate | undefined {
   return post.templateId
@@ -102,6 +105,10 @@ function publish() {
     saved: false,
     comments: [],
     media: draft.value.media || undefined,
+    images:
+      draft.value.type === 'article' && draft.value.images.length
+        ? [...draft.value.images]
+        : undefined,
     circleId: draft.value.circleId || undefined,
   };
   if (post.type === 'plan') {
@@ -127,35 +134,84 @@ function publish() {
     goalId: '',
     circleId: '',
     media: '',
+    images: [],
   };
 }
 async function upload(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  if (file.size > 1000000) {
-    app.toast('原型媒体请小于 1 MB，以便本地保存', true);
-    return;
-  }
+  const input = event.target as HTMLInputElement,
+    files = Array.from(input.files || []);
+  if (!files.length) return;
+  const video = draft.value.type === 'video';
   if (
-    !(draft.value.type === 'video'
-      ? file.type.startsWith('video/')
-      : file.type.startsWith('image/'))
+    files.length > (video ? 1 : 6) ||
+    files.reduce((n, f) => n + f.size, 0) > 1000000 ||
+    files.some((f) => !f.type.startsWith(video ? 'video/' : 'image/'))
   ) {
-    app.toast('请选择对应类型的媒体', true);
+    app.toast('请选择对应类型，最多 6 张图片或 1 段视频，总大小小于 1 MB。', true);
+    input.value = '';
     return;
   }
-  const reader = new FileReader();
-  reader.onload = () => (draft.value.media = String(reader.result));
-  reader.readAsDataURL(file);
+  try {
+    const type = draft.value.type;
+    const sources = await Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = () => reject(new Error('媒体读取失败'));
+            reader.readAsDataURL(file);
+          }),
+      ),
+    );
+    if (type !== draft.value.type) return;
+    draft.value.media = sources[0]!;
+    draft.value.images = video ? [] : sources;
+  } catch {
+    app.toast('无法读取媒体，请重新选择。', true);
+  } finally {
+    input.value = '';
+  }
 }
 function demoVideo() {
   draft.value.media = '/media/focus-demo.webm';
 }
 function setPostType(type: Post['type']) {
-  if (draft.value.type !== type) draft.value.media = '';
+  if (draft.value.type !== type) {
+    draft.value.media = '';
+    draft.value.images = [];
+  }
   draft.value.type = type;
 }
 const videoPosts = computed(() => posts.value.filter((post) => post.type === 'video'));
+const imageIndex = ref(0),
+  touchStart = ref({ x: 0, y: 0 });
+watch(
+  () => selected.value?.id,
+  () => {
+    imageIndex.value = 0;
+  },
+);
+function swipe(event: TouchEvent) {
+  const t = event.changedTouches[0];
+  if (!t) return;
+  const dy = t.clientY - touchStart.value.y,
+    dx = t.clientX - touchStart.value.x;
+  if (Math.abs(dy) > 70 && Math.abs(dy) > Math.abs(dx) * 1.5) browseVideo(dy < 0 ? 1 : -1);
+}
+function videoKeys(event: KeyboardEvent) {
+  if (
+    selected.value?.type !== 'video' ||
+    (event.target as HTMLElement).closest('input,textarea,select,video')
+  )
+    return;
+  if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    browseVideo(event.key === 'ArrowDown' ? 1 : -1);
+  }
+}
+onMounted(() => window.addEventListener('keydown', videoKeys));
+onBeforeUnmount(() => window.removeEventListener('keydown', videoKeys));
 function browseVideo(step: number) {
   const videos = videoPosts.value;
   const index = videos.findIndex((post) => post.id === selected.value?.id);
@@ -219,7 +275,7 @@ watch(
     <section>
       <div class="community-tabs">
         <button
-          v-for="item in ['推荐', '关注', '计划', '视频', '收藏']"
+          v-for="item in ['推荐', '图文', '视频', '关注', '计划', '收藏']"
           :key="item"
           :class="{ active: tab === item }"
           @click="tab = item"
@@ -241,6 +297,14 @@ watch(
         >
           {{ item }}
         </button>
+      </div>
+      <div v-if="tab === '视频'" class="video-room-banner">
+        <Icon name="video" :size="30" />
+        <div>
+          <span class="eyebrow">ASTERWAY FILM ROOM</span>
+          <h2>看看别人如何，把一小步坚持下去。</h2>
+          <p>纯视频频道 · 点击进入沉浸播放 · 手机上下滑切换</p>
+        </div>
       </div>
       <div :class="['community-feed', { 'video-feed': tab === '视频' }]">
         <article v-for="post in posts" :key="post.id" class="post-card">
@@ -347,89 +411,147 @@ watch(
   <p class="prototype-footnote">
     前端社区演示：用户和初始互动数为示例，本机点赞、评论、收藏和发布可保存；没有连接真实网络。
   </p>
-  <Modal v-if="selected && !bundle" :title="selected.title" wide @close="selected = null"
-    ><div class="post-detail">
-      <div v-if="selected.type === 'video'" class="video-navigation">
-        <button class="button secondary" :disabled="videoPosts.length < 2" @click="browseVideo(-1)">
-          <Icon name="left" :size="16" />上一个</button
-        ><span
-          >视频浏览 · {{ videoPosts.findIndex((p) => p.id === selected?.id) + 1 }} /
-          {{ videoPosts.length }}</span
-        ><button class="button secondary" :disabled="videoPosts.length < 2" @click="browseVideo(1)">
-          下一个<Icon name="right" :size="16" />
-        </button>
-      </div>
-      <div class="post-detail-author">
-        <RouterLink :to="`/profile/${selected.authorId}`" @click="selected = null"
-          ><span :class="['social-avatar', proto.user(selected.authorId).color]">{{
-            proto.user(selected.authorId).name.slice(0, 1)
-          }}</span
-          >{{ proto.user(selected.authorId).name }}</RouterLink
-        ><span class="tag">{{ selected.topic }}</span>
-      </div>
-      <video
-        v-if="selected.type === 'video' && selected.media"
-        :key="selected.id"
-        :src="selected.media"
-        :poster="
-          selected.media?.startsWith('/media/')
-            ? selected.media.replace('.webm', '.png')
-            : undefined
+  <Modal
+    v-if="selected && !bundle"
+    :title="selected.title"
+    wide
+    :class="['note-modal', { 'video-modal': selected.type === 'video' }]"
+    @close="selected = null"
+    ><div class="post-detail note-detail-layout">
+      <div
+        class="note-media-stage"
+        @touchstart="
+          (e) => {
+            const t = e.touches[0];
+            if (t) touchStart = { x: t.clientX, y: t.clientY };
+          }
         "
-        controls
-        loop
-        playsinline
-        preload="metadata"
-        class="community-video"
-      /><PostCover v-else :post="selected" large />
-      <p class="post-content">{{ selected.content }}</p>
-      <div class="chip-row">
-        <button
-          class="button secondary"
-          :class="{ selected: selected.liked }"
-          @click="proto.toggleLike(selected)"
-        >
-          <Icon name="heart" :size="16" />{{ selected.liked ? '已点赞' : '点赞' }}
-          {{ selected.likes }}</button
-        ><button class="button secondary" @click="proto.toggleSave(selected)">
-          <Icon name="bookmark" :size="16" />{{ selected.saved ? '已收藏' : '收藏' }}</button
-        ><button class="button secondary" @click="proto.collectPost(selected)">
-          <Icon name="notebook" :size="16" />收入知识库</button
-        ><button
-          v-if="selected.type === 'plan'"
-          class="button primary"
-          @click="previewPlan(selected)"
-        >
-          加入我的计划</button
-        ><button
-          v-if="selected.authorId === 'me'"
-          class="button danger ghost"
-          @click="removePost(selected)"
-        >
-          删除内容
-        </button>
-      </div>
-      <section class="comments-section">
-        <h3>一起聊聊 · {{ selected.comments.length }} 条评论</h3>
-        <div v-for="comment in selected.comments" :key="comment.id" class="comment-row">
-          <span :class="['social-avatar', proto.user(comment.authorId).color]">{{
-            proto.user(comment.authorId).name.slice(0, 1)
-          }}</span>
-          <div>
-            <strong>{{ proto.user(comment.authorId).name }}</strong>
-            <p>{{ comment.text }}</p>
+        @touchend="selected.type === 'video' && swipe($event)"
+      >
+        <div v-if="selected.type === 'video'" class="video-navigation">
+          <button
+            class="button secondary"
+            :disabled="videoPosts.length < 2"
+            @click="browseVideo(-1)"
+          >
+            <Icon name="left" :size="16" />上一个</button
+          ><span
+            >视频浏览 · {{ videoPosts.findIndex((p) => p.id === selected?.id) + 1 }} /
+            {{ videoPosts.length }}</span
+          ><button
+            class="button secondary"
+            :disabled="videoPosts.length < 2"
+            @click="browseVideo(1)"
+          >
+            下一个<Icon name="right" :size="16" />
+          </button>
+        </div>
+        <video
+          v-if="selected.type === 'video' && selected.media"
+          :key="selected.id"
+          :src="selected.media"
+          :poster="
+            selected.media?.startsWith('/media/')
+              ? selected.media.replace('.webm', '.png')
+              : undefined
+          "
+          controls
+          loop
+          playsinline
+          muted
+          autoplay
+          preload="metadata"
+          class="community-video"
+        />
+        <div v-else-if="selected.type === 'article'" class="note-carousel">
+          <img
+            :src="postImages(selected)[imageIndex]"
+            :alt="`${selected.title} · 第 ${imageIndex + 1} 张`"
+          />
+          <div v-if="postImages(selected).length > 1" class="note-carousel-controls">
+            <button
+              class="icon-button"
+              aria-label="上一张图片"
+              @click="
+                imageIndex =
+                  (imageIndex - 1 + postImages(selected).length) % postImages(selected).length
+              "
+            >
+              <Icon name="left" /></button
+            ><span>{{ imageIndex + 1 }} / {{ postImages(selected).length }}</span
+            ><button
+              class="icon-button"
+              aria-label="下一张图片"
+              @click="imageIndex = (imageIndex + 1) % postImages(selected).length"
+            >
+              <Icon name="right" />
+            </button>
           </div>
         </div>
-        <form class="inline-form" @submit.prevent="addComment">
-          <input
-            v-model="commentText"
-            maxlength="500"
-            required
-            placeholder="友善地回应一个真实的成长瞬间…"
-            aria-label="评论内容"
-          /><button class="button primary" type="submit">发布评论</button>
-        </form>
-      </section>
+        <PostCover v-else :post="selected" large />
+        <span v-if="selected.type === 'video'" class="video-swipe-hint"
+          >手机上下滑 · PC ↑ / ↓ 切换 · 可用播放器开启声音</span
+        >
+      </div>
+      <div class="note-discussion">
+        <div class="post-detail-author">
+          <RouterLink :to="`/profile/${selected.authorId}`" @click="selected = null"
+            ><span :class="['social-avatar', proto.user(selected.authorId).color]">{{
+              proto.user(selected.authorId).name.slice(0, 1)
+            }}</span
+            >{{ proto.user(selected.authorId).name }}</RouterLink
+          ><span class="tag">{{ selected.topic }}</span>
+        </div>
+        <h2>{{ selected.title }}</h2>
+        <p class="post-content">{{ selected.content }}</p>
+        <div class="chip-row">
+          <button
+            class="button secondary"
+            :class="{ selected: selected.liked }"
+            @click="proto.toggleLike(selected)"
+          >
+            <Icon name="heart" :size="16" />{{ selected.liked ? '已点赞' : '点赞' }}
+            {{ selected.likes }}</button
+          ><button class="button secondary" @click="proto.toggleSave(selected)">
+            <Icon name="bookmark" :size="16" />{{ selected.saved ? '已收藏' : '收藏' }}</button
+          ><button class="button secondary" @click="proto.collectPost(selected)">
+            <Icon name="notebook" :size="16" />收入知识库</button
+          ><button
+            v-if="selected.type === 'plan'"
+            class="button primary"
+            @click="previewPlan(selected)"
+          >
+            加入我的计划</button
+          ><button
+            v-if="selected.authorId === 'me'"
+            class="button danger ghost"
+            @click="removePost(selected)"
+          >
+            删除内容
+          </button>
+        </div>
+        <section class="comments-section">
+          <h3>一起聊聊 · {{ selected.comments.length }} 条评论</h3>
+          <div v-for="comment in selected.comments" :key="comment.id" class="comment-row">
+            <span :class="['social-avatar', proto.user(comment.authorId).color]">{{
+              proto.user(comment.authorId).name.slice(0, 1)
+            }}</span>
+            <div>
+              <strong>{{ proto.user(comment.authorId).name }}</strong>
+              <p>{{ comment.text }}</p>
+            </div>
+          </div>
+          <form class="inline-form" @submit.prevent="addComment">
+            <input
+              v-model="commentText"
+              maxlength="500"
+              required
+              placeholder="友善地回应一个真实的成长瞬间…"
+              aria-label="评论内容"
+            /><button class="button primary" type="submit">发布评论</button>
+          </form>
+        </section>
+      </div>
     </div></Modal
   >
   <Modal v-if="bundle" title="加入这份成长计划" wide @close="bundle = null"
@@ -505,11 +627,20 @@ watch(
         >本地{{ draft.type === 'video' ? '视频' : '图片' }}（小于 1 MB）<input
           type="file"
           :accept="draft.type === 'video' ? 'video/*' : 'image/*'"
+          :multiple="draft.type === 'article'"
           @change="upload" /></label
       ><button v-if="draft.type === 'video'" type="button" class="text-button" @click="demoVideo">
         使用原创演示片段
       </button>
       <p v-if="draft.media" class="positive small-text">✓ 已选择媒体</p>
+      <div v-if="draft.type === 'article' && draft.images.length" class="publish-image-preview">
+        <img
+          v-for="(source, index) in draft.images"
+          :key="index"
+          :src="source"
+          :alt="`预览图片${index + 1}`"
+        />
+      </div>
       <p class="field-hint">只在本机发布，不上传、不连接真实用户。</p>
       <div class="modal-actions">
         <button class="button secondary" type="button" @click="publishing = false">取消</button

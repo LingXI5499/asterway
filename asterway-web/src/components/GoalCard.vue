@@ -7,6 +7,7 @@ import { shortDate } from '../domain/dates';
 import { useAppStore } from '../store/app';
 import { ui } from '../store/ui';
 import Icon from './Icon.vue';
+import { planningMethods } from '../domain/methodPlans';
 const props = defineProps<{ goal: Goal; compact?: boolean }>();
 const store = useAppStore();
 const progress = computed(() => goalProgress(store.data, props.goal.id));
@@ -22,6 +23,9 @@ const milestones = computed(() =>
       ><Icon class="push-right" name="external" :size="17" />
     </div>
     <h3>{{ goal.title }}</h3>
+    <span v-if="goal.planningMethod" class="goal-method-tag">{{
+      planningMethods.find((m) => m.id === goal.planningMethod)?.name
+    }}</span>
     <p v-if="!compact" class="goal-description">
       {{ goal.description || '从一个小行动开始，让方向变得清晰。' }}
     </p>

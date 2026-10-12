@@ -19,6 +19,7 @@ export interface Post {
   topic: string;
   cover: string;
   media?: string;
+  images?: string[];
   templateId?: string;
   planActions?: string[];
   planCategory?: Category;
@@ -112,6 +113,14 @@ export interface PrototypeData {
   membership: 'free' | 'plus' | 'pro';
   persona: string;
   assistantAutoAdd: boolean;
+  reminders?: {
+    id: string;
+    title: string;
+    time: string;
+    enabled: boolean;
+    createdAt: string;
+    lastFiredDate?: string;
+  }[];
   conversations: {
     id: string;
     title: string;

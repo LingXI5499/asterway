@@ -1,6 +1,8 @@
 export type Category = 'study' | 'health' | 'work' | 'life' | 'creative' | 'other';
 export type Priority = 'high' | 'medium' | 'low';
+export type PlanningMethod = 'matrix' | 'top3' | 'blocks' | 'focus' | 'frog' | 'gtd';
 export interface Goal {
+  planningMethod?: PlanningMethod;
   id: string;
   title: string;
   description: string;
@@ -20,6 +22,7 @@ export interface Milestone {
   createdAt: string;
 }
 export interface Task {
+  planningMethod?: PlanningMethod;
   id: string;
   title: string;
   description: string;

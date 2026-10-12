@@ -185,7 +185,9 @@ function confirmImport() {
     <section class="card about-card">
       <span class="brand-symbol"><Icon name="sparkles" :size="28" /></span>
       <div>
-        <h2>Asterway <span class="muted">星行纪</span><small>v0.3.0 · 有方法地成长</small></h2>
+        <h2>
+          Asterway <span class="muted">星行纪</span><small>v0.4.0 · 方法、同行与全局伙伴</small>
+        </h2>
         <p>AI Personal Growth OS · Find your path. Grow your way.</p>
         <p class="muted">
           一个把长期目标变成每日行动的成长工作台。当前为纯前端可交互原型，伙伴使用本地规则，不连接真实

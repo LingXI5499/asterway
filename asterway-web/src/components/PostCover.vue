@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { Post } from '../domain/prototype';
 import Icon from './Icon.vue';
+import { postImages } from '../domain/postMedia';
 const props = defineProps<{ post: Post; large?: boolean }>();
 const poster = computed(() =>
   props.post.type === 'video' && props.post.media?.startsWith('/media/')
@@ -17,7 +18,13 @@ const poster = computed(() =>
       { large, vertical: post.type === 'video', 'has-poster': poster },
     ]"
   >
-    <img v-if="post.media && post.type === 'article'" :src="post.media" :alt="post.title" />
+    <template v-if="post.type === 'article'"
+      ><img :src="postImages(post)[0]" :alt="post.title" /><span
+        v-if="postImages(post).length > 1"
+        class="cover-image-count"
+        >{{ postImages(post).length }} 张</span
+      ></template
+    >
     <template v-else-if="poster"
       ><img :src="poster" :alt="post.title" /><span class="cover-play"
         ><Icon name="play" :size="27" /></span

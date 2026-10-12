@@ -12,12 +12,15 @@ import EntityEditor from './components/EntityEditor.vue';
 import GoalDetail from './components/GoalDetail.vue';
 import FocusTimer from './components/FocusTimer.vue';
 import SearchPanel from './components/SearchPanel.vue';
+import GlobalPartner from './components/GlobalPartner.vue';
+import { useAssistantStore } from './store/assistant';
 const store = useAppStore(),
   route = useRoute(),
   mobileOpen = ref(false),
   addOpen = ref(false);
 const proto = usePrototypeStore();
 const focusClock = useFocusStore();
+const partner = useAssistantStore();
 const personalNav = [
   { path: '/today', label: '今日总览', icon: 'dashboard' },
   { path: '/goals', label: '我的目标', icon: 'target' },
@@ -58,6 +61,10 @@ watch(
   },
 );
 function keyboard(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+    e.preventDefault();
+    partner.open();
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
     ui.open('search');
@@ -112,7 +119,7 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-prototype">
-          <span class="demo-dot">v0.3 PROTOTYPE</span><small>重要的事 · 有方法地成长</small>
+          <span class="demo-dot">v0.4 PROTOTYPE</span><small>方法、同行与全局伙伴</small>
         </div>
         <RouterLink to="/settings" class="settings-link"
           ><Icon name="settings" /><span>设置与数据</span></RouterLink
@@ -227,6 +234,7 @@ function openQuick(kind: 'goal' | 'task' | 'habit') {
     v-if="ui.modal && ['goal', 'task', 'habit'].includes(ui.modal.kind)"
     :key="`${ui.modal.kind}-${ui.modal.id || 'new'}`"
   />
+  <GlobalPartner />
   <GoalDetail v-if="ui.modal?.kind === 'goalDetail'" :key="ui.modal.id" />
   <FocusTimer v-if="ui.modal?.kind === 'focus'" /><SearchPanel v-if="ui.modal?.kind === 'search'" />
   <Modal v-if="ui.modal?.kind === 'confirm'" :title="ui.confirmTitle" @close="ui.close()"

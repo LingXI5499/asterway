@@ -9,6 +9,7 @@ const category = z.enum(['study', 'health', 'work', 'life', 'creative', 'other']
 const priority = z.enum(['high', 'medium', 'low']);
 const taskSchema = z
   .object({
+    planningMethod: z.enum(['matrix', 'top3', 'blocks', 'focus', 'frog', 'gtd']).optional(),
     id,
     title,
     description: z.string().max(5000),
@@ -53,6 +54,7 @@ const schema = z.object({
   goals: z.array(
     z
       .object({
+        planningMethod: z.enum(['matrix', 'top3', 'blocks', 'focus', 'frog', 'gtd']).optional(),
         id,
         title,
         description: z.string().max(5000),
