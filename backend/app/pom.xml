@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.asterway</groupId>
+        <artifactId>asterway-backend</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>app</artifactId>
+    <name>asterway-app</name>
+    <description>唯一可执行应用：启动、配置、HTTP、安全/会话适配、跨模块协调、调度、迁移与集成测试。</description>
+
+    <dependencies>
+        <!-- 内部模块：app 依赖 common 及 8 个业务模块 -->
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>identity</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>growth</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>planning</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>execution</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>habit</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>insights</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>notification</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.asterway</groupId><artifactId>administration</artifactId><version>${project.version}</version></dependency>
+
+        <!-- Web / 安全 / 校验 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- 持久化：MyBatis XML + PostgreSQL + Flyway + Spring Session JDBC -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- 测试 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 仅 app 生成可执行包；其余模块继承普通 jar 打包 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals><goal>repackage</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

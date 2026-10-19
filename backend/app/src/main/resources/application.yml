@@ -1,0 +1,45 @@
+server:
+  # 本地默认使用 8088；部署时可通过 SERVER_PORT 环境变量覆盖。
+  port: ${SERVER_PORT:8088}
+  shutdown: graceful
+
+spring:
+  # 默认激活本地开发配置（application-local.yml，已被 .gitignore 忽略、不进仓库）；
+  # 测试/生产通过环境变量 SPRING_PROFILES_ACTIVE 覆盖，保持三环境隔离。
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  application:
+    name: asterway-app
+
+  # 远程 PostgreSQL 17.11；连接与凭据外置，不写入代码库（RULE/秘密外置）
+  datasource:
+    url: ${ASTERWAY_DB_URL:jdbc:postgresql://127.0.0.1:5432/asterway_dev}
+    username: ${ASTERWAY_DB_USER:}
+    password: ${ASTERWAY_DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # 迁移脚本集中在 app 的 db/migration；无物理外键，会话表由迁移维护
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  # 服务端可撤销会话；initialize-schema=never，交由受控迁移建立无外键会话表
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+
+  jackson:
+    default-property-inclusion: non_null
+
+# 业务 SQL 与结果映射只写 XML；Mapper 接口不写注解（RULE-003）
+mybatis:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: INFO
+    com.asterway: DEBUG
