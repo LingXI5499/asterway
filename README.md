@@ -6,18 +6,26 @@
 
 ## 当前进度
 
-当前已有完整开发设计和后端工程骨架；本版将后端架构、包结构、DTO/VO 与异常链合入原有 V2.0 文档，待审阅。工作树已有最小账户表 V001，用户说明已执行；真实数据库和迁移历史尚未核实，后续为受保护基线上的增量迁移、公共安全机制及业务实现。文档中的接口、表、页面和测试数量表示设计范围。
+当前已有完整开发设计、后端多模块骨架，以及统一响应、公共错误和 MVC 异常处理基础。账户业务尚未实现；工作树中的 V001 与 Flyway 配置保留为另一组未提交改动，真实数据库和迁移历史未核实。文档中的接口、表、页面和综合用例数量表示设计范围。
 
 | 范围 | 当前已有内容 | 实现与验证状态 |
 |---|---|---|
 | 开发文档 | 需求、业务、数据、接口、类设计、编码、测试、部署及运维文档 | V2.0 已整理并通过静态校验；`docs` 仅保留本版及导航入口 |
 | 需求范围 | 12 个业务模块、132 项功能需求；84 项非功能需求，分为 15 类 | 设计与追溯已形成，业务验收尚未执行 |
-| 后端工程 | 聚合父 POM、10 个子工程、启动类与基础配置 | Maven 离线 `validate` 通过，Reactor 共 11 项；未完成编译、打包或启动验证 |
-| 业务代码 | 1 个启动类、9 个包职责说明，共 10 个 Java 源文件 | 尚无 Controller、Service、Mapper/XML、Entity 或 DTO 实现 |
+| 后端工程 | 聚合父 POM、10 个子工程、启动类与基础配置 | Maven `clean compile` 通过，Reactor 共 11 项；未进行打包或真实启动验收 |
+| 业务代码 | 19 个生产 Java 文件，含统一响应、公共错误码/业务异常、错误工厂、MVC 异常处理及追踪过滤器 | 正式账户 Controller、Service、Mapper/XML、Entity 和注册 DTO 尚未实现 |
 | 数据库 | 36 张表、420 列设计；工作树 V001 定义最小账户表 1 表 9 列 | 用户说明 V001 已执行，真实历史未核实；账户完整设计为 19 列，后续追加迁移，不改写已执行 V001 |
 | HTTP 接口 | 95 个接口契约及请求、响应、错误与测试输入 | 尚未实现业务接口或进行联调 |
 | 前端 | 20 个页面及交互、路由设计 | 尚无 `frontend/`、依赖清单、锁文件或页面组件 |
-| 测试与交付 | 72 个综合测试用例设计、部署门槛和备份恢复流程 | 尚无测试类或业务执行结果；未完成部署与恢复演练 |
+| 测试与交付 | 72 个综合测试用例设计、部署门槛和备份恢复流程 | 2 个测试类共 6 项序列化、错误工厂及 MockMvc 测试通过；72 个综合业务用例未执行，未完成部署与恢复演练 |
+
+### 本次验证与待办
+
+2026-10-22：统一 API 响应、公共错误码/业务异常、HTTP 错误响应工厂、全局 MVC 异常处理、请求追踪过滤器和字段校验错误响应已实现。Maven 3.9.4 / Java 17.0.18，11 项 Reactor 的 clean compile 通过；定向运行 ApiResponseContractTest（1 项）和 ApiErrorContractTest（5 项）通过，另行执行完整 Maven test，当前全部 6 项测试通过，失败/错误/跳过均为 0。MVC 验证采用 standalone MockMvc，不启动真实服务器或连接 PostgreSQL；72 个综合业务用例仍为 NOT_VERIFIED。
+
+正式账户注册请求 DTO、账户 Controller/Service、用户名唯一性检查与数据库写入、密码哈希、事务处理，以及真实 HTTP 与 PostgreSQL 的完整业务链路尚未完成。畸形 JSON、参数类型转换、405/415、Security/过滤器异常及异步/容器错误分派仍待专项实现与验证；成功响应的 traceId 需调用方显式传入，尚无自动填充机制。
+
+已验证响应包含 `code`、`message`、`data`、`traceId`，即使 data/traceId 为 null 也保留字段；NOT_FOUND 映射 404；字段校验失败返回 422/VALIDATION_ERROR 和字段列表；未知异常及未知业务错误码返回安全的 500，内部细节不回传客户端。已覆盖的 404/422/500 异常响应中，X-Trace-Id 响应头与响应体 traceId 一致。
 
 ## 架构与工程边界
 
@@ -36,7 +44,7 @@ flowchart TD
     DB -.基础备份与 WAL.-> Backup[独立备份存储]
 ```
 
-`app` 直接依赖 `common` 和全部 8 个业务工程；各业务工程的内部依赖只有 `common`，`common` 不依赖业务工程。跨模块用例由 `app` 协调；只有 `app` 配置可执行 JAR 重打包，其余子工程为普通 JAR。当前这些边界已体现在 POM，HTTP、安全链、事务用例及持久化逻辑仍待实现。
+`app` 直接依赖 `common` 和全部 8 个业务工程；各业务工程的内部依赖只有 `common`，`common` 不依赖业务工程。跨模块用例由 `app` 协调；只有 `app` 配置可执行 JAR 重打包，其余子工程为普通 JAR。当前这些边界已体现在 POM，公共 HTTP 响应与异常基础已实现，正式业务 HTTP 接口、安全链、事务用例及持久化逻辑仍待实现。
 
 所有 HTTP Controller 放在 `app/web/<工程名>/`；`request/` 存请求 DTO，`response/` 存响应 VO，返回数据装入统一 `ApiResponse.data`。业务工程采用 `api/service/mapper/model`，公开输入和结果在 `api/model`，Mapper XML 留在所属工程。common 保留中立契约和机制端口，具体锁、幂等、事件及审计适配在 `app/infrastructure`。完整目录与示例见原有编码实施手册和 A09，尚未批量创建业务类。
 
@@ -112,8 +120,10 @@ docs/
 # 文档重建与静态校验；需要 Python、Markdown 包及 Node.js
 python -X utf8 docs/开发文档V2.0/tools/build.py
 
-# 后端工程模型检查；使用已安装的 JDK 17 与 Maven 3.9.4
-mvn -o -f backend/pom.xml validate
+# 后端编译与测试；使用已安装的 JDK 17 与 Maven 3.9.4
+mvn -B -f backend/pom.xml clean compile
+mvn -B -f backend/pom.xml -pl app -am '-Dtest=ApiResponseContractTest,ApiErrorContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' test
+mvn -B -f backend/pom.xml test
 ```
 
 当前只提交了 Maven Wrapper 版本属性，尚无 `mvnw` / `mvnw.cmd`。`validate` 检查工程模型，不能替代编译、测试、启动或业务验收。
@@ -122,9 +132,9 @@ mvn -o -f backend/pom.xml validate
 
 ## 下一阶段
 
-1. 按 [基线核对与需求追溯](docs/开发文档V2.0/09-基线核对与需求追溯.md) 关闭适用的 OPEN 项：响应空值策略、数据库 schema 与会话绑定、安全过滤链及恢复门禁、Wrapper 和前端版本锁定。
-2. 核实已执行 V001 原文、真实迁移历史及空暂存版本，在保护现有数据的基础上追加迁移；在隔离库验证升级、约束和无外键会话适配，建立公共错误、事务锁、幂等、可靠事件及安全机制。
+1. `ApiResponse` 已以 ALWAYS 空值策略通过序列化测试；继续按 [基线核对与需求追溯](docs/开发文档V2.0/09-基线核对与需求追溯.md) 处理数据库 schema 与会话绑定、安全过滤链及恢复门禁、Wrapper 和前端版本锁定。
+2. 核实已执行 V001 原文、真实迁移历史及空暂存版本，在保护现有数据的基础上追加迁移；在隔离库验证升级、约束和无外键会话适配，完善其他异常边界、事务锁、幂等、可靠事件及安全机制。
 3. 按 DEV 依赖完成账户、目标与任务、周日计划、执行、习惯、通知、查询和后台功能，逐批保留测试与接口联调证据。
 4. 完成后端阶段验收后，制作页面原型、建立前端工程并联调；最后执行系统测试、部署和恢复演练。
 
-本地仅使用 `feature/LIngXI-develop`。成果先审阅，获得本次明确批准后才提交、推送 feature；模块完成并另获批准后才合入 main。提交、拉取请求及合并标题使用 `LIngXI` 前缀，发布与提交身份使用维护者账户；保留其他未授权修改、stash 和本地发布记录。
+本地仅使用 `feature/LingXI-develop`。成果先审阅，获得本次明确批准后才提交、推送 feature；模块完成并另获批准后才合入 main。提交、拉取请求及合并标题使用 `LingXI` 前缀，发布与提交身份使用维护者账户；保留其他未授权修改、stash 和本地发布记录。

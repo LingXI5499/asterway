@@ -63,7 +63,7 @@ def appendices():
             plan='\n以 [05 编码实施手册](../05-编码实施手册.md) 的十二模块覆盖矩阵核对完整性；DEV 为实施批次，不是 Maven 子工程。以下 19 批次和主手册共用同一数据源，业务状态均为 NOT_VERIFIED。\n\n'
             plan+=mdtable(['编号','依赖','先改哪里、后改哪里','交付与重点验证','失败时如何回退'],dev_batches())+'\n'
             t=re.sub(r'(## 7\. 手写业务切片\n).*?(?=^## 8\.)',lambda m:m.group(1)+plan,t,flags=re.S|re.M)
-            t=re.sub(r'(## 9\. 当前交付状态\n).*?(?=^## 10\.)',r'\1\n后端工程骨架已存在，Maven 工程模型校验通过。业务类、迁移 SQL、Mapper XML、测试及前端尚未建立；下文类与方法均为规划落点，运行状态为 NOT_VERIFIED。\n\n',t,flags=re.S|re.M)
+            t=re.sub(r'(## 9\. 当前交付状态\n).*?(?=^## 10\.)',r'\1\n后端骨架、统一响应、公共错误与 MVC 异常/追踪基础已存在，多模块编译和 6 项基础契约测试通过。正式账户业务、Mapper XML、完整迁移及前端尚未建立；下文业务类与方法均为规划落点，业务运行状态为 NOT_VERIFIED。\n\n',t,flags=re.S|re.M)
         if n=='12':
             t=t.replace('2026-10-19 已核对上述包的 npm 正式发布信息、`engines` 和 `peerDependencies`。','2026-10-19 的既有版本册记录了下列前端版本与兼容说明。本次未重新从 npm 仓库验证这些候选值；不能据此声明依赖已安装或可构建。')
             t=t.replace('DEV-001 按本文创建统一父 POM、10 个子模块和 app 配置','DEV-001 按本文复核已存在的父 POM、10 个子模块和 app 配置')
