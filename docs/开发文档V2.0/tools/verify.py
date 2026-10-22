@@ -34,8 +34,18 @@ class Scan(HTMLParser):
         if not self.ignore:self.visible.append(data)
         if not self.pre and re.search(r'\|\s*:?-{3,}',data):self.raw_tables.append(data[:120])
 
-def verify():
+def backend_state():
+    """Fingerprint the current working files and staging, including pre-existing edits."""
+    names=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z','--','backend'],cwd=ROOT).decode('utf-8').split('\0')
+    files={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() if (ROOT/name).is_file() else None
+           for name in sorted(set(names)-{''})}
+    index=subprocess.check_output(['git','ls-files','--stage','-z','--','backend'],cwd=ROOT)
+    return {'files':files,'index':hashlib.sha256(index).hexdigest()}
+
+def verify(backend_before=None):
     errors=[];s=(OUT/'index.html').read_text(encoding='utf-8');scan=Scan();scan.feed(s)
+    if {p.relative_to(OUT).as_posix() for p in OUT.rglob('*.html')}!={'index.html'}:
+        errors.append('V2.0 must use its existing index.html as the only HTML reader')
     if scan.problems or scan.stack:errors+=scan.problems+['Unclosed: '+str(scan.stack)] if scan.stack else scan.problems
     duplicate=[k for k,v in collections.Counter(scan.ids).items() if v>1]
     if duplicate:errors.append('Duplicate IDs '+str(duplicate[:5]))
@@ -60,6 +70,14 @@ def verify():
     jsoncount=0
     for p in all_mdpaths:
         t=p.read_text(encoding='utf-8')
+        fence=None
+        for line_number,line in enumerate(t.splitlines(),1):
+            match=re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$',line)
+            if match:
+                token,tail=match.groups()
+                if fence is None:fence=(token[0],len(token),line_number)
+                elif token[0]==fence[0] and len(token)>=fence[1] and not tail.strip():fence=None
+        if fence:errors.append('Unclosed code fence '+str(p.relative_to(OUT))+':'+str(fence[2]))
         for j,block in enumerate(re.findall(r'```json\s*\n(.*?)\n```',t,re.S)):
             if p in mdpaths:jsoncount+=1
             try:json.loads(block)
@@ -131,6 +149,13 @@ def verify():
         t=p.read_text(encoding='utf-8')
         sections=['第一部分：业务逻辑','第二部分：数据库设计','第三部分：接口设计','第四部分：类设计']
         if any(x not in t for x in sections) or [t.find(x) for x in sections]!=sorted(t.find(x) for x in sections):errors.append('Module order '+p.name)
+        if 'web/'+next(m[2] for m in MODULES if MID[m[0]] in p.name)+'/dto/' in t:errors.append('Obsolete combined HTTP dto package '+p.name)
+        if not all(term in t for term in ['/request/','/response/','api/model/','api/error/','ApiResponse.data']):errors.append('Incomplete integrated package design '+p.name)
+        if any(term in t for term in ['V001__identity_and_session.sql','尚未存在 SQL']):errors.append('Obsolete migration baseline '+p.name)
+    if '### 5.5 完整推荐包结构与 DTO/VO' not in manual or '### 7.5 架构细化的分阶段落点与验证' not in manual:
+        errors.append('Architecture/package review was not integrated into the existing handbook')
+    if 'V001__identity_and_session.sql' in manual:errors.append('Handbook reuses the protected V001 migration version')
+    if not all('P'+str(n)+'：' in manual for n in range(6)):errors.append('Handbook architecture phases were truncated')
     allowed={'README.md','index.html',OUT.name}
     unexpected=[p.name for p in (ROOT/'docs').iterdir() if p.name not in allowed]
     if unexpected:errors.append('Unexpected docs edition/files '+str(unexpected))
@@ -138,8 +163,9 @@ def verify():
     if {str((ROOT/x['path']).resolve()) for x in inv}!={str(p.resolve()) for p in SOURCE.glob('*.md')}:errors.append('Source inventory layout mismatch')
     changed=[x['path'] for x in inv if source_digest(ROOT/x['path'])!=x['sha256']]
     if changed:errors.append('Original docs changed '+str(changed))
-    backend=subprocess.check_output(['git','diff','--name-only','--','backend'],cwd=ROOT).decode().strip()
-    if backend:errors.append('Unexpected backend edits '+backend)
+    backend_unchanged=None if backend_before is None else backend_state()==backend_before
+    if backend_unchanged is False:errors.append('Backend working files or staged entries changed during document build')
+    backend=subprocess.check_output(['git','diff','--name-only','--','backend'],cwd=ROOT).decode('utf-8').splitlines()
     maps=json.loads((DATA/'render-map.json').read_text(encoding='utf-8'))
     if maps['legacy_anchor_fallbacks']:errors.append('Unresolved imported anchors')
     browser_status='NOT_VERIFIED: static checks do not execute browser interactions'
@@ -148,20 +174,21 @@ def verify():
         evidence=json.loads(browser_file.read_text(encoding='utf-8'))
         if evidence.get('inputs') and all((OUT/p).exists() and hashlib.sha256((OUT/p).read_bytes()).hexdigest()==digest for p,digest in evidence['inputs'].items()):
             browser_status=evidence['status']+'：'+evidence['scope']
-    report={'date':'2026-10-22','status':'PASS' if not errors else 'FAIL','markdown_files':len(mdpaths),'articles':scan.tags['article'],'internal_links':sum(x.startswith('#') for x in scan.links),'unique_ids':len(set(scan.ids)),'json_examples':jsoncount,'svg_diagrams':len(svg),'tables_rendered':scan.tags['table'],'html_bytes':len(s.encode('utf-8')),'fr':totals['fr'],'nfr':totals['nfr'],'fr_categories':len(MODULES),'nfr_categories':len(NFR_CATEGORIES),'maven_children':len(children),'maven_reactor_projects':len(children)+1,'dev_batches':len(batches),'test_cases':totals['tc'],'api_definitions':len(definitions),'design_tables':36,'expanded_columns':len(fields),'modules':len(mods),'source_docs_preserved':len(inv),'javascript':'PASS' if not syntax.returncode else 'FAIL','backend_unchanged':not bool(backend),'browser_preview':browser_status,'errors':errors}
+    report={'date':'2026-10-22','status':'PASS' if not errors else 'FAIL','markdown_files':len(mdpaths),'articles':scan.tags['article'],'internal_links':sum(x.startswith('#') for x in scan.links),'unique_ids':len(set(scan.ids)),'json_examples':jsoncount,'svg_diagrams':len(svg),'tables_rendered':scan.tags['table'],'html_bytes':len(s.encode('utf-8')),'fr':totals['fr'],'nfr':totals['nfr'],'fr_categories':len(MODULES),'nfr_categories':len(NFR_CATEGORIES),'maven_children':len(children),'maven_reactor_projects':len(children)+1,'dev_batches':len(batches),'test_cases':totals['tc'],'api_definitions':len(definitions),'design_tables':36,'expanded_columns':len(fields),'modules':len(mods),'source_docs_preserved':len(inv),'javascript':'PASS' if not syntax.returncode else 'FAIL','backend_unchanged':backend_unchanged,'backend_existing_changes':backend,'browser_preview':browser_status,'errors':errors}
     (DATA/'verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(report,ensure_ascii=False))
     return report
 
 def verification_doc(r):
     t=meta('10 文档校验记录')+'> 校验完成日期：2026-10-22。本文记录本次实际检查，不是软件业务测试报告。\n\n## 一、检查结果\n\n'
-    t+=mdtable(['检查','实际结果'],[['文档静态校验',r['status']],['填充正文',str(r['markdown_files'])+' 份（含本记录）'],['覆盖','8 类主文档、12 业务分册、公共能力、13 附录与基线/校验'],['功能/质量/综合用例',f'{r["fr"]} / {r["nfr"]} / {r["test_cases"]}'],['功能分类 / 质量分类',f'{r["fr_categories"]} / {r["nfr_categories"]}'],['Maven 子工程 / Reactor / DEV 批次',f'{r["maven_children"]} / {r["maven_reactor_projects"]} / {r["dev_batches"]}'],['唯一 API',r['api_definitions']],['表/展开列',f'{r["design_tables"]} / {r["expanded_columns"]}'],['内部链接',str(r['internal_links'])+'，目标全部存在'],['标识重复','0'],['JSON 示例',str(r['json_examples'])+' 段均可解析'],['SVG 图',str(r['svg_diagrams'])+' 个均可解析；引用标记有效'],['脚本','node --check 成功'],['V2.0 编制输入',str(r['source_docs_preserved'])+' 份 SHA-256 一致'],['后端源码','相对基点无改动'],['本地工程检查','mvn -o -f backend/pom.xml validate：BUILD SUCCESS；2026-10-22'],['浏览器预览',r['browser_preview']],['软件业务验证','NOT_VERIFIED：未编译、打包、运行 API、执行迁移或部署恢复']])
+    backend_result='相对本次编制前快照一致；保留已有未提交修改和暂存' if r['backend_unchanged'] else 'NOT_VERIFIED：独立校验未提供本次编制前快照' if r['backend_unchanged'] is None else 'FAIL：本次编制期间发生变化'
+    t+=mdtable(['检查','实际结果'],[['文档静态校验',r['status']],['填充正文',str(r['markdown_files'])+' 份（含本记录）'],['覆盖','8 类主文档、12 业务分册、公共能力、13 附录与基线/校验'],['功能/质量/综合用例',f'{r["fr"]} / {r["nfr"]} / {r["test_cases"]}'],['功能分类 / 质量分类',f'{r["fr_categories"]} / {r["nfr_categories"]}'],['Maven 子工程 / Reactor / DEV 批次',f'{r["maven_children"]} / {r["maven_reactor_projects"]} / {r["dev_batches"]}'],['唯一 API',r['api_definitions']],['表/展开列',f'{r["design_tables"]} / {r["expanded_columns"]}'],['内部链接',str(r['internal_links'])+'，目标全部存在'],['标识重复','0'],['JSON 示例',str(r['json_examples'])+' 段均可解析'],['SVG 图',str(r['svg_diagrams'])+' 个均可解析；引用标记有效'],['脚本','node --check 成功'],['V2.0 编制输入',str(r['source_docs_preserved'])+' 份 SHA-256 一致'],['后端源码与暂存',backend_result],['本地工程检查','mvn -o -f backend/pom.xml validate：BUILD SUCCESS；2026-10-22'],['浏览器预览',r['browser_preview']],['软件业务验证','NOT_VERIFIED：未编译、打包、运行 API、执行迁移或部署恢复']])
     t+='''
 ## 二、核对方式
 
 解析所有 HTML 标签、ID 与片段链接，核对源目录和正文中的 FR/NFR/API/表/TC 数量；检查模块四部分顺序、全部 JSON 示例、SVG、内嵌脚本语法、展示依赖和可见残留文字。所有正文、CSS、脚本与图形都包含在 HTML 中，展示无需网络资源。
 
-本版编制输入指纹与后端 Git 差异分别核对。Maven validate 只验证工程模型，不扩展为构建或业务通过。浏览器核对通过只绑定 data/browser-check.json 中记录的正文及渲染脚本指纹；正文变化后须重新预览。具体交互范围单独记录，未将屏幕预览扩大为全册交互或打印通过。
+本版编制输入指纹与后端保护分别核对。build.py 在编制开始时获取后端文件与暂存条目快照，生成期间逐次比较；不要求用户先清理已有改动，也不把已有差异算成本次修改。单独运行 verify.py 未提供快照时只报告该项未核实。Maven validate 只验证工程模型，不扩展为构建或业务通过。浏览器核对通过只绑定 data/browser-check.json 中记录的正文及渲染脚本指纹；正文变化后须重新预览。具体交互范围单独记录，未将屏幕预览扩大为全册交互或打印通过。
 
 ## 三、交付与复核
 

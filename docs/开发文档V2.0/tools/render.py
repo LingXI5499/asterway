@@ -5,6 +5,7 @@ import markdown
 from markdown.extensions.toc import slugify_unicode
 from html.parser import HTMLParser
 from write_modules import OUT,DATA,C,TABLE,NAMES,write,APPENDIX,NFR_CATEGORIES
+from architecture_diagrams import module_diagram,error_diagram,database_diagram
 
 def esc(x):return html.escape(str(x),quote=True)
 def fileid(p):return 'doc-'+hashlib.sha1(p.encode('utf-8')).hexdigest()[:10]
@@ -85,6 +86,9 @@ def render():
         h=markdown.markdown(t,extensions=['extra','toc','sane_lists','md_in_html'],extension_configs={'toc':{'slugify':slugify_unicode}})
         # Mermaid source remains available as details; the offline SVG is the reading surface.
         h=re.sub(r'<pre><code class="language-mermaid">(.*?)</code></pre>',r'<details><summary>关系结构文本</summary><pre><code>\1</code></pre></details>',h,flags=re.S)
+        for name,diagram in [('modules',module_diagram),('errors',error_diagram),('database',database_diagram)]:
+            marker=f'<!-- DIAGRAM:{name} -->'
+            if marker in h:h=h.replace(marker,diagram())
         if rel=='03-系统设计文档.md':h=h.replace('<h2 id="三总体架构">','<h2 id="三总体架构">')+architecture()
         if rel=='附录/A13-展开字段字典.md':h=h[:h.index('<h2')]+ '<h2 id="logical-relations">核心逻辑关系图</h2><p>鸟足标记：竖线表示一，圆圈表示可选，分叉表示多；虚线均为应用逻辑关系，不是数据库外键。完整关系及删除行为以 A01 的 REL 目录为准，以下展示主要业务链。</p>'+ergraph()+h[h.index('<h2'):]
         ids=re.findall(r'\bid="([^"]+)"',h);anchors[rel]=set(ids)

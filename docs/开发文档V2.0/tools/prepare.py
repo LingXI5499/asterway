@@ -12,10 +12,25 @@ def source(n): return next(SOURCE.glob(n+'-*.md'))
 def table_rows(t):
     return [[x.strip() for x in l.strip().strip('|').split('|')] for l in t.splitlines() if l.startswith('|') and not re.match(r'^\|[\s:|-]+$',l)]
 def section(t, heading, endlevel=2):
-    m=re.search(r'^'+re.escape(heading)+r'\s*$',t,re.M)
-    if not m:return ''
-    end=re.search(r'^#{1,'+str(endlevel)+r'} ',t[m.end():],re.M)
-    return t[m.end():m.end()+end.start() if end else len(t)].strip()
+    # A shell comment or sample Markdown heading inside a fence is not a chapter boundary.
+    found=False; fence=None; content=[]
+    for line in t.splitlines(keepends=True):
+        marker=re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$',line.rstrip('\r\n'))
+        if marker:
+            token,tail=marker.groups()
+            if fence is None:fence=(token[0],len(token))
+            elif token[0]==fence[0] and len(token)>=fence[1] and not tail.strip():fence=None
+            if found:content.append(line)
+            continue
+        if fence is not None:
+            if found:content.append(line)
+            continue
+        if not found:
+            if line.rstrip()==heading:found=True
+            continue
+        if re.match(r'^#{1,'+str(endlevel)+r'} ',line):break
+        content.append(line)
+    return ''.join(content).strip()
 
 docs={n:read(source(n)) for n in [f'{x:02}' for x in range(1,13)]}
 inventory=[]

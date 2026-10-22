@@ -5,7 +5,7 @@ import hashlib,os
 def main05():
     t=meta('05 编码实施手册')+'''## 一、编码前置条件
 
-01～04 为本版设计输入，需求编号保持稳定。现有工程仅完成结构初始化；编写首个业务切片前，应先关闭 09 的 OPEN-001～005 中对应前置问题。需求评审、数据库执行、接口运行和业务验收分开记录，不因本文填充完成视为已确认或已通过。
+01～04 为本版设计输入，需求编号保持稳定。现有工程仅完成结构初始化；编写首个业务切片前，应先关闭 09 的 OPEN-001～008 中对应前置问题。需求评审、数据库执行、接口运行和业务验收分开记录，不因本文填充完成视为已确认或已通过。
 
 ## 二、总体编码顺序
 
@@ -15,9 +15,9 @@ def main05():
 
 ### 3.1 仓库初始化
 
-仓库为 `LingXI5499/asterway`，默认分支为 `main`，工程基点见 09。功能分支采用 `LIngXI/feature/<业务主题>`，缺陷采用 `LIngXI/fix/<问题主题>`，文档采用 `LIngXI/docs-<主题>`。提交主题、拉取请求和合并标题使用 `LIngXI` 前缀，作者与提交者采用维护者 GitHub 账户。提交关联 FR、BUG 或 CR 编号；合并前检查依赖、构建、适用测试和文档。
+仓库为 `LingXI5499/asterway`，默认分支为 `main`，工程基点见 09。本地仅使用现有 `feature/LIngXI-develop`，不新建、切换或拉取其他分支。远程仅保留 main 与该固定 feature。开发或文档成果完成后先交用户审阅，明确批准本次成果后才提交并推送 feature；一个模块完成、验证通过且获本次明确审批后才可合入 main。feature 推送批准不代表 main 合入批准。提交主题、拉取请求和合并标题使用 `LIngXI` 前缀，作者与提交者采用维护者 GitHub 账户。提交关联 FR、BUG 或 CR 编号；合并前检查依赖、构建、适用测试和文档。
 
-后端已有 .gitignore；本地配置和秘密不得入库，根目录的历史资料与已有修改不纳入本次功能代码变更。发布时只纳入已审查的正式文档与构建工具，历史参考资料按其维护范围保留。
+后端已有 .gitignore；本地配置和秘密不得入库，保留已有暂存、未提交修改、文档 stash 和本地发布记录；不夹带其他成果，不自行恢复或清理备份。发布时只纳入已审查的正式文档与构建工具，历史参考资料按其维护范围保留。
 
 ### 3.2 版本与配置基线
 
@@ -39,16 +39,18 @@ def main05():
 
 ### 4.2 初始化步骤
 
+工作树已有 `V001__create_app_user.sql`，用户说明该表已建立。V001 受保护；下表 MG 编号仅划分后续设计内容，不预占 Flyway 版本。先核实实际执行文本和历史；本版文档整理不执行数据库操作。
+
 1. 在隔离开发库确认连接目标和最小权限，不连接生产做开发测试。
 2. 依据 A13 的展开字段和 A01 的约束编写下表迁移；按真实依赖排序。
 3. 在应用配置中明确 app、session_store、migration_meta 的建模及 search_path/表名约定，先关闭 OPEN-002。
 4. 只初始化护栏单例、两项配置和受控首次管理员，不写公开固定密码。
-5. 以单次受控迁移任务执行全部所需迁移；不能只部署 V001 就开放注册，业务依赖 V006 的去重、事件和审计。
+5. 保护已有 V001，不重用、改写或重建账户表；核实执行原文、真实历史及暂存差异后，为后续内容组分配未占用版本。不能凭最小账户表就开放注册，去重、事件、审计和会话等前置必须齐备。
 6. 在新空库、旧测试库升级、重复启动和失败恢复四种条件检查迁移。
 7. 查询真实系统目录，核对字段、主键、唯一、CHECK、排除和索引，并确认全库物理外键数量为零。
 8. 在真实 PostgreSQL 检查并发、回滚和无外键会话适配，不用内存数据库替代。
 
-'''+mdtable(['设计迁移组','拟定文件','内容','当前状态'],[['V001','V001__identity_and_session.sql','身份、时区、护栏、认证短期及会话表','未编写'],['V002','V002__growth.sql','目标、阶段、任务、节点及快照','未编写'],['V003','V003__planning.sql','周日身份、安排、完成事实','未编写'],['V004','V004__execution.sql','执行、段、控制、修正、日期归属','未编写'],['V005','V005__habit.sql','规则、星期、节点及日结果','未编写'],['V006','V006__events_and_security.sql','通知、配置、审计、幂等、事件及安全依据','未编写'],['V007','V007__constraints_and_indexes.sql','行内保护、索引、种子及权限复核','未编写']])+'''
+'''+mdtable(['设计内容组（非版本）','真实迁移版本','内容','当前状态'],[['MG-01','核实历史后分配未用版本','身份、时区、护栏、认证短期及会话表','未编写'],['MG-02','核实历史后分配未用版本','目标、阶段、任务、节点及快照','未编写'],['MG-03','核实历史后分配未用版本','周日身份、安排、完成事实','未编写'],['MG-04','核实历史后分配未用版本','执行、段、控制、修正、日期归属','未编写'],['MG-05','核实历史后分配未用版本','规则、星期、节点及日结果','未编写'],['MG-06','核实历史后分配未用版本','通知、配置、审计、幂等、事件及安全依据','未编写'],['MG-07','核实历史后分配未用版本','行内保护、索引、种子及权限复核','未编写']])+'''
 ### 4.3 数据库初始化完成标准
 
 36 张设计表全部可从空库复现；公共字段不遗漏；物理外键为零；唯一及时间排除并发测试通过；框架会话实际事务的删属性再删父、写属性先锁父行为有证据；迁移失败不进入就绪状态。当前这些标准均未完成。
@@ -93,6 +95,17 @@ java -jar backend/app/target/app-0.1.0-SNAPSHOT.jar
 
 '''
     t+=implementation_plan()+'\n\n### 7.4 编码期间的文档变更\n\n澄清不改变范围的实现细节可记录设计说明；改变状态、历史保留、字段语义、接口或质量指标必须登记 CR，分析兼容和迁移，更新关联文档后实施。\n\n## 八、提交与代码自检\n\n逐项核对：FR/接口与实现一致、参数化 SQL、服务端归属、固定锁序、版本及幂等、失败无部分效果、配置无秘密、真实构建与适用测试证据、文档同步。跨存储安全结果未知保持隔离，不通过关闭约束或删除历史让测试通过。\n'
+    backend_source=read(source('06'))
+    packages=section(backend_source,'## 11. 推荐包结构与数据对象',2)
+    phases=section(backend_source,'## 13. 分阶段实施与验证',2)
+    if not packages or not phases:raise ValueError('Missing integrated architecture sections in source 06')
+    def deepen(text,source_number,prefix):
+        text=re.sub(r'^(#{3,5}) ',r'\1# ',text,flags=re.M)
+        return re.sub(r'^(####) '+source_number+r'\.(\d+)',lambda m:m[1]+' '+prefix+'.'+m[2],text,flags=re.M)
+    packages=rewrite(packages,'05-编码实施手册.md','06')
+    phases=rewrite(phases,'05-编码实施手册.md','06').replace('第11章','本手册5.5节').replace('第12章','A09第12节')
+    t=t.replace('## 六、前端初始化流程','### 5.5 完整推荐包结构与 DTO/VO\n\n'+deepen(packages,'11','5.5')+'\n\n## 六、前端初始化流程',1)
+    t=t.replace('## 八、提交与代码自检','### 7.5 架构细化的分阶段落点与验证\n\n'+deepen(phases,'13','7.5')+'\n\n## 八、提交与代码自检',1)
     write('05-编码实施手册.md',t)
 
 def main06():
@@ -110,7 +123,7 @@ def main06():
 
 ### 1.3 测试依据
 
-01～08 采用 V2.0；业务和数据库字典继承V2.0 业务规则和设计册；工程基点和版本见 09。数据库迁移版本尚不存在。旧 TEST-001～072 保留原编号，增加 TC-001～072 作为同一用例别名，不重复统计。
+01～08 采用 V2.0；业务和数据库字典继承V2.0 业务规则和设计册；工程基点和版本见 09。工作树已有 V001 最小账户迁移，用户说明已执行；真实数据库及 Flyway 历史尚未核实，后续版本待分配。旧 TEST-001～072 保留原编号，增加 TC-001～072 作为同一用例别名，不重复统计。
 
 ## 二、测试类型与职责
 
@@ -219,7 +232,7 @@ def main07():
 
 ### 7.1 开发环境
 
-按 05 获取分支和工具，准备隔离 DB，配置 ASTERWAY_DB_*，执行已审查迁移，构建启动 app 后再做账户/业务冒烟。frontend 尚不存在，不执行不存在的 npm 命令。默认 8088 来自配置，不是已监听端口的证明。
+按 05 使用固定开发分支并核对工具，准备隔离 DB，配置 ASTERWAY_DB_*，执行已审查迁移，构建启动 app 后再做账户/业务冒烟。frontend 尚不存在，不执行不存在的 npm 命令。默认 8088 来自配置，不是已监听端口的证明。
 
 ### 7.2 测试环境
 
@@ -291,7 +304,7 @@ def main08():
 1. 固定现场版本、用户范围、业务日和请求链；日志脱敏。
 2. 检查前端请求/旧状态、接口认证/CSRF/参数、应用事务/锁、Mapper 条件、数据库约束、配置和外部账本。
 3. 在隔离环境按原步骤复现，定位根因；结果未知先查原意图，不重复写入。
-4. 在 fix 分支修复并关联 BUG/FR/API，增加能复现原问题的回归用例。
+4. 在现有 `feature/LIngXI-develop` 修复并关联 BUG/FR/API，补充能复现原问题的回归用例；不另建 fix 分支。完成后先审阅，明确批准再推 feature；main 合入独立审批。
 5. 对影响数据的修复明确查询范围、前后快照、备份与恢复，取得相应执行授权后实施。
 6. 通过适用测试及评审再发布；原环境复验、观察并记录关闭依据。
 
@@ -343,12 +356,12 @@ def audit():
     inv=json.loads((DATA/'source-inventory.json').read_text(encoding='utf-8'))
     t=meta('09 基线核对与需求追溯')+'''## 一、版本与证据边界
 
-仓库：LingXI5499/asterway；默认分支为 `main`，维护者为 `LingXI5499`。下表工程基点来自主分支，后端事实以该版本的 POM、启动类及配置为准。本文记录设计与验证边界；文档发布不表示业务软件已部署或通过运行验收。
+仓库：LingXI5499/asterway；默认分支为 `main`，维护者为 `LingXI5499`。下表区分已提交基点与当前本地工作树；后端 POM、启动类、配置和 V001 已有用户未提交修改，不把它们描述为远程已发布内容。本文记录设计与验证边界；文档发布不表示业务软件已部署或通过运行验收。
 
-'''+mdtable(['证据','结果'],[['基点 commit',C['commit']],['提交时间','2026-10-19T20:13:23+08:00'],['工程版本','0.1.0-SNAPSHOT'],['实际代码','10 个 Java 源文件：1 启动类、9 包说明'],['实际业务层','Controller、Service、Mapper/XML、Entity、DTO、测试类均未建立'],['实际数据库','0 个 SQL 迁移；仅迁移 README；无运行库访问'],['实际前端','frontend、package.json、路由及页面均不存在'],['设计目录','132 FR、84 NFR、95 API、36 表、20 页面、7 JOB、72 TEST'],['表列定义','公共字段展开后 420 列；设计数，不是已部署列数'],['文档来源',str(len(inv))+' 份正式设计与业务依据已纳入清点、指纹和版本比对'],['已执行工程检查','Maven 3.9.4 / Java 17.0.18；离线 validate 成功'],['未执行','compile、package、业务测试、数据库迁移、接口、前端和部署恢复']])+'''
+'''+mdtable(['证据','结果'],[['基点 commit',C['commit']],['提交时间',subprocess.check_output(['git','show','-s','--format=%cI',C['commit']],cwd=ROOT).decode().strip()],['工程版本','0.1.0-SNAPSHOT'],['实际代码','10 个 Java 源文件：1 启动类、9 包说明'],['实际业务层','Controller、Service、Mapper/XML、Entity、DTO、测试类均未建立'],['实际数据库','工作树 V001 定义最小账户表：1 表9列；用户说明已执行，数据库及历史 NOT_VERIFIED；暂存版本为空，提交前需核实'],['实际前端','frontend、package.json、路由及页面均不存在'],['设计目录','132 FR、84 NFR、95 API、36 表、20 页面、7 JOB、72 TEST'],['表列定义','公共字段展开后 420 列；设计数，不是已部署列数'],['文档来源',str(len(inv))+' 份正式设计与业务依据已纳入清点、指纹和版本比对'],['已执行工程检查','Maven 3.9.4 / Java 17.0.18；离线 validate 成功'],['未执行','compile、package、业务测试、数据库迁移、接口、前端和部署恢复']])+'''
 ## 二、来源优先级与差异处理
 
-本次明确范围优先；业务按现行业务规则 与有效 FR/NFR；工程版本按现行 POM、配置及 A08 技术版本基线；接口与字典按远程 main 中现行设计。docs 仅发布 V2.0；编制输入与正文均位于同一版本目录，不另保留早期文档集。
+本次明确范围优先；业务按现行业务规则 与有效 FR/NFR；工程版本按现行 POM、配置及 A08 技术版本基线；接口与字典按本地 V2.0 有效设计及本次待审细化。docs 仅发布 V2.0；编制输入与正文均位于同一版本目录，不另保留早期文档集。
 
 | 差异 | 处理结果 |
 |---|---|
@@ -365,12 +378,12 @@ def audit():
 
 以下为静态问题和实施前置，不是已运行缺陷，不虚构修复结果。
 
-'''+mdtable(['编号','事实与来源','设计决定/下一动作','验证标准'],[['OPEN-001','application.yml: jackson.default-property-inclusion=non_null；契约声明可空字段固定返回 null','实现接口前修正全局或明确 DTO 空值输出策略；本次不改源码','真实响应与 A03～A05 的 null 字段一致'],['OPEN-002','字典设计 app/session_store/migration_meta；当前 Flyway/session/schema 绑定未完整配置','迁移前明确 schema 创建、历史表 schema、会话表名及查询/清理 SQL','新空库迁移与框架增删会话、无外键并发测试'],['OPEN-003','仅声明 Security/Session 依赖；无过滤链、撤销、账本和恢复门禁','实现公共安全与可信恢复，不以默认框架行为代替产品规则','权限、CSRF、失效会话、最后超管及恢复测试'],['OPEN-004','只有 Maven wrapper properties，无 wrapper 启动脚本','当前使用已安装 Maven 3.9.4；后续补齐 wrapper 再声明可用','新环境可执行固定版本构建'],['OPEN-005','无前端清单/锁文件；本机 Node 与目标版本不同；依赖版本来自既有文档记录','建工程前核对仓库可解析版本、兼容关系，锁定后真实构建；不将记录等同已安装','npm ci、类型检查、构建和必要测试留证']])+'''
+'''+mdtable(['编号','事实与来源','设计决定/下一动作','验证标准'],[['OPEN-001','application.yml: jackson.default-property-inclusion=non_null；契约声明可空字段固定返回 null','实现接口前修正全局或明确 DTO 空值输出策略；本次不改源码','真实响应与 A03～A05 的 null 字段一致'],['OPEN-002','公共配置已部分绑定 migration_meta/app/session_store 且 create-schemas=false；会话表名/SQL与真实历史位置仍未核实','迁移前明确 schema 创建、历史表 schema、会话表名及查询/清理 SQL','新空库迁移与框架增删会话、无外键并发测试'],['OPEN-003','仅声明 Security/Session 依赖；无过滤链、撤销、账本和恢复门禁','实现公共安全与可信恢复，不以默认框架行为代替产品规则','权限、CSRF、失效会话、最后超管及恢复测试'],['OPEN-004','只有 Maven wrapper properties，无 wrapper 启动脚本','当前使用已安装 Maven 3.9.4；后续补齐 wrapper 再声明可用','新环境可执行固定版本构建'],['OPEN-005','无前端清单/锁文件；本机 Node 与目标版本不同；依赖版本来自既有文档记录','建工程前核对版本和兼容关系并锁定','npm ci、类型检查、构建和必要测试留证'],['OPEN-006','V001 工作树有 SQL，暂存为空；公共 baseline=false 被 local=true/version=0 覆盖','核对实际执行原文、history schema/version/script/checksum；保护 V001 并分配后续版本','原文一致、历史不重复、不 repair/clean 或重建现有表'],['OPEN-007','账户设计19列而 V001仅9列；哈希类型和生成列非空声明不同','新增版本兼容扩展和受控回填，禁止改已执行 V001','隔离空库与升级库逐列、约束和数据验证'],['OPEN-008','分层目录、两类只读投影、公共机制适配及405/415/500补充码为本版待审细化','用户审阅后按批准范围实施和推送 feature，main 独立审批','03/05/A09及全部模块分册保持同一口径']])+'''
 ## 四、真实工程文件清单
 
 '''
     files=subprocess.check_output(['git','ls-files','backend'],cwd=ROOT).decode('utf-8').splitlines()
-    desc=lambda p:'父工程与统一依赖' if p=='backend/pom.xml' else '启动类和统一扫描' if p.endswith('AsterwayApplication.java') else '模块包职责说明' if p.endswith('package-info.java') else '环境与资源绑定' if p.endswith('application.yml') else '迁移目录说明，尚无 SQL' if p.endswith('migration/README.md') else '子模块依赖与构建' if p.endswith('pom.xml') else '工程忽略规则' if p.endswith('.gitignore') else 'Wrapper 发行版本属性，非完整 Wrapper'
+    desc=lambda p:'父工程与统一依赖' if p=='backend/pom.xml' else '启动类和统一扫描' if p.endswith('AsterwayApplication.java') else '模块包职责说明' if p.endswith('package-info.java') else '环境与资源绑定' if p.endswith('application.yml') else '最小账户表 V001，工作树已有；用户报告已执行，历史未核实' if p.endswith('V001__create_app_user.sql') else '迁移维护说明，现与工作树进度存在差异' if p.endswith('migration/README.md') else '子模块依赖与构建' if p.endswith('pom.xml') else '工程忽略规则' if p.endswith('.gitignore') else 'Wrapper 发行版本属性，非完整 Wrapper'
     t+=mdtable(['真实路径','职责'],[[p,desc(p)] for p in files])
     t+='\n## 五、功能逐条追溯\n\n'+mdtable(['场景','功能','模块','接口或系统处理','主要表','开发批次','综合测试'],[[SCN[f['group']],f['id']+' '+f['name'],MID[f['group']],f['operations'],f['tables'],f['dev'],f['tests']+'（同号 TC）'] for f in FR])
     quality={g:(name,scope,owner,tests) for g,name,scope,owner,tests in NFR_CATEGORIES}
@@ -386,7 +399,7 @@ def audit():
 def readme():
     t=meta('Asterway 全栈开发文档')+'''从使用场景逐步进入需求、架构、模块、编码、测试、部署和运维。Markdown 为可编辑正文，index.html 为完整离线阅读版，可直接打开、搜索、折叠详情和打印。
 
-当前范围是开发设计升级。远程 main 的后端骨架已核对，业务代码、迁移 SQL、前端和运行验收尚未完成。工程模型校验与业务测试分开记录。
+本版已将后端架构、包结构和异常链融入原有系统设计、实施手册及模块分册，仍为本地设计审阅稿。工作树已有最小账户表 V001，用户说明已执行，真实历史未核实；业务代码、完整迁移、前端和运行验收尚未完成。工程模型校验与业务测试分开记录。审阅通过后才同步 feature，main 合入另行审批。
 
 ## 阅读目录
 

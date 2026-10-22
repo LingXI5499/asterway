@@ -4,11 +4,11 @@
   "markdown_files": 37,
   "articles": 37,
   "internal_links": 852,
-  "unique_ids": 2151,
-  "json_examples": 581,
-  "svg_diagrams": 18,
-  "tables_rendered": 1481,
-  "html_bytes": 3223661,
+  "unique_ids": 2221,
+  "json_examples": 588,
+  "svg_diagrams": 21,
+  "tables_rendered": 1504,
+  "html_bytes": 3365279,
   "fr": 132,
   "nfr": 84,
   "fr_categories": 12,
@@ -24,6 +24,12 @@
   "source_docs_preserved": 15,
   "javascript": "PASS",
   "backend_unchanged": true,
+  "backend_existing_changes": [
+    "backend/app/src/main/java/com/asterway/app/AsterwayApplication.java",
+    "backend/app/src/main/resources/application.yml",
+    "backend/app/src/main/resources/db/migration/V001__create_app_user.sql",
+    "backend/pom.xml"
+  ],
   "browser_preview": "NOT_VERIFIED: static checks do not execute browser interactions",
   "errors": []
 }

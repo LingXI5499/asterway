@@ -80,9 +80,48 @@ def backend_structure():
          '唯一可执行 JAR；依赖所有业务工程并负责装配' if name=='app' else '普通 JAR；不反向依赖 app，不启用可执行重打包']
         for name in children])
     t+='\n`<modules>` 表示聚合，`<dependencies>` 表示代码依赖；两者不能互相替代。app 直接依赖 common 和全部 8 个业务工程；各业务工程只依赖 common；common 不依赖业务或 app。业务间调用由 app 协调，禁止兄弟工程互相依赖。\n\n'
-    t+='Java 17、Boot 3.5.16、MyBatis Starter 3.0.5 已在 POM 声明。只有 app 启用 Spring Boot 重打包。业务 SQL 的目标位置是各工程 `src/main/resources/mapper/<工程>/`；app 配置使用 `classpath*:mapper/**/*.xml`，迁移集中在 `app/src/main/resources/db/migration/`。这些 XML 和迁移 SQL 尚未编写。完整分层职责见 [A09 分层实施细则](附录/A09-分层实施细则.md)。\n\n'
+    t+='Java 17、Boot 3.5.16、MyBatis Starter 3.0.5 已在 POM 声明。只有 app 启用 Spring Boot 重打包。业务 SQL 的目标位置是各工程 `src/main/resources/mapper/<工程>/`；app 配置使用 `classpath*:mapper/**/*.xml`，迁移集中在 `app/src/main/resources/db/migration/`。业务 XML 尚未编写；工作树已有最小账户表 V001，用户说明已执行，真实历史未核实，不能重用或改写该版本。完整分层职责见 [A09 分层实施细则](附录/A09-分层实施细则.md)。\n\n'
     t+='### 5.3 工程核验、构建与启动顺序\n\n依次实现安全过滤链和响应空值策略、统一错误和 traceId、DTO 校验、账户锁、幂等及 outbox、受控时钟、框架会话适配、独立安全账本和启动恢复，再实现首条业务接口。\n\n'
     return t
+
+def architecture_overview():
+    children,deps=engineering_inventory()
+    t='''### 3.3 Maven 多模块与模块内部的分层
+
+`backend/pom.xml` 聚合 10 个 Maven 子工程，app 启动整个后端。模块按业务分工，分层按代码职责分工；request/response 是包和数据类，不新增 Maven 工程。
+
+| 放在哪里 | 写什么 | 以创建目标为例 |
+|---|---|---|
+| app/web/growth | Controller、request 请求 DTO、response 响应 VO | 接收前端 JSON，校验允许字段，返回安全结果 |
+| app/application/goal | 需要锁、幂等、事务或跨模块协调的应用用例 | 组织本次创建，调用目标公开能力 |
+| growth/api、api/model | 模块间 Java 调用接口和输入/结果 | GoalApi 声明可调用的目标业务方法 |
+| growth/service | 目标、阶段、任务的业务规则 | GoalService 实现资格和状态校验 |
+| growth/mapper、resources/mapper/growth | Mapper 接口与 XML SQL | 绑定参数，查询或保存目标 |
+| growth/model | 内部存储/查询模型 | 接收表行，不直接作为 HTTP 返回 |
+| common | 通用错误、游标、上下文与机制端口 | 不放 Controller、领域规则和具体 Web 响应 |
+
+请求 JSON → app 请求 DTO → Controller → 应用用例（需要时）→ 业务 Api/Service → Mapper/XML → 业务结果 → app 响应 VO → ApiResponse.data → 响应 JSON。公开 Api 由具体 Service 实现，不为单实现机械加 ServiceImpl。单模块只读可直接调用公开能力，涉及到期补偿时仍先执行受控补偿。
+
+### 3.4 app、common 与业务工程的明确边界
+
+采用 app 完整组装方案：所有 HTTP Controller、请求 DTO、响应 VO、统一响应和异常、安全/会话适配、跨模块用例、启动恢复、调度和集中迁移均归 app。Goal/Task/Habit 状态规则归各自业务工程，app 不直接取得业务 Mapper 写表。common 的公共锁、幂等和事件只保留中立契约/端口，具体持久实现落 app/infrastructure；这属于本版待审细化，不表示已经有实现需要搬迁。
+
+只保留两类明确的跨域只读表投影：insights 的看板/历史聚合、administration 的授权账户摘要。它们不取得其他工程写权，也不形成兄弟工程 Java 依赖；账户写入仍归 identity。详细包树、MVC/Security 异常链和具体文件落点见 05 与 A09；每个模块第四部分同步同一套命名。
+
+### 3.5 真实依赖矩阵与推荐依赖图
+
+<!-- DIAGRAM:modules -->
+
+行依赖列；1 为当前 POM 的直接内部依赖，— 为无依赖。父工程聚合/继承关系不计入这些边；当前与推荐方向一致。
+
+'''
+    t+=mdtable(['依赖方 \\ 被依赖方',*children],[[name,*['1' if col in deps[name] else '—' for col in children]] for name in children])
+    edges=sum(map(len,deps.values()))
+    t+=f'\n共 {edges} 条直接内部依赖；app 9 条、8 个业务工程各 1 条，无业务环。\n\n```mermaid\nflowchart TB\n'
+    for name in children:t+=f'    {name}["{name}"]\n'
+    for name in children:
+        for dep in deps[name]:t+=f'    {name} --> {dep}\n'
+    return t+'```\n\n'
 
 def implementation_plan():
     t='### 7.2 十二个业务模块的实施覆盖矩阵\n\n先按业务模块核对需求覆盖，再按 DEV 依赖顺序编码。12 是业务模块数，19 是实施批次数；一个批次可以跨多个模块，一个模块也可以分多批完成。下表从 132 项 FR 的开发关联汇总，页面实现统一补充 DEV-017，后端统一在 DEV-015 检查，系统统一在 DEV-018 验收。\n\n'

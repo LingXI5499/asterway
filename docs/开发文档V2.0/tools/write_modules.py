@@ -47,7 +47,7 @@ def appendices():
         t=read(source(n))
         t=re.sub(r'^# .*\n', '# '+Path(filename).stem.replace('-', ' ',1)+'\n',t,count=1)
         first=re.search(r'^## ',t,re.M)
-        if first:t=t[:t.index('\n')]+f'\n\n> 文档版本 V2.0；核对日期 {DATE}。继承现行契约和业务规则。后端仅有工程骨架；业务、DDL、前端及运行验证尚未完成。\n\n'+t[first.start():]
+        if first:t=t[:t.index('\n')]+f'\n\n> 文档版本 V2.0；核对日期 {DATE}。继承现行契约和业务规则。架构细化为本地设计审阅稿。后端业务尚未实现；工作树已有最小账户表 V001，用户说明已执行，真实数据库和迁移历史未核实。\n\n'+t[first.start():]
         if n=='09':
             t=t.split('## 5.')[0]+'\n## 当前基线\n\n历史变更不作为当前运行状态。本版基点、真实工程清单、静态差异及验证状态统一见 09 基线核对与需求追溯。\n'
         if n=='06':
@@ -70,7 +70,7 @@ def appendices():
             t=t.replace('| 直接执行 `java -version` | Java 21.0.10 | 当前 PATH 中的 Java 与 Maven 不一致；开发终端需要切换到 JDK 17 |','| 2026-10-19 直接执行 `java -version` 的历史输出 | Java 21.0.10 | 与当时 Maven 使用的 JDK 不一致；本次未重新核对全局 PATH，开发前需确认 |')
         write(filename,rewrite(t,filename,n))
     # Expanded columns make all common fields explicit and independently reviewable.
-    t=meta('A13 展开字段字典')+'共 36 张设计表，公共字段展开后共 '+str(sum(len(t['fields']) for t in TABLE))+' 列定义；当前迁移 SQL 为 0，实际数据库列数尚未核验。物理外键设计数为 0，图示关联均为应用维护的逻辑关系。\n\n'
+    t=meta('A13 展开字段字典')+'共 36 张设计表，公共字段展开后共 '+str(sum(len(t['fields']) for t in TABLE))+' 列定义。工作树已有 1 份 V001 最小账户迁移，定义 1 表9列；用户说明已执行，实际数据库和历史未核验。420 是设计列数，账户完整设计为19列；保护 V001 后追加迁移。物理外键设计数为 0，图示关联均为应用维护的逻辑关系。\n\n'
     for tb in TABLE:
         t+=f'## {tb["id"]} {tb["name"]}（{tb["cn"]}）\n\n'
         t+=mdtable(['字段','PostgreSQL 类型','长度/精度','可空','默认/生成规则','键或业务约束及含义','来源'],[[f['name'],f['type'],re.search(r'\(([^)]+)\)',f['type']).group(1) if '(' in f['type'] else '由类型定义',f['nullable'],f['default'],f['meaning'],f['origin']] for f in tb['fields']])
@@ -111,6 +111,43 @@ def function_flow(f,apis):
                 if flow:b+='**'+job+' 详细事件流：**\n\n'+normalize(flow)+'\n\n'
     b+='**关联功能/处理：**'+f['operations']+'；**开发批次：**'+f['dev']+'。\n\n'
     return b
+
+def class_design(g,eng,stem,scope):
+    """Keep HTTP objects and business-layer responsibilities consistent across all modules."""
+    usecase_package,usecase={'AUTH':('identity','AccountUseCase'),'GOAL':('goal','GoalLifecycleUseCase'),'STAGE':('goal','StageUseCase'),'TASK':('task','TaskUseCase'),'WEEK':('planning','PlanChangeUseCase'),'DAY':('planning','PlanChangeUseCase'),'FOCUS':('execution','ExecutionCommandUseCase'),'HABIT':('habit','HabitCommandUseCase'),'DASH':('insights','DashboardQueryUseCase'),'HISTORY':('insights','HistoryQueryUseCase'),'NOTICE':('notification','NotificationUseCase'),'ADMIN':('administration','AdminAccountUseCase')}[g]
+    service_role='查询口径与只读投影，不写业务事实' if eng=='insights' else '规则与本模块拥有数据的写入'
+    t=f'''```text
+backend/{eng}/src/main/java/com/asterway/{eng}/
+  api/{stem}Api.java           模块之间调用的 Java 公开能力
+  api/model/                  公开 Command / Result / Snapshot，按用例创建
+  api/error/                  本业务错误码和必要的带类型异常
+  service/{stem}Service.java   {service_role}
+  mapper/{stem}Mapper.java     本模块数据访问或明确允许的只读投影
+  model/                      内部存储/查询模型，不直接作为 HTTP 响应
+backend/{eng}/src/main/resources/mapper/{eng}/{stem}Mapper.xml
+backend/app/src/main/java/com/asterway/app/
+  web/{eng}/{stem}Controller.java
+  web/{eng}/request/           请求 DTO：前端提交的允许字段
+  web/{eng}/response/          响应 VO：返回前端的安全字段
+  application/{usecase_package}/{usecase}.java   需要协调时创建
+```
+
+`request` 和 `response` 是 Java 包，分别存请求 DTO 和响应 VO；DTO/VO 是数据传输对象，不是额外 Maven 工程。请求 JSON 绑定为请求 DTO，Controller 调用用例/公开能力，业务结果映射为响应 VO，再放入统一 `ApiResponse.data`。`api` 指模块间 Java 调用契约，HTTP 路由集中在 app 的 Controller。
+
+### 4.2 类清单
+
+'''
+    t+=mdtable(['包','类/接口','类型','职责','依赖','关键技术'],[
+        [f'com.asterway.app.web.{eng}',stem+'Controller','Controller','路由、校验、DTO 映射','应用用例/公开能力','Spring MVC'],
+        ['com.asterway.app.application.'+usecase_package,usecase,'应用用例（按需）','锁、幂等、补偿及跨模块协调',eng+'公开能力、common','受代理的事务入口'],
+        [f'com.asterway.{eng}.api',stem+'Api','公开业务契约','声明有类型的公开输入与结果','common；api/model','Java 进程内调用'],
+        [f'com.asterway.{eng}.service',stem+'Service','业务服务',service_role,'本模块 Mapper','实现公开能力；不机械加 Impl'],
+        [f'com.asterway.{eng}.mapper',stem+'Mapper','Mapper','数据访问；insights/admin 仅按明确投影例外跨表只读','XML','统一扫描；不写 SQL 注解'],
+        [f'com.asterway.app.web.{eng}.request',stem+'Request','请求 DTO','仅接收允许字段','接口字段契约','jakarta.validation'],
+        [f'com.asterway.app.web.{eng}.response',stem+'Response / View','响应 VO','仅输出安全字段','接口响应契约','放入 ApiResponse.data']])
+    t+=f'\n### 4.3 关键类设计\n\n`{usecase}` 是需要应用协调时的落点示例，不要求为每条只读接口建立转发类。写命令涉及统一锁、幂等、补偿和跨模块原子性时由应用用例协调；具体 Service 实现公开能力，不再机械增加同义 Service 接口和 ServiceImpl。公开输入/结果在 api/model，内部存储模型在 model。\n\n'
+    if g=='TASK':t+='任务完成的协调另用 `app/application/task/TaskCompletionUseCase.java`：先确认所有执行已结束，再原子保存完成事实、撤销安排和写可靠事件；普通任务管理不全部塞进完成用例。\n\n'
+    return t
 
 def module_doc(i,m):
     g,name,eng,scope,db,entry,dep=m; mid=MID[g];fs=[f for f in FR if f['group']==g];apis=associated(g)
@@ -154,7 +191,7 @@ def module_doc(i,m):
     if not owned:t+='不适用新增字段：查询模型及响应对象按第三部分和 A03～A05 定义；来源字段从 A13 可逐列查阅。\n\n'
     t+='### 2.4 约束与索引\n\n本模块的主键、唯一、行内 CHECK、时间排除和查询索引必须同时落实。精确约束清单集中在 A01 第 11～12 章，不以简写替换索引名称和字段顺序；模块字段表说明不可空、生成列和状态。当前尚无 SQL 迁移，不能将设计索引数量视为已安装数量。\n\n'
     t+='### 2.5 数据字典与规范\n\n枚举采用 A01 的稳定值；时刻用 UTC 和 timestamptz，业务日期按有效 IANA 时区冻结；版本和时长通过 HTTP 传输为字符串。金额不适用，本期没有支付。软删除及历史保留以动作定义为准，不统一物理删除。记录永久业务事实时保留完整正文，技术载荷限制不截断结束/完成快照。\n\n'
-    t+='### 2.6 数据库脚本/迁移文件\n\n集中目录为 `backend/app/src/main/resources/db/migration/`。当前只有 README，尚未存在 SQL。计划采用 V001～V007 分组，完整分组与跨组前置依赖见 05；文件命名拟为 `V001__identity_and_session.sql` 等，文件名属于实施设计，不表示已执行。\n\n'
+    t+='### 2.6 数据库脚本/迁移文件\n\n集中目录为 `backend/app/src/main/resources/db/migration/`。工作树已有 `V001__create_app_user.sql` 最小账户表脚本，用户说明已执行，真实数据库及 Flyway 历史未核实。该脚本不改写、删除或重命名；当前暂存为空，提交前须核对实际执行原文。后续按 MG-01～MG-07 设计内容组规划，MG 编号不等于 Flyway 版本；真实文件版本须核实历史后分配未占用编号，不能再次建立另一份 V001。完整分组与前置见 05。\n\n'
     t+='## 第三部分：接口设计\n\n### 3.1 公共接口约定\n\n统一继承 A02：`/api/v1`、JSON、服务端会话、写入 CSRF、必要 Idempotency-Key、统一错误、分页与安全归属。接口示例中的凭据是说明性合成值，不是实际秘密。响应对象包含嵌套字段、null、数组及分页外壳的完整字典见 A03～A05；不得只复制顶层字段。\n\n### 3.2 接口清单\n\n'
     t+=mdtable(['编号','方法','路径','名称','权限/用途'],[[a['id'],a['method'],a['path'],a['name'],'遵守该接口认证、本人归属或后台角色限制'] for a in apis])
     for a in apis:
@@ -162,9 +199,7 @@ def module_doc(i,m):
         t+='**完整字段与功能契约：**见 ['+a['id']+' 对象及示例](../'+APIFILE[a['source']]+'#'+a['id'].lower()+')。\n\n'
     t+='## 第四部分：类设计\n\n### 4.1 包结构\n\n现有工程仅含包说明；以下为本模块的规划类，尚未实现。\n\n'
     stem={'AUTH':'Account','GOAL':'Goal','STAGE':'Stage','TASK':'Task','WEEK':'WeeklyPlan','DAY':'DailyPlan','FOCUS':'Focus','HABIT':'Habit','DASH':'Dashboard','HISTORY':'History','NOTICE':'Notification','ADMIN':'Administration'}[g]
-    t+=f'```text\nbackend/{eng}/src/main/java/com/asterway/{eng}/\n  api/{stem}Api.java           业务公开能力\n  service/{stem}Service.java   规则与本模块写入\n  mapper/{stem}Mapper.java     数据访问接口\n  model/                      内部输入、结果与实体\nbackend/{eng}/src/main/resources/mapper/{eng}/{stem}Mapper.xml\nbackend/app/src/main/java/com/asterway/app/\n  web/{eng}/{stem}Controller.java\n  web/{eng}/dto/               HTTP 请求及响应\n  application/                跨模块应用用例\n```\n\n'
-    t+='### 4.2 类清单\n\n'+mdtable(['包','类/接口','类型','职责','依赖','关键技术'],[[f'com.asterway.app.web.{eng}',stem+'Controller','Controller','路由、校验、DTO 映射','应用用例','@RestController、@Validated'],['com.asterway.app.application',stem+'UseCase','应用服务','锁、幂等及跨模块协调',eng+'公开能力、common','受代理的 @Transactional'],[f'com.asterway.{eng}.service',stem+'Service','业务服务',scope,'本模块 Mapper','业务状态与版本检查'],[f'com.asterway.{eng}.mapper',stem+'Mapper','Mapper','参数化查询与条件更新','XML','统一扫描；不写 SQL 注解'],[f'com.asterway.app.web.{eng}.dto',stem+'Request / View','DTO/VO','明确可写字段与安全输出','字段字典','jakarta.validation']])
-    t+='\n### 4.3 关键类设计\n\n'+f'`{stem}UseCase` 负责协调此模块动作。每个动作的公开方法以业务语义命名，输入为请求 DTO 转换后的明确模型，输出为该接口声明的结果模型；不得用无类型 Map 传递完整请求或数据库行。\n\n'
+    t+=class_design(g,eng,stem,scope)
     t+=mdtable(['契约入口','输入','输出','公开职责与边界'],[[a['id'],a['method']+' '+a['path'],'第三部分成功响应模型',a['name']+'；授权、日期、状态、版本及异常按本节契约重验。'] for a in apis])
     for a in apis:
         t+=f'\n#### {a["id"]} 数据操作与实现职责\n\n'+normalize(a['operations'])+'\n\n'+normalize(a['implementation'])+'\n\n'
@@ -172,7 +207,7 @@ def module_doc(i,m):
 
 Controller → HTTP DTO 校验/转换 → app 应用用例 → 领域公开能力/Service → 本模块 Mapper/XML → PostgreSQL → 业务结果 → 安全 VO。业务异常在服务层产生，由 app 的全局异常处理映射到 A02 的 HTTP 和业务码；数据库约束冲突只转换为可披露的标准错误，不回传 SQL、内部路径或堆栈。
 
-Controller 不发起独立通知或跨域直接写表；业务模块不引用兄弟模块 Mapper；insights 只读查询允许按固定表契约关联，不取得写所有权。
+Controller 不发起独立通知或跨域直接写表；业务模块不引用兄弟模块 Mapper。只保留 insights 聚合事实、administration 授权账户摘要两类明确的只读投影例外，不取得其他模块写权。账户写入由 identity 处理，app 协调管理权限。
 
 ## 五、模块设计一致性检查
 
@@ -192,7 +227,7 @@ def common_doc():
 
 ## 第二部分：数据库设计
 
-公共拥有 DB-03～05、DB-29～31、DB-33；框架适配及迁移管理 DB-34～36。身份拥有 DB-32 安全变化本地依据，独立账本在数据库之外。完整字段、约束和删除规则见 A01/A13，不建立物理外键。
+DB-03～05、DB-29～31、DB-33 是公共机制表：中立契约与端口归 common，具体锁、去重、outbox、审计和检查点持久适配归 app/infrastructure，迁移仍集中 app。框架会话与迁移历史 DB-34～36 分别由 app 的 Session 适配和 Flyway 管理，业务代码不手改历史。身份拥有 DB-32 安全变化本地依据，独立账本在数据库之外。完整字段、约束和删除规则见 A01/A13，不建立物理外键。
 
 ## 第三部分：接口设计
 
@@ -205,9 +240,13 @@ def common_doc():
 | 规划位置 | 类/职责 | 依赖与边界 |
 |---|---|---|
 | common/context | 身份与业务日上下文 | 不承载领域对象 |
-| common/concurrency | 固定锁序及护栏 | 机制不代业务资格 |
-| common/idempotency | 原意图核实、指纹与结果 | 不保存凭据或正文 |
-| common/event | outbox 认领与持久记录 | 不直接决定目标结束 |
+| common/error、exception、pagination | ErrorCode、CommonErrorCode、BusinessException、CursorPage | 中立契约，不依赖 Web/Security 或业务工程 |
+| common/concurrency | 固定锁序及护栏端口 | 不代业务资格，不承载具体 SQL |
+| common/idempotency | 原意图和结果的中立契约/端口 | 不保存凭据或正文 |
+| common/event | 中立事件契约/端口 | 不决定目标结束，持久适配归 app |
+| app/infrastructure | 护栏、去重、outbox、审计、检查点适配 | 只访问自身机制表，不直接写领域表 |
+| app/web/contract | ApiResponse、ErrorData、Violation | HTTP 外壳与安全数据，data 承载响应 VO |
+| app/web/error、web/filter | Advice、ApiErrorFactory/Writer、TraceIdFilter | 与安全入口共享响应契约，分别处理边界 |
 | app/application | 跨模块命令与读前补偿 | 取得稳定上下文后调用公开能力 |
 | app/security | 过滤链、CSRF、授权版本、会话适配 | 框架事务内无外键清理 |
 | app/bootstrap | 运行代次和恢复门禁 | 未核实安全依据不开放 |
@@ -225,7 +264,7 @@ def run():
     appendices()
     for i,m in enumerate(MODULES,1):module_doc(i,m)
     common_doc()
-    write('04-模块设计文档.md',meta('04 模块设计文档')+'本册是十二个业务分册与公共规范的索引。每个业务分册完整采用“业务逻辑→数据库设计→接口设计→类设计”的顺序。响应对象、公共字段和系统处理在附录集中维护，以保持唯一口径。\n\n'+mdtable(['编号','模块','工程','功能数','分册'],[[MID[g],name,eng,sum(f['group']==g for f in FR),link_module(g)] for g,name,eng,*_ in MODULES])+'\n[公共能力与跨模块契约](模块设计/公共能力.md)\n\n接口引用可能跨模块；全局接口总数按“HTTP 方法+路径”的唯一集合统计为 95，不将重复引用重复计数。36 张表的每列定义已在 A13 展开，数据库尚未迁移。\n')
+    write('04-模块设计文档.md',meta('04 模块设计文档')+'本册是十二个业务分册与公共规范的索引。每个业务分册完整采用“业务逻辑→数据库设计→接口设计→类设计”的顺序。响应对象、公共字段和系统处理在附录集中维护，以保持唯一口径。\n\n'+mdtable(['编号','模块','工程','功能数','分册'],[[MID[g],name,eng,sum(f['group']==g for f in FR),link_module(g)] for g,name,eng,*_ in MODULES])+'\n[公共能力与跨模块契约](模块设计/公共能力.md)\n\n接口引用可能跨模块；全局接口总数按“HTTP 方法+路径”的唯一集合统计为 95，不将重复引用重复计数。36 张表的每列定义已在 A13 展开；工作树 V001 仅定义最小账户表，用户说明已执行，完整设计迁移和真实数据库核实尚未完成。\n')
     print('Written 12 module documents, shared contract and 13 appendices')
 
 if __name__=='__main__':run()
