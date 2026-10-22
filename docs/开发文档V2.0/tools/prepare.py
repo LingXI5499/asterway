@@ -1,13 +1,14 @@
 from pathlib import Path
-import hashlib,json,re,subprocess
+import hashlib,json,re,subprocess,sys
 
 ROOT=Path(__file__).resolve().parents[3]
 OUT=Path(__file__).resolve().parents[1]
 DATA=OUT/'data'
+SOURCE=OUT/'编制源文件'
 DATA.mkdir(exist_ok=True)
 def read(p): return p.read_text(encoding='utf-8-sig')
 def source_digest(p): return hashlib.sha256(read(p).encode('utf-8')).hexdigest()
-def source(n): return next((ROOT/'docs').glob(n+'-*.md'))
+def source(n): return next(SOURCE.glob(n+'-*.md'))
 def table_rows(t):
     return [[x.strip() for x in l.strip().strip('|').split('|')] for l in t.splitlines() if l.startswith('|') and not re.match(r'^\|[\s:|-]+$',l)]
 def section(t, heading, endlevel=2):
@@ -16,15 +17,15 @@ def section(t, heading, endlevel=2):
     end=re.search(r'^#{1,'+str(endlevel)+r'} ',t[m.end():],re.M)
     return t[m.end():m.end()+end.start() if end else len(t)].strip()
 
-docs={n:read(source(n)) for n in [f'{x:02}' for x in range(13)]}
+docs={n:read(source(n)) for n in [f'{x:02}' for x in range(1,13)]}
 inventory=[]
 source_paths={source(n) for n in docs}
-source_paths.update((ROOT/'docs/依据').glob('*.md'))
+source_paths.update(SOURCE/name for name in ['业务规则.md','功能需求基线.md','质量需求基线.md'])
 for p in sorted(source_paths):
     t=read(p)
     inventory.append(dict(path=p.relative_to(ROOT).as_posix(),sha256=source_digest(p),bytes=len(t.encode('utf-8')),
-        headings=re.findall(r'^#{1,3} (.+)',t,re.M),kind='现行设计' if p.parent==ROOT/'docs' else '业务依据'))
-if not (DATA/'source-inventory.json').exists():
+        headings=re.findall(r'^#{1,3} (.+)',t,re.M),kind='V2.0 工程设计输入' if re.match(r'\d{2}-',p.name) else 'V2.0 业务需求输入'))
+if '--refresh-sources' in sys.argv or not (DATA/'source-inventory.json').exists():
     (DATA/'source-inventory.json').write_text(json.dumps(inventory,ensure_ascii=False,indent=2),encoding='utf-8')
 apis=[]
 for n in ['02','03','04','05']:
@@ -47,7 +48,7 @@ for row in table_rows(docs['09']):
     if re.fullmatch(r'FR-[A-Z]+-\d{3}',row[0]):
         frs.append(dict(id=row[0],name=row[1],operations=row[2],tables=row[3],dev=row[4],tests=row[5],group=row[0].split('-')[1]))
 nfrs=[]
-for row in table_rows(read(ROOT/'docs/依据/MVP非功能性需求分析.md')):
+for row in table_rows(read(SOURCE/'质量需求基线.md')):
     if re.fullmatch(r'NFR-[A-Z0-9]+-\d{3}',row[0]):nfrs.append(dict(id=row[0],target=row[1],verification=row[2],group=row[0].split('-')[1]))
 tests=[]
 for row in table_rows(docs['08']):

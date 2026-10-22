@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 import collections,hashlib,json,re,subprocess,xml.etree.ElementTree as ET
 from write_main import OUT,ROOT,DATA,C,meta,mdtable,write,MODULES,MID,NFR_CATEGORIES,section,table_rows
 from implementation import engineering_inventory,dev_batches,expand_dev
-from prepare import source_digest
+from prepare import source_digest,SOURCE
 
 class Scan(HTMLParser):
     VOID={'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr','path','rect','circle','line','polyline','polygon','stop','use'}
@@ -53,15 +53,15 @@ def verify():
     refs=re.findall(r'url\(#([^\)]+)\)',s)
     if any(x not in set(scan.ids) for x in refs):errors.append('Missing SVG markers')
     scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
-    scriptfile=DATA/'reader-script.js';scriptfile.write_text('\n'.join(scripts),encoding='utf-8')
-    syntax=subprocess.run(['node','--check',str(scriptfile)],capture_output=True,text=True)
+    syntax=subprocess.run(['node','--check'],input='\n'.join(scripts),capture_output=True,text=True,encoding='utf-8')
     if syntax.returncode:errors.append('JavaScript syntax '+syntax.stderr)
-    mdpaths=sorted(p for p in OUT.rglob('*.md'))
+    all_mdpaths=sorted(p for p in OUT.rglob('*.md'))
+    mdpaths=[p for p in all_mdpaths if SOURCE not in p.parents]
     jsoncount=0
-    for p in mdpaths:
+    for p in all_mdpaths:
         t=p.read_text(encoding='utf-8')
         for j,block in enumerate(re.findall(r'```json\s*\n(.*?)\n```',t,re.S)):
-            jsoncount+=1
+            if p in mdpaths:jsoncount+=1
             try:json.loads(block)
             except json.JSONDecodeError as e:errors.append(str(p.relative_to(OUT))+' JSON '+str(j)+': '+str(e))
         for label,link in re.findall(r'\[([^\]]+)\]\(([^\s)]+)\)',t):
@@ -75,7 +75,7 @@ def verify():
         if count!=want:errors.append(f'{key}: {count} != {want}')
     # Compare complete identifiers with original sources, not just a hardcoded total.
     requirements=(OUT/'02-需求分析文档.md').read_text(encoding='utf-8')
-    source_nfr=(ROOT/'docs/依据/MVP非功能性需求分析.md').read_text(encoding='utf-8-sig')
+    source_nfr=(SOURCE/'质量需求基线.md').read_text(encoding='utf-8-sig')
     expected_nfr=set(re.findall(r'^\| (NFR-[A-Z0-9]+-\d{3}) \|',source_nfr,re.M))
     actual_nfr=re.findall(r'^\| (NFR-[A-Z0-9]+-\d{3}) \|',requirements,re.M)
     actual_fr=re.findall(r'^\| (FR-[A-Z]+-\d{3}) \|',requirements,re.M)
@@ -131,7 +131,11 @@ def verify():
         t=p.read_text(encoding='utf-8')
         sections=['第一部分：业务逻辑','第二部分：数据库设计','第三部分：接口设计','第四部分：类设计']
         if any(x not in t for x in sections) or [t.find(x) for x in sections]!=sorted(t.find(x) for x in sections):errors.append('Module order '+p.name)
+    allowed={'README.md','index.html',OUT.name}
+    unexpected=[p.name for p in (ROOT/'docs').iterdir() if p.name not in allowed]
+    if unexpected:errors.append('Unexpected docs edition/files '+str(unexpected))
     inv=json.loads((DATA/'source-inventory.json').read_text(encoding='utf-8'))
+    if {str((ROOT/x['path']).resolve()) for x in inv}!={str(p.resolve()) for p in SOURCE.glob('*.md')}:errors.append('Source inventory layout mismatch')
     changed=[x['path'] for x in inv if source_digest(ROOT/x['path'])!=x['sha256']]
     if changed:errors.append('Original docs changed '+str(changed))
     backend=subprocess.check_output(['git','diff','--name-only','--','backend'],cwd=ROOT).decode().strip()
@@ -151,13 +155,13 @@ def verify():
 
 def verification_doc(r):
     t=meta('10 文档校验记录')+'> 校验完成日期：2026-10-22。本文记录本次实际检查，不是软件业务测试报告。\n\n## 一、检查结果\n\n'
-    t+=mdtable(['检查','实际结果'],[['文档静态校验',r['status']],['填充正文',str(r['markdown_files'])+' 份（含本记录）'],['覆盖','8 类主文档、12 业务分册、公共能力、13 附录与基线/校验'],['功能/质量/综合用例',f'{r["fr"]} / {r["nfr"]} / {r["test_cases"]}'],['功能分类 / 质量分类',f'{r["fr_categories"]} / {r["nfr_categories"]}'],['Maven 子工程 / Reactor / DEV 批次',f'{r["maven_children"]} / {r["maven_reactor_projects"]} / {r["dev_batches"]}'],['唯一 API',r['api_definitions']],['表/展开列',f'{r["design_tables"]} / {r["expanded_columns"]}'],['内部链接',str(r['internal_links'])+'，目标全部存在'],['标识重复','0'],['JSON 示例',str(r['json_examples'])+' 段均可解析'],['SVG 图',str(r['svg_diagrams'])+' 个均可解析；引用标记有效'],['脚本','node --check 成功'],['原文档',str(r['source_docs_preserved'])+' 份 SHA-256 一致'],['后端源码','相对基点无改动'],['本地工程检查','mvn -o -f backend/pom.xml validate：BUILD SUCCESS；2026-10-22'],['浏览器预览',r['browser_preview']],['软件业务验证','NOT_VERIFIED：未编译、打包、运行 API、执行迁移或部署恢复']])
+    t+=mdtable(['检查','实际结果'],[['文档静态校验',r['status']],['填充正文',str(r['markdown_files'])+' 份（含本记录）'],['覆盖','8 类主文档、12 业务分册、公共能力、13 附录与基线/校验'],['功能/质量/综合用例',f'{r["fr"]} / {r["nfr"]} / {r["test_cases"]}'],['功能分类 / 质量分类',f'{r["fr_categories"]} / {r["nfr_categories"]}'],['Maven 子工程 / Reactor / DEV 批次',f'{r["maven_children"]} / {r["maven_reactor_projects"]} / {r["dev_batches"]}'],['唯一 API',r['api_definitions']],['表/展开列',f'{r["design_tables"]} / {r["expanded_columns"]}'],['内部链接',str(r['internal_links'])+'，目标全部存在'],['标识重复','0'],['JSON 示例',str(r['json_examples'])+' 段均可解析'],['SVG 图',str(r['svg_diagrams'])+' 个均可解析；引用标记有效'],['脚本','node --check 成功'],['V2.0 编制输入',str(r['source_docs_preserved'])+' 份 SHA-256 一致'],['后端源码','相对基点无改动'],['本地工程检查','mvn -o -f backend/pom.xml validate：BUILD SUCCESS；2026-10-22'],['浏览器预览',r['browser_preview']],['软件业务验证','NOT_VERIFIED：未编译、打包、运行 API、执行迁移或部署恢复']])
     t+='''
 ## 二、核对方式
 
 解析所有 HTML 标签、ID 与片段链接，核对源目录和正文中的 FR/NFR/API/表/TC 数量；检查模块四部分顺序、全部 JSON 示例、SVG、内嵌脚本语法、展示依赖和可见残留文字。所有正文、CSS、脚本与图形都包含在 HTML 中，展示无需网络资源。
 
-原有文档指纹与后端 Git 差异分别核对。Maven validate 只验证工程模型，不扩展为构建或业务通过。浏览器核对通过只绑定 data/browser-check.json 中记录的正文及渲染脚本指纹；正文变化后须重新预览。具体交互范围单独记录，未将屏幕预览扩大为全册交互或打印通过。
+本版编制输入指纹与后端 Git 差异分别核对。Maven validate 只验证工程模型，不扩展为构建或业务通过。浏览器核对通过只绑定 data/browser-check.json 中记录的正文及渲染脚本指纹；正文变化后须重新预览。具体交互范围单独记录，未将屏幕预览扩大为全册交互或打印通过。
 
 ## 三、交付与复核
 

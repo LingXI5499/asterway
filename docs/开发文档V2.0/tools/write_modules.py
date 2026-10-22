@@ -30,14 +30,10 @@ def rewrite(t,current,oldnum):
         path,sep,anchor=target.partition('#')
         base=Path(path).name
         found=re.match(r'(\d{2})-',base)
-        if found and found.group(1) in APPENDIX:
+        if base=='03-系统设计文档.md':dest=OUT/base
+        elif found and found.group(1) in APPENDIX:
             dest=OUT/APPENDIX[found.group(1)]
-        elif 'MVP业务逻辑V4' in base:dest=ROOT/'docs/依据/MVP业务逻辑V4.md'
-        elif 'MVP功能性需求清单' in base:dest=ROOT/'docs/依据/MVP功能性需求清单.md'
-        elif 'MVP非功能性需求分析' in base:dest=ROOT/'docs/依据/MVP非功能性需求分析.md'
-        elif 'V1系统架构设计' in base:dest=ROOT/'docs/依据/V1系统架构设计.md'
-        elif 'V1模块划分与技术选型' in base:dest=ROOT/'docs/依据/V1模块划分与技术选型.md'
-        elif 'V1数据库' in base:dest=OUT/APPENDIX['01'];anchor='';sep=''
+        elif base in ['业务规则.md','功能需求基线.md','质量需求基线.md']:dest=OUT/'编制源文件'/base
         elif base in ['README.md','index.html']:dest=OUT/'README.md';anchor='';sep=''
         else:return m.group(0)
         import os

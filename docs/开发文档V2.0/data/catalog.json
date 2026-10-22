@@ -1,6 +1,6 @@
 {
   "commit": "f4aca730c81eddd9ba6a8598f4a0df2cbde02bed",
-  "branch": "LIngXI/docs-development-guide-v2",
+  "branch": "LIngXI/docs-v2-only-progress",
   "api": [
     {
       "id": "API-COMMON-001",
@@ -42,13 +42,13 @@
       "name": "查询可选择的有效时区",
       "method": "GET",
       "path": "/api/v1/public/time-zones?q=Asia%2FShanghai&limit=20",
-      "body": "**GET `/api/v1/public/time-zones`**\n\n#### 需求分析\n\n| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 识别失败时选择合法IANA时区；V4第2.3节，支撑FR-AUTH-001 |\n| 页面入口 | 注册页的时区选择器 |\n| 角色与前置 | 设备无法给出有效时区，或用户搜索选择项 |\n\n#### 业务流程\n\n1. 读取JDK已加载的有效IANA名称集合。\n2. 按q做ASCII大小写不敏感筛选，按zoneId升序分页。\n3. 页面选择原始zoneId，不把语言、IP地区或UTC偏移量当时区。\n\n#### 接口设计\n\n**请求头：** 无业务必填请求头。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | q | string | 否 | 1～64字符；按IANA名筛选 |\n| Query | limit | number | 否 | 整数1～100；默认20 |\n| Query | cursor | string | 否 | 服务端不透明游标；与筛选及排序绑定 |\n| Body | — | — | — | 无 |\n\n**成功：HTTP 200；data：Page<TimeZoneItem>。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| items | TimeZoneItem[] | 每项字段见[TimeZoneItem](#dto-timezoneitem) |\n| nextCursor | string/null | 下一页游标；没有时固定null |\n| hasMore | boolean | 是否存在后续页 |\n\n**关键异常：** HTTP 422 `VALIDATION_ERROR`；分页参数不合法。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nGET /api/v1/public/time-zones?q=Asia%2FShanghai&limit=20\n```\n\n无请求Body。\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"items\": [\n      {\n        \"zoneId\": \"Asia/Shanghai\"\n      }\n    ],\n    \"nextCursor\": null,\n    \"hasMore\": false\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VALIDATION_ERROR\",\n  \"message\": \"分页参数不合法\",\n  \"data\": {\n    \"violations\": [\n      {\n        \"field\": \"limit\",\n        \"message\": \"必须为1至100的整数\"\n      }\n    ]\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data 为 TimeZoneItem 的分页结果；按 zoneId 稳定升序，不匹配时 items为空、nextCursor=null、hasMore=false。\n\n**错误：** 参数无效400／422 VALIDATION_ERROR；服务端时区规则不可用503 SERVICE_UNAVAILABLE。\n\n**前端反馈：** 设备自动识别失败且无已有有效时区时，提供选择；先取得合法时区，再允许注册或相关日期写入。\n\n</details>\n\n#### 数据操作\n\n<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| 无业务表 | 读取JDK时区规则集合 | 不查询账户，不生成地域画像，不写DB-02 |\n\n**原子边界与安全细则：**\n\n只读 JDK 已加载的受支持 IANA 时区集合，不读取他人账户、不写表。不是根据IP或语言猜测地区。\n\n</details>\n\n#### 分层实现步骤\n\n<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | TimeZoneQuery（q、limit、cursor）→TimeZonePageVO |\n| 2. Controller | PublicController.listTimeZones(query) |\n| 3. Service/应用协调 | TimeZoneCatalogService.list(query)：筛选、排序、分页 |\n| 4. Mapper接口及XML | 无Mapper/XML；时区来源为JDK规则库 |\n\n</details>\n\n#### 功能测试\n\n<details>\n<summary>展开：具体输入、操作步骤与预期</summary>\n\n| 场景 | 输入与步骤 | 预期结果 |\n|---|---|---|\n| 精确筛选 | GET ?q=Asia/Shanghai&limit=20 | 200，items含Asia/Shanghai |\n| 空列表 | GET ?q=NoSuchZone | 200，items=[]、nextCursor=null、hasMore=false |\n| 游标绑定 | 用q=Asia的游标改q=Europe继续读 | 422；页面清空旧游标后重查 |\n\n以上为待执行的测试设计；尚无通过/失败结论。\n\n</details>",
+      "body": "**GET `/api/v1/public/time-zones`**\n\n#### 需求分析\n\n| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 识别失败时选择合法IANA时区；现行业务规则第2.3节，支撑FR-AUTH-001 |\n| 页面入口 | 注册页的时区选择器 |\n| 角色与前置 | 设备无法给出有效时区，或用户搜索选择项 |\n\n#### 业务流程\n\n1. 读取JDK已加载的有效IANA名称集合。\n2. 按q做ASCII大小写不敏感筛选，按zoneId升序分页。\n3. 页面选择原始zoneId，不把语言、IP地区或UTC偏移量当时区。\n\n#### 接口设计\n\n**请求头：** 无业务必填请求头。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | q | string | 否 | 1～64字符；按IANA名筛选 |\n| Query | limit | number | 否 | 整数1～100；默认20 |\n| Query | cursor | string | 否 | 服务端不透明游标；与筛选及排序绑定 |\n| Body | — | — | — | 无 |\n\n**成功：HTTP 200；data：Page<TimeZoneItem>。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| items | TimeZoneItem[] | 每项字段见[TimeZoneItem](#dto-timezoneitem) |\n| nextCursor | string/null | 下一页游标；没有时固定null |\n| hasMore | boolean | 是否存在后续页 |\n\n**关键异常：** HTTP 422 `VALIDATION_ERROR`；分页参数不合法。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nGET /api/v1/public/time-zones?q=Asia%2FShanghai&limit=20\n```\n\n无请求Body。\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"items\": [\n      {\n        \"zoneId\": \"Asia/Shanghai\"\n      }\n    ],\n    \"nextCursor\": null,\n    \"hasMore\": false\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VALIDATION_ERROR\",\n  \"message\": \"分页参数不合法\",\n  \"data\": {\n    \"violations\": [\n      {\n        \"field\": \"limit\",\n        \"message\": \"必须为1至100的整数\"\n      }\n    ]\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data 为 TimeZoneItem 的分页结果；按 zoneId 稳定升序，不匹配时 items为空、nextCursor=null、hasMore=false。\n\n**错误：** 参数无效400／422 VALIDATION_ERROR；服务端时区规则不可用503 SERVICE_UNAVAILABLE。\n\n**前端反馈：** 设备自动识别失败且无已有有效时区时，提供选择；先取得合法时区，再允许注册或相关日期写入。\n\n</details>\n\n#### 数据操作\n\n<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| 无业务表 | 读取JDK时区规则集合 | 不查询账户，不生成地域画像，不写DB-02 |\n\n**原子边界与安全细则：**\n\n只读 JDK 已加载的受支持 IANA 时区集合，不读取他人账户、不写表。不是根据IP或语言猜测地区。\n\n</details>\n\n#### 分层实现步骤\n\n<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | TimeZoneQuery（q、limit、cursor）→TimeZonePageVO |\n| 2. Controller | PublicController.listTimeZones(query) |\n| 3. Service/应用协调 | TimeZoneCatalogService.list(query)：筛选、排序、分页 |\n| 4. Mapper接口及XML | 无Mapper/XML；时区来源为JDK规则库 |\n\n</details>\n\n#### 功能测试\n\n<details>\n<summary>展开：具体输入、操作步骤与预期</summary>\n\n| 场景 | 输入与步骤 | 预期结果 |\n|---|---|---|\n| 精确筛选 | GET ?q=Asia/Shanghai&limit=20 | 200，items含Asia/Shanghai |\n| 空列表 | GET ?q=NoSuchZone | 200，items=[]、nextCursor=null、hasMore=false |\n| 游标绑定 | 用q=Asia的游标改q=Europe继续读 | 422；页面清空旧游标后重查 |\n\n以上为待执行的测试设计；尚无通过/失败结论。\n\n</details>",
       "source": "03",
       "fr": [
         "FR-AUTH-001"
       ],
       "flow": "1. 读取JDK已加载的有效IANA名称集合。\n2. 按q做ASCII大小写不敏感筛选，按zoneId升序分页。\n3. 页面选择原始zoneId，不把语言、IP地区或UTC偏移量当时区。",
-      "analysis": "| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 识别失败时选择合法IANA时区；V4第2.3节，支撑FR-AUTH-001 |\n| 页面入口 | 注册页的时区选择器 |\n| 角色与前置 | 设备无法给出有效时区，或用户搜索选择项 |",
+      "analysis": "| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 识别失败时选择合法IANA时区；现行业务规则第2.3节，支撑FR-AUTH-001 |\n| 页面入口 | 注册页的时区选择器 |\n| 角色与前置 | 设备无法给出有效时区，或用户搜索选择项 |",
       "contract": "**请求头：** 无业务必填请求头。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | q | string | 否 | 1～64字符；按IANA名筛选 |\n| Query | limit | number | 否 | 整数1～100；默认20 |\n| Query | cursor | string | 否 | 服务端不透明游标；与筛选及排序绑定 |\n| Body | — | — | — | 无 |\n\n**成功：HTTP 200；data：Page<TimeZoneItem>。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| items | TimeZoneItem[] | 每项字段见[TimeZoneItem](#dto-timezoneitem) |\n| nextCursor | string/null | 下一页游标；没有时固定null |\n| hasMore | boolean | 是否存在后续页 |\n\n**关键异常：** HTTP 422 `VALIDATION_ERROR`；分页参数不合法。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nGET /api/v1/public/time-zones?q=Asia%2FShanghai&limit=20\n```\n\n无请求Body。\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"items\": [\n      {\n        \"zoneId\": \"Asia/Shanghai\"\n      }\n    ],\n    \"nextCursor\": null,\n    \"hasMore\": false\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VALIDATION_ERROR\",\n  \"message\": \"分页参数不合法\",\n  \"data\": {\n    \"violations\": [\n      {\n        \"field\": \"limit\",\n        \"message\": \"必须为1至100的整数\"\n      }\n    ]\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data 为 TimeZoneItem 的分页结果；按 zoneId 稳定升序，不匹配时 items为空、nextCursor=null、hasMore=false。\n\n**错误：** 参数无效400／422 VALIDATION_ERROR；服务端时区规则不可用503 SERVICE_UNAVAILABLE。\n\n**前端反馈：** 设备自动识别失败且无已有有效时区时，提供选择；先取得合法时区，再允许注册或相关日期写入。\n\n</details>",
       "operations": "<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| 无业务表 | 读取JDK时区规则集合 | 不查询账户，不生成地域画像，不写DB-02 |\n\n**原子边界与安全细则：**\n\n只读 JDK 已加载的受支持 IANA 时区集合，不读取他人账户、不写表。不是根据IP或语言猜测地区。\n\n</details>",
       "implementation": "<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | TimeZoneQuery（q、limit、cursor）→TimeZonePageVO |\n| 2. Controller | PublicController.listTimeZones(query) |\n| 3. Service/应用协调 | TimeZoneCatalogService.list(query)：筛选、排序、分页 |\n| 4. Mapper接口及XML | 无Mapper/XML；时区来源为JDK规则库 |\n\n</details>",
@@ -216,13 +216,13 @@
       "name": "同步自动识别的设备时区",
       "method": "PUT",
       "path": "/api/v1/auth/device-time-zone",
-      "body": "**PUT `/api/v1/auth/device-time-zone`**\n\n#### 需求分析\n\n| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 设备时区变化在旧业务日结束后生效；V4第2.3节、BL-AUTH-006，支撑FR-AUTH-007 |\n| 页面入口 | 登录后及设备时区变化时的同步提示 |\n| 角色与前置 | 已登录，识别得到合法IANA值；已读取最新账户version |\n\n#### 业务流程\n\n1. 先补齐已到期旧周期，再比对设备与当前/待生效时区。\n2. 本人锁内检查版本；相同目标按无变化处理。\n3. 不同目标登记旧时区当日末边界；再次改目标不顺延边界。\n4. 到期由自动处理暂停执行、关闭旧区间并建立新区间；历史日期不重排。\n\n#### 接口设计\n\n**请求头：** JSON请求使用Content-Type: application/json；写请求必带Idempotency-Key: UUID、X-CSRF-TOKEN: string。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | — | — | — | 无 |\n| Body | detectedZoneId | string | 是 | 合法IANA名称；识别失败不发送空值 |\n| Body | expectedVersion | string | 是 | 非负bigint十进制字符串；对应账户version |\n\n**成功：HTTP 200；data：DeviceTimeZoneResult。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| account | SelfAccount | 完整字段见[SelfAccount](#dto-selfaccount)或[AdminAccount](#dto-adminaccount) |\n| changed | boolean | 是否产生真实变更；同值为false |\n| serverTime | UTC string | 服务端权威当前时刻 |\n\n**关键异常：** HTTP 409 `VERSION_CONFLICT`；时区状态已更新，请同步后再操作。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nPUT /api/v1/auth/device-time-zone\nIdempotency-Key: e786356a-ac28-4938-89da-24c3ae5496a5\nX-CSRF-TOKEN: example-csrf-token\nContent-Type: application/json\n```\n\n请求Body：\n\n```json\n{\n  \"detectedZoneId\": \"America/New_York\",\n  \"expectedVersion\": \"3\"\n}\n```\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"account\": {\n      \"id\": \"e617f28e-1ae3-4f1f-9c34-0db703f00d21\",\n      \"username\": \"Star雨\",\n      \"nickname\": \"星雨\",\n      \"role\": \"USER\",\n      \"version\": \"4\",\n      \"createdAt\": \"2026-10-17T02:00:00Z\",\n      \"updatedAt\": \"2026-10-18T02:00:00Z\",\n      \"timeZone\": {\n        \"activeZoneId\": \"Asia/Shanghai\",\n        \"zonePeriodId\": \"a43cf965-3109-4892-93d5-a5a3ab46d168\",\n        \"zoneRevision\": \"1\",\n        \"pendingZoneId\": \"America/New_York\",\n        \"pendingEffectiveAt\": \"2026-10-18T16:00:00Z\"\n      }\n    },\n    \"changed\": true,\n    \"serverTime\": \"2026-10-18T02:00:00Z\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VERSION_CONFLICT\",\n  \"message\": \"时区状态已更新，请同步后再操作\",\n  \"data\": {\n    \"currentVersion\": \"4\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data为DeviceTimeZoneResult。与已生效时区相同且无待生效变化时changed=false；确有变化时登记pendingZoneId及pendingEffectiveAt，**当前日期不立即改用新时区**。\n\n**错误：** 400／422 VALIDATION_ERROR；401 AUTH_REQUIRED；403 CSRF_INVALID；409 VERSION_CONFLICT／STATE_CONFLICT；503 RESULT_UNKNOWN／SERVICE_UNAVAILABLE。\n\n**前端反馈：** 登录后、设备时区变化后比较me快照，再按差异提交；显示“将在当前业务日结束后使用新时区”。多设备版本冲突先同步，不在后台循环把两个设备时区互相覆盖。自动识别失败不静默使用服务器UTC。\n\n</details>\n\n#### 数据操作\n\n<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| DB-01 app.app_user | 更新pending_zone_id、pending_zone_effective_at、pending_zone_requested_at、version、updated_at | 三个pending字段同空同非空；识别回当前时区时成组清空 |\n| DB-30、33 | 保存原意图；更新ZONE_APPLY的next_due_at及区间依据 | 重复相同pending不递增账户version/重复建区间 |\n| 到期：DB-02、17～19、21 | 关闭旧区间valid_to，新建revision+1有效区间；可信点暂停并保存日期分配 | 到期与账户current_zone_period_id指针切换同事务；原区间/投入不改历史 |\n\n**原子边界与安全细则：**\n\n先补齐已到期旧周期；本人账户锁内重验版本、有效时区和既有待生效项。新时区在旧时区当前日结束边界生效；写DB-01 pending字段、DB-30及DB-33必要处理依据。到期事务先按可信点暂停相关执行，关闭旧DB-02区间、新建新区间并更新本人指针；实际投入区间和日归属沿用DB-18、21原依据，历史不重排。待生效前再次识别不同合法时区时，用新意图和当前版本替换待生效目标，旧日边界不顺延；识别回当前有效时区可取消待生效项。重复相同pending值不递增版本或另建时区区间。\n\n</details>\n\n#### 分层实现步骤\n\n<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | DeviceTimeZoneRequest→DeviceTimeZoneResultVO |\n| 2. Controller | AuthController.syncDeviceTimeZone(request) |\n| 3. Service/应用协调 | DeviceTimeZoneService.schedule(...)；app日期协调用例负责到期切换 |\n| 4. Mapper接口及XML | AccountMapper.updatePendingZoneWithVersion、ZonePeriodMapper.closeCurrent/insertNext；CheckpointMapper更新ZONE_APPLY |\n\n</details>\n\n#### 功能测试\n\n<details>\n<summary>展开：具体输入、操作步骤与预期</summary>\n\n| 场景 | 输入与步骤 | 预期结果 |\n|---|---|---|\n| 上海转纽约 | 2026-10-18上海业务日提交纽约时区 | 200 pendingEffectiveAt=2026-10-18T16:00:00Z，今天仍用上海 |\n| 取消待切换 | 当前上海、pending纽约，再以新键当前版本报上海 | 200 changed=true；pending两返回字段均null |\n| 两设备冲突 | 两个设备持version=3提交不同时区 | 只有先提交成功；另一个409，页面同步，不循环互相覆盖 |\n\n以上为待执行的测试设计；尚无通过/失败结论。\n\n</details>",
+      "body": "**PUT `/api/v1/auth/device-time-zone`**\n\n#### 需求分析\n\n| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 设备时区变化在旧业务日结束后生效；现行业务规则第2.3节、BL-AUTH-006，支撑FR-AUTH-007 |\n| 页面入口 | 登录后及设备时区变化时的同步提示 |\n| 角色与前置 | 已登录，识别得到合法IANA值；已读取最新账户version |\n\n#### 业务流程\n\n1. 先补齐已到期旧周期，再比对设备与当前/待生效时区。\n2. 本人锁内检查版本；相同目标按无变化处理。\n3. 不同目标登记旧时区当日末边界；再次改目标不顺延边界。\n4. 到期由自动处理暂停执行、关闭旧区间并建立新区间；历史日期不重排。\n\n#### 接口设计\n\n**请求头：** JSON请求使用Content-Type: application/json；写请求必带Idempotency-Key: UUID、X-CSRF-TOKEN: string。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | — | — | — | 无 |\n| Body | detectedZoneId | string | 是 | 合法IANA名称；识别失败不发送空值 |\n| Body | expectedVersion | string | 是 | 非负bigint十进制字符串；对应账户version |\n\n**成功：HTTP 200；data：DeviceTimeZoneResult。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| account | SelfAccount | 完整字段见[SelfAccount](#dto-selfaccount)或[AdminAccount](#dto-adminaccount) |\n| changed | boolean | 是否产生真实变更；同值为false |\n| serverTime | UTC string | 服务端权威当前时刻 |\n\n**关键异常：** HTTP 409 `VERSION_CONFLICT`；时区状态已更新，请同步后再操作。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nPUT /api/v1/auth/device-time-zone\nIdempotency-Key: e786356a-ac28-4938-89da-24c3ae5496a5\nX-CSRF-TOKEN: example-csrf-token\nContent-Type: application/json\n```\n\n请求Body：\n\n```json\n{\n  \"detectedZoneId\": \"America/New_York\",\n  \"expectedVersion\": \"3\"\n}\n```\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"account\": {\n      \"id\": \"e617f28e-1ae3-4f1f-9c34-0db703f00d21\",\n      \"username\": \"Star雨\",\n      \"nickname\": \"星雨\",\n      \"role\": \"USER\",\n      \"version\": \"4\",\n      \"createdAt\": \"2026-10-17T02:00:00Z\",\n      \"updatedAt\": \"2026-10-18T02:00:00Z\",\n      \"timeZone\": {\n        \"activeZoneId\": \"Asia/Shanghai\",\n        \"zonePeriodId\": \"a43cf965-3109-4892-93d5-a5a3ab46d168\",\n        \"zoneRevision\": \"1\",\n        \"pendingZoneId\": \"America/New_York\",\n        \"pendingEffectiveAt\": \"2026-10-18T16:00:00Z\"\n      }\n    },\n    \"changed\": true,\n    \"serverTime\": \"2026-10-18T02:00:00Z\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VERSION_CONFLICT\",\n  \"message\": \"时区状态已更新，请同步后再操作\",\n  \"data\": {\n    \"currentVersion\": \"4\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data为DeviceTimeZoneResult。与已生效时区相同且无待生效变化时changed=false；确有变化时登记pendingZoneId及pendingEffectiveAt，**当前日期不立即改用新时区**。\n\n**错误：** 400／422 VALIDATION_ERROR；401 AUTH_REQUIRED；403 CSRF_INVALID；409 VERSION_CONFLICT／STATE_CONFLICT；503 RESULT_UNKNOWN／SERVICE_UNAVAILABLE。\n\n**前端反馈：** 登录后、设备时区变化后比较me快照，再按差异提交；显示“将在当前业务日结束后使用新时区”。多设备版本冲突先同步，不在后台循环把两个设备时区互相覆盖。自动识别失败不静默使用服务器UTC。\n\n</details>\n\n#### 数据操作\n\n<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| DB-01 app.app_user | 更新pending_zone_id、pending_zone_effective_at、pending_zone_requested_at、version、updated_at | 三个pending字段同空同非空；识别回当前时区时成组清空 |\n| DB-30、33 | 保存原意图；更新ZONE_APPLY的next_due_at及区间依据 | 重复相同pending不递增账户version/重复建区间 |\n| 到期：DB-02、17～19、21 | 关闭旧区间valid_to，新建revision+1有效区间；可信点暂停并保存日期分配 | 到期与账户current_zone_period_id指针切换同事务；原区间/投入不改历史 |\n\n**原子边界与安全细则：**\n\n先补齐已到期旧周期；本人账户锁内重验版本、有效时区和既有待生效项。新时区在旧时区当前日结束边界生效；写DB-01 pending字段、DB-30及DB-33必要处理依据。到期事务先按可信点暂停相关执行，关闭旧DB-02区间、新建新区间并更新本人指针；实际投入区间和日归属沿用DB-18、21原依据，历史不重排。待生效前再次识别不同合法时区时，用新意图和当前版本替换待生效目标，旧日边界不顺延；识别回当前有效时区可取消待生效项。重复相同pending值不递增版本或另建时区区间。\n\n</details>\n\n#### 分层实现步骤\n\n<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | DeviceTimeZoneRequest→DeviceTimeZoneResultVO |\n| 2. Controller | AuthController.syncDeviceTimeZone(request) |\n| 3. Service/应用协调 | DeviceTimeZoneService.schedule(...)；app日期协调用例负责到期切换 |\n| 4. Mapper接口及XML | AccountMapper.updatePendingZoneWithVersion、ZonePeriodMapper.closeCurrent/insertNext；CheckpointMapper更新ZONE_APPLY |\n\n</details>\n\n#### 功能测试\n\n<details>\n<summary>展开：具体输入、操作步骤与预期</summary>\n\n| 场景 | 输入与步骤 | 预期结果 |\n|---|---|---|\n| 上海转纽约 | 2026-10-18上海业务日提交纽约时区 | 200 pendingEffectiveAt=2026-10-18T16:00:00Z，今天仍用上海 |\n| 取消待切换 | 当前上海、pending纽约，再以新键当前版本报上海 | 200 changed=true；pending两返回字段均null |\n| 两设备冲突 | 两个设备持version=3提交不同时区 | 只有先提交成功；另一个409，页面同步，不循环互相覆盖 |\n\n以上为待执行的测试设计；尚无通过/失败结论。\n\n</details>",
       "source": "03",
       "fr": [
         "FR-AUTH-007"
       ],
       "flow": "1. 先补齐已到期旧周期，再比对设备与当前/待生效时区。\n2. 本人锁内检查版本；相同目标按无变化处理。\n3. 不同目标登记旧时区当日末边界；再次改目标不顺延边界。\n4. 到期由自动处理暂停执行、关闭旧区间并建立新区间；历史日期不重排。",
-      "analysis": "| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 设备时区变化在旧业务日结束后生效；V4第2.3节、BL-AUTH-006，支撑FR-AUTH-007 |\n| 页面入口 | 登录后及设备时区变化时的同步提示 |\n| 角色与前置 | 已登录，识别得到合法IANA值；已读取最新账户version |",
+      "analysis": "| 项目 | 说明 |\n|---|---|\n| 目的与来源 | 设备时区变化在旧业务日结束后生效；现行业务规则第2.3节、BL-AUTH-006，支撑FR-AUTH-007 |\n| 页面入口 | 登录后及设备时区变化时的同步提示 |\n| 角色与前置 | 已登录，识别得到合法IANA值；已读取最新账户version |",
       "contract": "**请求头：** JSON请求使用Content-Type: application/json；写请求必带Idempotency-Key: UUID、X-CSRF-TOKEN: string。 身份Cookie由浏览器处理；详情见02。\n\n| 位置 | 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|---|\n| Path | — | — | — | 无 |\n| Query | — | — | — | 无 |\n| Body | detectedZoneId | string | 是 | 合法IANA名称；识别失败不发送空值 |\n| Body | expectedVersion | string | 是 | 非负bigint十进制字符串；对应账户version |\n\n**成功：HTTP 200；data：DeviceTimeZoneResult。**\n\n| data字段 | 类型 | 说明 |\n|---|---|---|\n| account | SelfAccount | 完整字段见[SelfAccount](#dto-selfaccount)或[AdminAccount](#dto-adminaccount) |\n| changed | boolean | 是否产生真实变更；同值为false |\n| serverTime | UTC string | 服务端权威当前时刻 |\n\n**关键异常：** HTTP 409 `VERSION_CONFLICT`；时区状态已更新，请同步后再操作。\n\n<details>\n<summary>展开：完整请求、成功JSON与失败JSON</summary>\n\n```http\nPUT /api/v1/auth/device-time-zone\nIdempotency-Key: e786356a-ac28-4938-89da-24c3ae5496a5\nX-CSRF-TOKEN: example-csrf-token\nContent-Type: application/json\n```\n\n请求Body：\n\n```json\n{\n  \"detectedZoneId\": \"America/New_York\",\n  \"expectedVersion\": \"3\"\n}\n```\n\n成功响应：\n\n```json\n{\n  \"code\": \"OK\",\n  \"message\": \"操作成功\",\n  \"data\": {\n    \"account\": {\n      \"id\": \"e617f28e-1ae3-4f1f-9c34-0db703f00d21\",\n      \"username\": \"Star雨\",\n      \"nickname\": \"星雨\",\n      \"role\": \"USER\",\n      \"version\": \"4\",\n      \"createdAt\": \"2026-10-17T02:00:00Z\",\n      \"updatedAt\": \"2026-10-18T02:00:00Z\",\n      \"timeZone\": {\n        \"activeZoneId\": \"Asia/Shanghai\",\n        \"zonePeriodId\": \"a43cf965-3109-4892-93d5-a5a3ab46d168\",\n        \"zoneRevision\": \"1\",\n        \"pendingZoneId\": \"America/New_York\",\n        \"pendingEffectiveAt\": \"2026-10-18T16:00:00Z\"\n      }\n    },\n    \"changed\": true,\n    \"serverTime\": \"2026-10-18T02:00:00Z\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n失败响应：\n\n```json\n{\n  \"code\": \"VERSION_CONFLICT\",\n  \"message\": \"时区状态已更新，请同步后再操作\",\n  \"data\": {\n    \"currentVersion\": \"4\"\n  },\n  \"traceId\": \"tr-20261018-0001\"\n}\n```\n\n示例中的CSRF/验证码token仅用于说明字段；实际值必须来自本次会话和验证，不能复制示例作为凭据。\n\n</details>\n\n<details>\n<summary>展开：本接口错误条件、页面状态与结果核实</summary>\n\n**成功：** 200，data为DeviceTimeZoneResult。与已生效时区相同且无待生效变化时changed=false；确有变化时登记pendingZoneId及pendingEffectiveAt，**当前日期不立即改用新时区**。\n\n**错误：** 400／422 VALIDATION_ERROR；401 AUTH_REQUIRED；403 CSRF_INVALID；409 VERSION_CONFLICT／STATE_CONFLICT；503 RESULT_UNKNOWN／SERVICE_UNAVAILABLE。\n\n**前端反馈：** 登录后、设备时区变化后比较me快照，再按差异提交；显示“将在当前业务日结束后使用新时区”。多设备版本冲突先同步，不在后台循环把两个设备时区互相覆盖。自动识别失败不静默使用服务器UTC。\n\n</details>",
       "operations": "<details>\n<summary>展开：准确表字段、事务、并发与失败保存</summary>\n\n| 表与逻辑归属 | 查询或写入字段 | 条件与结果 |\n|---|---|---|\n| DB-01 app.app_user | 更新pending_zone_id、pending_zone_effective_at、pending_zone_requested_at、version、updated_at | 三个pending字段同空同非空；识别回当前时区时成组清空 |\n| DB-30、33 | 保存原意图；更新ZONE_APPLY的next_due_at及区间依据 | 重复相同pending不递增账户version/重复建区间 |\n| 到期：DB-02、17～19、21 | 关闭旧区间valid_to，新建revision+1有效区间；可信点暂停并保存日期分配 | 到期与账户current_zone_period_id指针切换同事务；原区间/投入不改历史 |\n\n**原子边界与安全细则：**\n\n先补齐已到期旧周期；本人账户锁内重验版本、有效时区和既有待生效项。新时区在旧时区当前日结束边界生效；写DB-01 pending字段、DB-30及DB-33必要处理依据。到期事务先按可信点暂停相关执行，关闭旧DB-02区间、新建新区间并更新本人指针；实际投入区间和日归属沿用DB-18、21原依据，历史不重排。待生效前再次识别不同合法时区时，用新意图和当前版本替换待生效目标，旧日边界不顺延；识别回当前有效时区可取消待生效项。重复相同pending值不递增版本或另建时区区间。\n\n</details>",
       "implementation": "<details>\n<summary>展开：DTO → Controller → Service → Mapper XML</summary>\n\n| 步骤 | 手写职责与方法 |\n|---|---|\n| 1. DTO/VO | DeviceTimeZoneRequest→DeviceTimeZoneResultVO |\n| 2. Controller | AuthController.syncDeviceTimeZone(request) |\n| 3. Service/应用协调 | DeviceTimeZoneService.schedule(...)；app日期协调用例负责到期切换 |\n| 4. Mapper接口及XML | AccountMapper.updatePendingZoneWithVersion、ZonePeriodMapper.closeCurrent/insertNext；CheckpointMapper更新ZONE_APPLY |\n\n</details>",
@@ -3048,7 +3048,7 @@
     },
     {
       "id": "NFR-DATA-001",
-      "target": "当前任务考核与历史贡献按 V4 分别计算；已删除历史任务不进入当前分子分母，但真实时间和历史完成贡献保留",
+      "target": "当前任务考核与历史贡献按现行业务规则 分别计算；已删除历史任务不进入当前分子分母，但真实时间和历史完成贡献保留",
       "verification": "删除未开始、部分执行及已完成任务，核对阶段完成、目标进度及历史",
       "group": "DATA"
     },
@@ -3078,7 +3078,7 @@
     },
     {
       "id": "NFR-DATA-006",
-      "target": "成长记录、规则时间线及结束快照按 V4 持续保留，不因应用日志轮转、备份过期或清理缓存而删除；历史查询保持本人归属限制",
+      "target": "成长记录、规则时间线及结束快照按现行业务规则 持续保留，不因应用日志轮转、备份过期或清理缓存而删除；历史查询保持本人归属限制",
       "verification": "执行日志清理、备份轮转及缓存清理，再查询早期归档记录",
       "group": "DATA"
     },
@@ -3126,7 +3126,7 @@
     },
     {
       "id": "NFR-TIME-008",
-      "target": "时区切换按 V4 在旧时区当日结束后生效；历史不重分桶。跨日期线导致当地日期重复时，不得重开已结算日结果或重复贡献",
+      "target": "时区切换按现行业务规则 在旧时区当日结束后生效；历史不重分桶。跨日期线导致当地日期重复时，不得重开已结算日结果或重复贡献",
       "verification": "测试上海与纽约切换、向西跨日期线、夏令时起止及本地日期重复",
       "group": "TIME"
     },
@@ -3222,7 +3222,7 @@
     },
     {
       "id": "NFR-PRIV-002",
-      "target": "后台账户接口仅返回 V4 约定账户资料，系统配置接口按其角色及配置范围返回；后台均不得读取其他用户成长正文。普通运维日志及错误上报不默认采集正文、密码、密码哈希或会话令牌",
+      "target": "后台账户接口仅返回 现行业务规则 约定账户资料，系统配置接口按其角色及配置范围返回；后台均不得读取其他用户成长正文。普通运维日志及错误上报不默认采集正文、密码、密码哈希或会话令牌",
       "verification": "检查各角色及不同接口的响应与日志样本，使用测试敏感值检索",
       "group": "PRIV"
     },
@@ -3330,7 +3330,7 @@
     },
     {
       "id": "NFR-OBS-006",
-      "target": "应用日志建议保留 30 天，安全及后台审计记录建议保留 90 天；受控轮转且不能占满运行磁盘。业务历史按 V4 保留，不受此期限影响",
+      "target": "应用日志建议保留 30 天，安全及后台审计记录建议保留 90 天；受控轮转且不能占满运行磁盘。业务历史按现行业务规则 保留，不受此期限影响",
       "verification": "推进测试日期及模拟磁盘不足，核对轮转、访问权限和历史完整性",
       "group": "OBS"
     },
@@ -3355,7 +3355,7 @@
     {
       "id": "NFR-USE-004",
       "target": "删除、归档、完成及退出提示准确说明影响；被删除内容是否保留历史、任务完成不可恢复、未结束执行如何处理须清晰",
-      "verification": "按 V4 的删除与结束分支实际走查，检查文案与结果一致",
+      "verification": "按现行业务规则 的删除与结束分支实际走查，检查文案与结果一致",
       "group": "USE"
     },
     {
@@ -3402,13 +3402,13 @@
     },
     {
       "id": "NFR-COMP-003",
-      "target": "中文用户名、昵称、正文和密码处理一致；字符长度不误按 UTF-8 字节数限制，允许字符仍按 V4 的字段规则",
+      "target": "中文用户名、昵称、正文和密码处理一致；字符长度不误按 UTF-8 字节数限制，允许字符仍按现行业务规则 的字段规则",
       "verification": "提交中英文边界、表情及组合字符，前后端使用一致计数规则",
       "group": "COMP"
     },
     {
       "id": "NFR-COMP-004",
-      "target": "浏览器时区识别失败时按 V4 处理；客户端时区不等于服务器部署地区；历史日期不随服务器时区变化整体偏移",
+      "target": "浏览器时区识别失败时按现行业务规则 处理；客户端时区不等于服务器部署地区；历史日期不随服务器时区变化整体偏移",
       "verification": "更换客户端和服务器时区，使用无有效识别结果的测试场景",
       "group": "COMP"
     },
@@ -3427,7 +3427,7 @@
     {
       "id": "NFR-MAIN-003",
       "target": "业务状态机、时间计算、权限及数据迁移具备自动化回归；每个关键失败和并发分支有可追溯验证，不以单一代码覆盖率替代",
-      "verification": "以 V4 的 AC 编号和本文 NFR／NFA 编号关联测试、输入及结果",
+      "verification": "以现行业务规则 的 AC 编号和本文 NFR／NFA 编号关联测试、输入及结果",
       "group": "MAIN"
     },
     {
@@ -3550,7 +3550,7 @@
       "id": "TEST-013",
       "input": "首次无法识别时区、已有有效区后设备改变",
       "steps": "执行日期写入，选择有效区；申请时区变化",
-      "expected": "从未有效时要求选择；已有区按V4保留并在旧日结束后生效，不静默套服务器地区",
+      "expected": "从未有效时要求选择；已有区按现行业务规则保留并在旧日结束后生效，不静默套服务器地区",
       "evidence": "E1、E2、E3",
       "status": "NOT_VERIFIED"
     },
@@ -3566,7 +3566,7 @@
       "id": "TEST-015",
       "input": "本人父链、无任务目标、完整/缺失任务字段",
       "steps": "创建阶段任务并读取各入口；提交非法日期和预计值",
-      "expected": "无任务有空态和规划入口；任务未开始/未执行、不自动安排；字段按V4校验",
+      "expected": "无任务有空态和规划入口；任务未开始/未执行、不自动安排；字段按现行业务规则校验",
       "evidence": "E1、E2",
       "status": "NOT_VERIFIED"
     },
@@ -3582,7 +3582,7 @@
       "id": "TEST-017",
       "input": "到期未结束目标、不同进度与无任务情况",
       "steps": "重复扫描和访问；手动改预计结束；停机后补偿",
-      "expected": "按V4延期公式及固定基数至少延1天，不每次刷新重复延；目标不自动消失",
+      "expected": "按现行业务规则延期公式及固定基数至少延1天，不每次刷新重复延；目标不自动消失",
       "evidence": "E1、E2、E3",
       "status": "NOT_VERIFIED"
     },
@@ -3598,7 +3598,7 @@
       "id": "TEST-019",
       "input": "暂停/完成阶段及有效未完成任务",
       "steps": "修改规划、开始、完成阶段、恢复/重开",
-      "expected": "暂停可规划不执行；有有效未完成任务不能完成；按V4恢复，不混淆已完成任务",
+      "expected": "暂停可规划不执行；有有效未完成任务不能完成；按现行业务规则恢复，不混淆已完成任务",
       "evidence": "E1、E2",
       "status": "NOT_VERIFIED"
     },
@@ -3926,7 +3926,7 @@
       "id": "TEST-060",
       "input": "普通/管理/超管角色，两个可用超管",
       "steps": "逐项管理权限；并发禁用/删除/降权两个超管",
-      "expected": "权限符合V4且不返回成长正文；至少一可用超管；必要审计失败不假报成功",
+      "expected": "权限符合现行业务规则且不返回成长正文；至少一可用超管；必要审计失败不假报成功",
       "evidence": "E1、E2、E4",
       "status": "NOT_VERIFIED"
     },
@@ -4031,7 +4031,7 @@
     {
       "id": "DB-01",
       "name": "app.app_user",
-      "body": "公共字段：I+C+M。账户主身份，不物理删除。\n\n| 字段 | 类型 | 空 | 默认 | 含义与规则 |\n|---|---|---|---|---|\n| username | varchar(30) | 否 | — | 1–30 字符，保留展示形式；合法字符按 V4 |\n| username_key | varchar(30) COLLATE C | 否 | STORED 生成列 | translate(username,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')；全局唯一 |\n| nickname | varchar(30) | 否 | — | 1–30 字符；注册未填时服务写入注册用户名，后续独立修改 |\n| password_hash | text | 否 | — | 完整 Argon2id 编码及必要参数，不保存密码原文 |\n| role | varchar(16) | 否 | USER | USER / ADMIN / SUPER_ADMIN |\n| status | varchar(16) | 否 | ENABLED | ENABLED / DISABLED |\n| deleted_at | T | 是 | NULL | 后台逻辑删除；非空即拒绝登录 |\n| security_version | bigint | 否 | 1 | >0；密码、授权或撤销变化的校验版本 |\n| credential_version | bigint | 否 | 1 | >0；改密递增，不用改数字掩盖恢复旧哈希 |\n| login_name_version | bigint | 否 | 1 | >0；改名递增，现有会话仍关联本账户 |\n| password_changed_at | T | 否 | — | 初始设密及后续改密时刻 |\n| current_zone_period_id | uuid | 否 | — | 本人当前已生效的时区区间 ID，逻辑关联 DB-02 |\n| pending_zone_id | varchar(64) | 是 | NULL | 待生效 IANA 时区 |\n| pending_zone_effective_at | T | 是 | NULL | 旧时区当日结束边界，与 pending_zone_id 同空同非空 |\n| pending_zone_requested_at | T | 是 | NULL | 请求时刻，三个 pending 字段成组 |\n\nusername_key 由数据库生成，不能由请求直接填写；英文只作 ASCII 大小写转换，不额外使用会改变中文或符号语义的 NFKC。逻辑删除账户继续占用其保留行的当前登录名，唯一索引不按 deleted_at 过滤。改名后的旧键释放，但不能继续登录原账户。[生成列](https://www.postgresql.org/docs/18/ddl-generated-columns.html)",
+      "body": "公共字段：I+C+M。账户主身份，不物理删除。\n\n| 字段 | 类型 | 空 | 默认 | 含义与规则 |\n|---|---|---|---|---|\n| username | varchar(30) | 否 | — | 1–30 字符，保留展示形式；合法字符按现行业务规则 |\n| username_key | varchar(30) COLLATE C | 否 | STORED 生成列 | translate(username,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')；全局唯一 |\n| nickname | varchar(30) | 否 | — | 1–30 字符；注册未填时服务写入注册用户名，后续独立修改 |\n| password_hash | text | 否 | — | 完整 Argon2id 编码及必要参数，不保存密码原文 |\n| role | varchar(16) | 否 | USER | USER / ADMIN / SUPER_ADMIN |\n| status | varchar(16) | 否 | ENABLED | ENABLED / DISABLED |\n| deleted_at | T | 是 | NULL | 后台逻辑删除；非空即拒绝登录 |\n| security_version | bigint | 否 | 1 | >0；密码、授权或撤销变化的校验版本 |\n| credential_version | bigint | 否 | 1 | >0；改密递增，不用改数字掩盖恢复旧哈希 |\n| login_name_version | bigint | 否 | 1 | >0；改名递增，现有会话仍关联本账户 |\n| password_changed_at | T | 否 | — | 初始设密及后续改密时刻 |\n| current_zone_period_id | uuid | 否 | — | 本人当前已生效的时区区间 ID，逻辑关联 DB-02 |\n| pending_zone_id | varchar(64) | 是 | NULL | 待生效 IANA 时区 |\n| pending_zone_effective_at | T | 是 | NULL | 旧时区当日结束边界，与 pending_zone_id 同空同非空 |\n| pending_zone_requested_at | T | 是 | NULL | 请求时刻，三个 pending 字段成组 |\n\nusername_key 由数据库生成，不能由请求直接填写；英文只作 ASCII 大小写转换，不额外使用会改变中文或符号语义的 NFKC。逻辑删除账户继续占用其保留行的当前登录名，唯一索引不按 deleted_at 过滤。改名后的旧键释放，但不能继续登录原账户。[生成列](https://www.postgresql.org/docs/18/ddl-generated-columns.html)",
       "fields": [
         {
           "name": "id",
@@ -4070,7 +4070,7 @@
           "type": "varchar(30)",
           "nullable": "否",
           "default": "—",
-          "meaning": "1–30 字符，保留展示形式；合法字符按 V4",
+          "meaning": "1–30 字符，保留展示形式；合法字符按现行业务规则",
           "origin": "专用字段"
         },
         {
@@ -4592,7 +4592,7 @@
     {
       "id": "DB-08",
       "name": "app.goal",
-      "body": "公共字段：I+C+U+M。\n\n| 字段 | 类型 | 空 | 默认 | 含义与规则 |\n|---|---|---|---|---|\n| name | text | 否 | — | 非空名称 |\n| description | text | 否 | — | 非空描述 |\n| completion_criteria | text | 否 | — | 非空完成条件 |\n| start_date | date | 否 | — | 业务开始日 |\n| expected_end_date | date | 否 | — | 当前预计结束日，≥start_date |\n| baseline_duration_days | integer | 否 | — | ≥1；最近人工设定的含首尾日历天数，自动延期不改 |\n| state | varchar(16) | 否 | — | PENDING / ACTIVE / COMPLETED，服务根据开始日写入 |\n| archived_at | T | 是 | NULL | 主动归档；与业务状态正交 |\n| closed_at | T | 是 | NULL | 当前已结束时刻；仅 COMPLETED 非空，重开清空但快照保留 |\n| cycle_no | integer | 否 | 1 | >0；每次重开递增，不重置任务完成 |\n| completion_condition_met | boolean | 否 | false | 当前是否处于有效全部完成条件，由源任务及状态计算维护 |\n| condition_round | bigint | 否 | 0 | ≥0；新一轮条件成立递增，通知用此去重 |\n| next_action_at | T | 是 | NULL | 可重建到期提示，实际资格仍即时校验 |\n\n没有 deleted_at；运行角色不获 DELETE。当前任务 N/C、百分比与投入不持久化为独立可修改字段。自动延期严格使用 V4 已记录公式，不自行逐日反复叠加延期。",
+      "body": "公共字段：I+C+U+M。\n\n| 字段 | 类型 | 空 | 默认 | 含义与规则 |\n|---|---|---|---|---|\n| name | text | 否 | — | 非空名称 |\n| description | text | 否 | — | 非空描述 |\n| completion_criteria | text | 否 | — | 非空完成条件 |\n| start_date | date | 否 | — | 业务开始日 |\n| expected_end_date | date | 否 | — | 当前预计结束日，≥start_date |\n| baseline_duration_days | integer | 否 | — | ≥1；最近人工设定的含首尾日历天数，自动延期不改 |\n| state | varchar(16) | 否 | — | PENDING / ACTIVE / COMPLETED，服务根据开始日写入 |\n| archived_at | T | 是 | NULL | 主动归档；与业务状态正交 |\n| closed_at | T | 是 | NULL | 当前已结束时刻；仅 COMPLETED 非空，重开清空但快照保留 |\n| cycle_no | integer | 否 | 1 | >0；每次重开递增，不重置任务完成 |\n| completion_condition_met | boolean | 否 | false | 当前是否处于有效全部完成条件，由源任务及状态计算维护 |\n| condition_round | bigint | 否 | 0 | ≥0；新一轮条件成立递增，通知用此去重 |\n| next_action_at | T | 是 | NULL | 可重建到期提示，实际资格仍即时校验 |\n\n没有 deleted_at；运行角色不获 DELETE。当前任务 N/C、百分比与投入不持久化为独立可修改字段。自动延期严格使用 现行业务规则 已记录公式，不自行逐日反复叠加延期。",
       "fields": [
         {
           "name": "id",
