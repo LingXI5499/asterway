@@ -1,0 +1,114 @@
+/* ===== 全局基础样式 ===== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+  color: #202b29;
+  background: #f3f6f4;
+}
+
+/* 按钮和输入框继承正文字体 */
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* 禁用态按钮 */
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+a {
+  color: #287a62;
+}
+
+/* ===== 布局容器：把卡片居中 ===== */
+
+.app-container {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+/* ===== 认证卡片（登录/注册/账户中心共用）===== */
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 32px;
+  border: 1px solid #e0e8e3;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 12px 40px rgb(20 50 40 / 6%);
+}
+
+.auth-card h1 {
+  margin-top: 0;
+}
+
+.subtitle {
+  color: #68736f;
+  line-height: 1.6;
+}
+
+/* ===== 表单 ===== */
+
+form {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd7d1;
+  border-radius: 8px;
+  outline-color: #287a62;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  background: #287a62;
+}
+
+/* ===== 提示信息 ===== */
+
+/* 错误提示（红色） */
+.error {
+  color: #bd3434;
+}
+
+/* 成功提示（绿色） */
+.success {
+  color: #287a62;
+}
+
+/* 底部"切换登录/注册"链接 */
+.switch-link {
+  margin-top: 24px;
+  text-align: center;
+}

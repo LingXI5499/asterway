@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  账户数据访问 SQL 映射文件。
+  对应接口：com.asterway.identity.mapper.AccountMapper
+  包含三个 SQL：insertAccount（新增）、findByUsernameKey（按用户名查）、existsByUsernameKey（判断存在）。
+-->
+
+<mapper namespace="com.asterway.identity.mapper.AccountMapper">
+
+    <!--
+      结果映射：把查询出的列映射到 AccountEntity 这个 record。
+      因为 AccountEntity 是不可变 record（没有 setter），
+      所以用 <constructor> 按构造器参数顺序映射，每个参数都要写 name + javaType。
+    -->
+    <resultMap id="AccountEntityMap"
+               type="com.asterway.identity.model.AccountEntity">
+
+        <constructor>
+            <!-- 主键 id 用 <idArg> -->
+            <idArg column="id"
+                   name="id"
+                   javaType="java.util.UUID"/>
+
+            <arg column="username"
+                 name="username"
+                 javaType="java.lang.String"/>
+
+            <arg column="username_key"
+                 name="usernameKey"
+                 javaType="java.lang.String"/>
+
+            <arg column="nickname"
+                 name="nickname"
+                 javaType="java.lang.String"/>
+
+            <arg column="password_hash"
+                 name="passwordHash"
+                 javaType="java.lang.String"/>
+
+            <arg column="role"
+                 name="role"
+                 javaType="java.lang.String"/>
+
+            <arg column="status"
+                 name="status"
+                 javaType="java.lang.String"/>
+
+            <arg column="created_at"
+                 name="createdAt"
+                 javaType="java.time.OffsetDateTime"/>
+
+            <arg column="updated_at"
+                 name="updatedAt"
+                 javaType="java.time.OffsetDateTime"/>
+        </constructor>
+
+    </resultMap>
+
+    <!--
+      新增账户。
+      注意：id、username_key、created_at、updated_at 由数据库生成，这里不插入。
+    -->
+    <insert id="insertAccount"
+            parameterType="com.asterway.identity.model.AccountEntity">
+
+        INSERT INTO app.app_user (
+        username,
+        nickname,
+        password_hash,
+        role,
+        status
+        )
+        VALUES (
+        #{username},
+        #{nickname},
+        #{passwordHash},
+        #{role},
+        #{status}
+        )
+
+    </insert>
+
+    <!--
+      按规范化用户名查询账户（返回完整实体，含密码哈希）。
+      仅在登录校验时使用，不能把密码哈希返回给前端。
+    -->
+    <select id="findByUsernameKey"
+            resultMap="AccountEntityMap">
+
+        SELECT
+        id,
+        username,
+        username_key,
+        nickname,
+        password_hash,
+        role,
+        status,
+        created_at,
+        updated_at
+        FROM app.app_user
+        WHERE username_key = #{usernameKey}
+
+    </select>
+
+    <!--
+      判断用户名是否已存在（只查存在性，不读密码哈希等敏感字段）。
+      用于注册时的查重，返回 true / false。
+    -->
+    <select id="existsByUsernameKey" resultType="boolean">
+
+        SELECT EXISTS (
+            SELECT 1
+            FROM app.app_user
+            WHERE username_key = #{usernameKey}
+        )
+
+    </select>
+
+</mapper>
