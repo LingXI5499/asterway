@@ -1,55 +1,94 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiRequest, ensureCsrf } from '../api/http'
+import CaptchaPuzzle from '../components/CaptchaPuzzle.vue'
+import { ApiError, apiRequest } from '../api/http'
+import {
+  createIntent,
+  errorText,
+  resultUncertain,
+  sendIntent,
+  validateUsername,
+} from '../api/account'
 
 const router = useRouter()
 const route = useRoute()
-
-// 表单字段
 const username = ref('')
 const password = ref('')
-
-// 加载状态与错误提示
+const proof = ref(null)
+const captcha = ref(null)
 const loading = ref(false)
+const checking = ref(true)
+const registrationOpen = ref(true)
+const siteName = ref('Asterway')
 const errorMessage = ref('')
+const notice =
+  new Map([
+    ['account-unavailable', '账户不可用，请联系管理员。'],
+    ['session-expired', '登录状态已失效，请重新登录。'],
+    ['password-changed', '密码修改成功，请使用新密码登录。'],
+    ['result-unknown', '上次操作结果尚未确认。登录后可核实原操作结果。'],
+  ]).get(route.query.reason) || ''
+const pending = ref(null)
 
-// 是否刚从注册页跳转过来（query.registered === '1'）
-const registered = ref(route.query.registered === '1')
-
-// 页面挂载时先初始化 CSRF Token，否则登录（写请求）会失败
 onMounted(async () => {
   try {
-    await ensureCsrf()
+    const bootstrap = await apiRequest('/public/bootstrap')
+    siteName.value = bootstrap.siteName
+    registrationOpen.value = bootstrap.registrationOpen
+    await apiRequest('/auth/me')
+    await router.replace('/home')
   } catch (error) {
-    errorMessage.value = error.message
+    if (!(error instanceof ApiError) || ![401, 403].includes(error.status)) {
+      errorMessage.value = errorText(error)
+    }
+  } finally {
+    checking.value = false
   }
 })
 
-// 提交登录表单
 async function submit() {
-  loading.value = true
+  if (loading.value) {
+    return
+  }
   errorMessage.value = ''
-
   try {
-    await apiRequest('/auth/login', {
-      method: 'POST',
-      body: {
-        username: username.value,
-        password: password.value
+    if (!pending.value) {
+      validateUsername(username.value)
+      if (!password.value || Array.from(password.value).length > 50 || !proof.value) {
+        errorMessage.value = '请输入密码并完成滑动验证。'
+        return
       }
-    })
-
-    // 清空密码，避免留在内存里
+      pending.value = createIntent({
+        username: username.value,
+        password: password.value,
+        captchaChallengeId: proof.value.challengeId,
+        captchaVerificationToken: proof.value.verificationToken,
+      })
+    }
+    loading.value = true
+    await sendIntent('/auth/login', 'POST', pending.value)
     password.value = ''
-
-    // 登录成功后安全策略刷新了 CSRF Token，
-    // 重新获取一次，再进入受保护页面（否则后续写请求会 403）
-    await ensureCsrf()
-
-    await router.push('/home')
+    pending.value = null
+    await router.replace('/home')
   } catch (error) {
-    errorMessage.value = error.message
+    errorMessage.value =
+      error instanceof ApiError || error instanceof TypeError ? errorText(error) : error.message
+    if (resultUncertain(error) && pending.value) {
+      // Cookie 已建立而响应丢失时，按当前服务端身份核实，不从去重结果重发 Cookie。
+      try {
+        await apiRequest('/auth/me')
+        password.value = ''
+        pending.value = null
+        await router.replace('/home')
+        return
+      } catch {
+        errorMessage.value += ' 结果尚未确认，可使用原操作标识重试。'
+      }
+    } else {
+      pending.value = null
+      await captcha.value?.reset()
+    }
   } finally {
     loading.value = false
   }
@@ -58,49 +97,31 @@ async function submit() {
 
 <template>
   <section class="auth-card">
-    <h1>登录 Asterway</h1>
-    <p class="subtitle">使用已注册的账户继续。</p>
-
-    <!-- 注册成功跳转过来时的提示 -->
-    <p v-if="registered" class="success">
-      注册成功，请登录。
-    </p>
-
-    <!-- 阻止默认提交，走自定义 submit -->
-    <form @submit.prevent="submit">
-      <label>
-        用户名
-        <input
-          v-model="username"
-          required
-          maxlength="30"
-          autocomplete="username"
-        />
-      </label>
-
-      <label>
-        密码
-        <input
-          v-model="password"
-          type="password"
-          required
-          maxlength="50"
-          autocomplete="current-password"
-        />
-      </label>
-
-      <p v-if="errorMessage" class="error">
-        {{ errorMessage }}
-      </p>
-
-      <button :disabled="loading">
-        {{ loading ? '登录中…' : '登录' }}
+    <h1>登录 {{ siteName }}</h1>
+    <p v-if="route.query.registered === '1'" class="success">注册成功，请登录。</p>
+    <p v-if="notice" role="status">{{ notice }}</p>
+    <p v-if="checking">正在确认登录状态…</p>
+    <form v-else @submit.prevent="submit">
+      <fieldset :disabled="loading || Boolean(pending)">
+        <label>
+          用户名
+          <input v-model="username" required autocomplete="username" />
+        </label>
+        <label>
+          密码
+          <input v-model="password" type="password" required autocomplete="current-password" />
+        </label>
+      </fieldset>
+      <CaptchaPuzzle ref="captcha" v-model="proof" purpose="LOGIN" />
+      <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+      <button :disabled="loading || (!proof && !pending)">
+        {{ loading ? '登录中…' : pending ? '重试原登录请求' : '登录' }}
       </button>
     </form>
-
-    <p class="switch-link">
+    <p v-if="registrationOpen" class="switch-link">
       没有账户？
       <RouterLink to="/register">去注册</RouterLink>
     </p>
+    <p v-else>当前未开放注册，已有账户仍可登录。</p>
   </section>
 </template>

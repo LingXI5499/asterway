@@ -1,53 +1,98 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiRequest } from '../api/http'
+import CaptchaPuzzle from '../components/CaptchaPuzzle.vue'
+import TimeZoneSelect from '../components/TimeZoneSelect.vue'
+import { ApiError, apiRequest } from '../api/http'
+import {
+  createIntent,
+  detectTimeZone,
+  errorText,
+  passwordStrength,
+  resultUncertain,
+  sendIntent,
+  validateNickname,
+  validatePassword,
+  validateUsername,
+} from '../api/account'
 
 const router = useRouter()
-
-// 表单字段
 const username = ref('')
 const nickname = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-
-// 加载状态与错误提示
+const zoneId = ref(detectTimeZone())
+const proof = ref(null)
+const captcha = ref(null)
 const loading = ref(false)
+const checking = ref(true)
+const registrationOpen = ref(false)
 const errorMessage = ref('')
+const pending = ref(null)
+const strength = computed(() => passwordStrength(password.value))
 
-// 提交注册表单
-async function submit() {
-  loading.value = true
-  errorMessage.value = ''
-
+onMounted(async () => {
   try {
-    // 组装请求体，昵称为空时不传（后端会回退为用户名）
-    const body = {
-      username: username.value,
-      password: password.value,
-      confirmPassword: confirmPassword.value
+    const bootstrap = await apiRequest('/public/bootstrap')
+    registrationOpen.value = bootstrap.registrationOpen
+  } catch (error) {
+    errorMessage.value = errorText(error)
+  } finally {
+    checking.value = false
+  }
+})
+
+async function submit() {
+  if (loading.value) {
+    return
+  }
+  errorMessage.value = ''
+  try {
+    if (!pending.value) {
+      validateUsername(username.value)
+      validatePassword(password.value)
+      if (nickname.value !== '') {
+        validateNickname(nickname.value)
+      }
+      if (confirmPassword.value !== password.value) {
+        errorMessage.value = '两次输入的密码不一致。'
+        return
+      }
+      if (!zoneId.value || !proof.value) {
+        errorMessage.value = '请选择有效时区并完成滑动验证。'
+        return
+      }
+      const body = {
+        username: username.value,
+        password: password.value,
+        confirmPassword: confirmPassword.value,
+        zoneId: zoneId.value,
+        captchaChallengeId: proof.value.challengeId,
+        captchaVerificationToken: proof.value.verificationToken,
+      }
+      if (nickname.value !== '') {
+        body.nickname = nickname.value
+      }
+      pending.value = createIntent(body)
     }
-
-    if (nickname.value.trim()) {
-      body.nickname = nickname.value
-    }
-
-    await apiRequest('/auth/register', {
-      method: 'POST',
-      body
-    })
-
-    // 清空敏感字段
+    loading.value = true
+    await sendIntent('/auth/register', 'POST', pending.value)
     password.value = ''
     confirmPassword.value = ''
-
-    // 注册成功跳转登录页，带 registered=1 提示
-    await router.push({
-      path: '/login',
-      query: { registered: '1' }
-    })
+    pending.value = null
+    await router.replace({ path: '/login', query: { registered: '1' } })
   } catch (error) {
-    errorMessage.value = error.message
+    errorMessage.value =
+      error instanceof ApiError || error instanceof TypeError ? errorText(error) : error.message
+    if (resultUncertain(error) && pending.value) {
+      errorMessage.value += ' 结果尚未确认，请重试原注册请求，勿重复创建账户。'
+    } else {
+      pending.value = null
+      if (error.code === 'REGISTRATION_CLOSED') {
+        registrationOpen.value = false
+      }
+      await captcha.value?.reset()
+    }
   } finally {
     loading.value = false
   }
@@ -56,64 +101,41 @@ async function submit() {
 
 <template>
   <section class="auth-card">
-    <h1>创建 Asterway 账户</h1>
-    <p class="subtitle">注册后使用用户名和密码登录。</p>
-
-    <form @submit.prevent="submit">
-      <label>
-        用户名
-        <input
-          v-model="username"
-          required
-          minlength="1"
-          maxlength="30"
-          autocomplete="username"
-          placeholder="中文、英文字母或数字"
-        />
-      </label>
-
-      <label>
-        昵称（可选）
-        <input
-          v-model="nickname"
-          maxlength="30"
-          placeholder="默认使用用户名"
-        />
-      </label>
-
-      <label>
-        密码
-        <input
-          v-model="password"
-          type="password"
-          required
-          minlength="8"
-          maxlength="50"
-          autocomplete="new-password"
-        />
-      </label>
-
-      <label>
-        确认密码
-        <input
-          v-model="confirmPassword"
-          type="password"
-          required
-          minlength="8"
-          maxlength="50"
-          autocomplete="new-password"
-        />
-      </label>
-
-      <p v-if="errorMessage" class="error">
-        {{ errorMessage }}
-      </p>
-
-      <button :disabled="loading">
-        {{ loading ? '注册中…' : '注册' }}
+    <h1>创建账户</h1>
+    <p v-if="checking">正在读取注册状态…</p>
+    <p v-else-if="!registrationOpen">当前未开放注册。</p>
+    <form v-else @submit.prevent="submit">
+      <fieldset :disabled="loading || Boolean(pending)">
+        <label>
+          用户名
+          <input
+            v-model="username"
+            required
+            autocomplete="username"
+            placeholder="中文、英文字母或数字"
+          />
+        </label>
+        <label>
+          昵称（可选）
+          <input v-model="nickname" placeholder="留空时使用本次用户名" />
+        </label>
+        <label>
+          密码
+          <input v-model="password" type="password" required autocomplete="new-password" />
+        </label>
+        <p v-if="password">密码强度：{{ strength }}（仅作提示）</p>
+        <label>
+          确认密码
+          <input v-model="confirmPassword" type="password" required autocomplete="new-password" />
+        </label>
+        <TimeZoneSelect v-model="zoneId" />
+      </fieldset>
+      <CaptchaPuzzle ref="captcha" v-model="proof" purpose="REGISTER" />
+      <button :disabled="loading || (!proof && !pending)">
+        {{ loading ? '注册中…' : pending ? '重试原注册请求' : '注册' }}
       </button>
     </form>
-
+    <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
     <p class="switch-link">
       已有账户？
       <RouterLink to="/login">去登录</RouterLink>

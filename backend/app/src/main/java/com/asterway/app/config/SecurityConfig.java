@@ -1,6 +1,10 @@
 package com.asterway.app.config;
 
 import com.asterway.app.security.RestAccessDeniedHandler;
+import com.asterway.app.security.AccountSessionFilter;
+import com.asterway.app.security.AccountThrottleFilter;
+import com.asterway.app.web.error.ApiErrorFactory;
+import com.asterway.identity.api.AccountApi;
 import com.asterway.app.security.RestAuthenticationEntryPoint;
 import com.asterway.app.security.SpaCsrfTokenRequestHandler;
 
@@ -8,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +32,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 import java.util.List;
 
@@ -45,13 +51,16 @@ public class SecurityConfig {
 
     // CSRF Token 仓库：把 token 存进 Cookie（httpOnly=false，前端才能读）
     @Bean
-    public CsrfTokenRepository csrfTokenRepository() {
+    public CsrfTokenRepository csrfTokenRepository(
+            @Value("${asterway.identity.secure-cookie:true}") boolean secureCookie
+    ) {
 
         CookieCsrfTokenRepository repository =
                 CookieCsrfTokenRepository.withHttpOnlyFalse();
 
         // 指定前端提交 token 用的请求头名
         repository.setHeaderName("X-CSRF-TOKEN");
+        repository.setCookieCustomizer(cookie -> cookie.secure(secureCookie).sameSite("Lax").path("/"));
 
         return repository;
     }
@@ -69,12 +78,12 @@ public class SecurityConfig {
     public SessionAuthenticationStrategy sessionAuthenticationStrategy(
             CsrfTokenRepository csrfTokenRepository
     ) {
-        return new CompositeSessionAuthenticationStrategy(
-                List.of(
-                        new ChangeSessionIdAuthenticationStrategy(),
-                        new CsrfAuthenticationStrategy(csrfTokenRepository)
-                )
+        List<SessionAuthenticationStrategy> strategies = List.of(
+                new ChangeSessionIdAuthenticationStrategy(),
+                new CsrfAuthenticationStrategy(csrfTokenRepository)
         );
+        SessionAuthenticationStrategy strategy = new CompositeSessionAuthenticationStrategy(strategies);
+        return strategy;
     }
 
     // 注销处理器：退出登录时清理认证状态
@@ -89,7 +98,10 @@ public class SecurityConfig {
             HttpSecurity http,
             CsrfTokenRepository csrfTokenRepository,
             SecurityContextRepository securityContextRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            AccountApi accounts,
+            ApiErrorFactory errors,
+            SecurityContextLogoutHandler logoutHandler
     ) throws Exception {
 
         http
@@ -130,20 +142,39 @@ public class SecurityConfig {
                         // GET csrf 接口放行（任何人都要先拿 token）
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/v1/auth/csrf"
+                                "/api/v1/auth/csrf",
+                                "/api/v1/public/**"
+                        ).permitAll()
+                        // 文档端点由配置决定是否启用，不绕过业务接口的认证。
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         // 注册、登录放行
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/v1/auth/register",
-                                "/api/v1/auth/login"
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/logout",
+                                "/api/v1/auth/captcha-challenges",
+                                "/api/v1/auth/captcha-challenges/*/verify"
                         ).permitAll()
                         // 其余接口都需要认证
                         .anyRequest().authenticated()
                 )
                 // 关闭表单登录和 HTTP Basic，因为走的是自定义 REST 登录
                 .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable);
+                .httpBasic(AbstractHttpConfigurer::disable)
+                // 所有注销必须通过账户用例，不能走框架默认入口绕过未结束执行检查。
+                .logout(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new AccountThrottleFilter(objectMapper), AuthorizationFilter.class)
+                .addFilterBefore(new AccountSessionFilter(
+                        accounts, objectMapper, errors, logoutHandler, csrfTokenRepository
+                ), AuthorizationFilter.class);
 
         return http.build();
     }

@@ -18,6 +18,9 @@ spring:
     username: ${ASTERWAY_DB_USER:}
     password: ${ASTERWAY_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 24
 
   # 迁移脚本集中在 app 的 db/migration；无物理外键，会话表由迁移维护
 
@@ -31,6 +34,8 @@ spring:
       - app
       - session_store
     create-schemas: false
+    placeholders:
+      legacyAccountZone: ${ASTERWAY_LEGACY_ACCOUNT_ZONE:Asia/Shanghai}
 
   # 服务端可撤销会话；initialize-schema=never，交由受控迁移建立无外键会话表
   session:
@@ -43,7 +48,9 @@ spring:
       table-name: session_store.SPRING_SESSION
 
   jackson:
-    default-property-inclusion: non_null
+    default-property-inclusion: always
+    deserialization:
+      fail-on-unknown-properties: true
 
 # 业务 SQL 与结果映射只写 XML；Mapper 接口不写注解（RULE-003）
 mybatis:
@@ -53,6 +60,44 @@ mybatis:
     map-underscore-to-camel-case: true
 
 logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId:-}]"
   level:
     root: INFO
-    com.asterway: DEBUG
+    com.asterway: INFO
+
+# 默认关闭接口文档，开发环境通过下方 local 配置启用。
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  paths-to-match:
+    - /api/v1/auth/**
+    - /api/v1/public/**
+    - /api/v1/operations/**
+
+asterway:
+  identity:
+    private-directory: ${ASTERWAY_IDENTITY_PRIVATE_DIR:.asterway-private}
+    secure-cookie: ${ASTERWAY_SECURE_COOKIE:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: true
+      cookie-name: XSRF-TOKEN
+      header-name: X-CSRF-TOKEN
+
+asterway:
+  identity:
+    secure-cookie: ${ASTERWAY_SECURE_COOKIE:false}

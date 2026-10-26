@@ -15,7 +15,10 @@ public enum CommonErrorCode implements ErrorCode {
     FORBIDDEN("FORBIDDEN", "没有权限执行此操作"),
 
     // 请求的资源不存在
-    NOT_FOUND("NOT_FOUND", "未找到请求的资源");
+    NOT_FOUND("NOT_FOUND", "未找到请求的资源"),
+
+    // 依赖暂时不可用，调用方可稍后重新读取。
+    SERVICE_UNAVAILABLE("SERVICE_UNAVAILABLE", "服务暂时不可用，请稍后重试");
 
     // 错误码字符串
     private final String code;

@@ -8,7 +8,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: Arial, "Microsoft YaHei", sans-serif;
+  font-family: Arial, 'Microsoft YaHei', sans-serif;
   color: #202b29;
   background: #f3f6f4;
 }
@@ -111,4 +111,89 @@ button {
 .switch-link {
   margin-top: 24px;
   text-align: center;
+}
+
+.account-card {
+  max-width: 720px;
+}
+
+fieldset {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #dce3df;
+  border-radius: 8px;
+}
+
+legend,
+summary {
+  font-weight: 600;
+}
+
+details {
+  margin: 24px 0;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.button-row button {
+  flex: 1;
+  min-width: 140px;
+}
+
+.secondary {
+  color: #254e42;
+  background: #eaf1ed;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  font-weight: normal;
+  line-height: 1.6;
+}
+
+.checkbox-label input {
+  width: auto;
+  margin-top: 5px;
+}
+
+.captcha-board {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.captcha-board > img:first-child {
+  display: block;
+  width: 100%;
+}
+
+.captcha-piece {
+  position: absolute;
+  pointer-events: none;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 12px;
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.result-notice {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid #dce3df;
 }

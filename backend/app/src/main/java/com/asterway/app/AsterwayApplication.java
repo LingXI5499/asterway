@@ -13,7 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
                 "com.asterway.identity"
         }
 )
-@MapperScan("com.asterway.identity.mapper")
+@MapperScan({"com.asterway.identity.mapper", "com.asterway.app.mapper"})
 public class AsterwayApplication {
 
     // 程序入口

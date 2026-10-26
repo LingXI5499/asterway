@@ -1,11 +1,17 @@
 package com.asterway.identity.mapper;
 
 import com.asterway.identity.model.AccountEntity;
+import com.asterway.identity.model.AccountProfile;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.UUID;
 
 // 账户数据访问接口（MyBatis Mapper）。
 // 这里只声明 SQL 方法签名，具体 SQL 写在 AccountMapper.xml 里（项目约定：SQL 统一放 XML）。
 public interface AccountMapper {
+
+    // 按当前认证账户 ID 查询基础资料，不读取密码哈希。
+    AccountProfile findProfileById(@Param("accountId") UUID accountId);
 
     // 新增一条账户记录。
     // 注意：id、username_key、created_at、updated_at 都由数据库生成，插入时不传入。

@@ -1,199 +1,163 @@
 package com.asterway.identity.service;
 
-import com.asterway.common.exception.BusinessException;
 import com.asterway.identity.api.AccountApi;
-import com.asterway.identity.api.PasswordHasher;
-import com.asterway.identity.api.error.IdentityErrorCode;
-import com.asterway.identity.api.model.AuthenticatedAccount;
-import com.asterway.identity.api.model.LoginCommand;
-import com.asterway.identity.api.model.RegisterCommand;
+import com.asterway.identity.api.model.AccountModels.CaptchaChallenge;
+import com.asterway.identity.api.model.AccountModels.CaptchaProof;
+import com.asterway.identity.api.model.AccountModels.Context;
+import com.asterway.identity.api.model.AccountModels.CsrfInfo;
+import com.asterway.identity.api.model.AccountModels.DeviceTimeZoneResult;
+import com.asterway.identity.api.model.AccountModels.LoginGrant;
+import com.asterway.identity.api.model.AccountModels.LoginInput;
+import com.asterway.identity.api.model.AccountModels.LogoutResult;
+import com.asterway.identity.api.model.AccountModels.OperationSnapshot;
+import com.asterway.identity.api.model.AccountModels.PasswordChangeResult;
+import com.asterway.identity.api.model.AccountModels.PasswordInput;
+import com.asterway.identity.api.model.AccountModels.ProfileInput;
+import com.asterway.identity.api.model.AccountModels.ProfileResult;
+import com.asterway.identity.api.model.AccountModels.PublicBootstrap;
+import com.asterway.identity.api.model.AccountModels.RegistrationInput;
+import com.asterway.identity.api.model.AccountModels.SelfSession;
+import com.asterway.identity.api.model.AccountModels.TimeZonePage;
+import com.asterway.identity.api.model.AccountModels.ZoneInput;
 import com.asterway.identity.api.model.RegistrationResult;
-import com.asterway.identity.mapper.AccountMapper;
-import com.asterway.identity.model.AccountEntity;
-
-import org.springframework.dao.DataIntegrityViolationException;
+import com.asterway.identity.infrastructure.security.AccountSecurityLedger;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.Locale;
-import java.util.Objects;
+import java.util.UUID;
 
-// 账户业务核心实现。
-// 同时负责：注册、密码哈希、用户名查重、登录凭据验证。
-// 它实现了 AccountApi 接口，是 identity 模块对外的实际业务入口。
+// 实现模块公开能力并分派给内部服务；框架会话由 app 的应用用例协调。
 @Service
 public class AccountService implements AccountApi {
 
-    // 账户数据访问（SQL 在 XML 里）
-    private final AccountMapper accountMapper;
+    private final AccountPublicQueryService publicQueryService;
 
-    // 密码哈希器（具体算法由 app 模块注入，这里是 Argon2）
-    private final PasswordHasher passwordHasher;
+    private final AccountCaptchaService captchaService;
 
-    // 事务模板，用于把查重 + 插入 + 回读放到同一个数据库事务里
-    private final TransactionTemplate transactionTemplate;
+    private final AccountRegistrationService registrationService;
+
+    private final AccountAuthenticationService authenticationService;
+
+    private final AccountProfileService profileService;
+
+    private final AccountPasswordService passwordService;
+
+    private final AccountLogoutService logoutService;
+
+    private final AccountTimeZoneService timeZoneService;
+
+    private final AccountIdempotencyService idempotencyService;
+
+    private final AccountSecurityLedger ledger;
 
     public AccountService(
-            AccountMapper accountMapper,
-            PasswordHasher passwordHasher,
-            PlatformTransactionManager transactionManager
+            AccountPublicQueryService publicQueryService,
+            AccountCaptchaService captchaService,
+            AccountRegistrationService registrationService,
+            AccountAuthenticationService authenticationService,
+            AccountProfileService profileService,
+            AccountPasswordService passwordService,
+            AccountLogoutService logoutService,
+            AccountTimeZoneService timeZoneService,
+            AccountIdempotencyService idempotencyService,
+            AccountSecurityLedger ledger
     ) {
-        this.accountMapper = accountMapper;
-        this.passwordHasher = passwordHasher;
-        this.transactionTemplate =
-                new TransactionTemplate(transactionManager);
+        this.publicQueryService = publicQueryService;
+        this.captchaService = captchaService;
+        this.registrationService = registrationService;
+        this.authenticationService = authenticationService;
+        this.profileService = profileService;
+        this.passwordService = passwordService;
+        this.logoutService = logoutService;
+        this.timeZoneService = timeZoneService;
+        this.idempotencyService = idempotencyService;
+        this.ledger = ledger;
     }
 
     @Override
-    public RegistrationResult register(RegisterCommand command) {
-
-        // 第一步：校验两次输入的密码是否一致
-        if (!Objects.equals(
-                command.password(),
-                command.confirmPassword()
-        )) {
-            throw new BusinessException(
-                    IdentityErrorCode.PASSWORD_MISMATCH
-            );
-        }
-
-        // 用户名规范化（转小写），用于和数据库生成的 username_key 比较
-        String username = command.username();
-        String usernameKey = normalizeUsername(username);
-
-        // 昵称为空时回退为用户名
-        String nickname = command.nickname();
-        if (nickname == null || nickname.isBlank()) {
-            nickname = username;
-        }
-
-        // 在数据库事务外执行耗时的密码哈希计算，避免占用数据库事务
-        String passwordHash = passwordHasher.hash(
-                command.password()
-        );
-
-        String finalNickname = nickname;
-
-        // 用事务模板执行核心写操作：查重 -> 插入 -> 回读数据库生成的字段
-        return Objects.requireNonNull(
-                transactionTemplate.execute(transactionStatus -> {
-
-                    // 第一次查重：只判断是否存在，给用户友好的业务错误
-                    if (accountMapper.existsByUsernameKey(usernameKey)) {
-                        throw new BusinessException(
-                                IdentityErrorCode.USERNAME_TAKEN
-                        );
-                    }
-
-                    // 构造待插入的实体；id、username_key、时间字段由数据库生成
-                    AccountEntity account = new AccountEntity(
-                            null,          // id 由数据库生成
-                            username,
-                            null,          // username_key 由数据库生成
-                            finalNickname,
-                            passwordHash,
-                            "USER",        // 新账户默认角色
-                            "ENABLED",     // 新账户默认启用
-                            null,          // created_at 由数据库生成
-                            null           // updated_at 由数据库生成
-                    );
-
-                    try {
-                        int rows = accountMapper.insertAccount(account);
-
-                        if (rows != 1) {
-                            throw new IllegalStateException(
-                                    "账户插入影响行数异常"
-                            );
-                        }
-                    } catch (DataIntegrityViolationException exception) {
-                        // 并发注册时，先查重可能没查到，但插入时撞上唯一约束。
-                        // 这里识别是否是用户名唯一约束冲突，是的话转成业务错误。
-                        if (isUsernameUniqueViolation(exception)) {
-                            throw new BusinessException(
-                                    IdentityErrorCode.USERNAME_TAKEN,
-                                    exception
-                            );
-                        }
-                        // 其他完整性错误原样抛出
-                        throw exception;
-                    }
-
-                    // 重新读一次，拿到数据库生成的 id 和创建时间
-                    AccountEntity saved =
-                            accountMapper.findByUsernameKey(usernameKey);
-
-                    if (saved == null) {
-                        throw new IllegalStateException(
-                                "账户插入后未能读取账户记录"
-                        );
-                    }
-
-                    // 组装注册结果返回
-                    return new RegistrationResult(
-                            saved.id(),
-                            saved.username(),
-                            true,
-                            saved.createdAt().toInstant()
-                    );
-                })
-        );
+    public void initializeSecurity() {
+        ledger.initialize();
     }
 
     @Override
-    public AuthenticatedAccount authenticate(LoginCommand command) {
-
-        String usernameKey = normalizeUsername(command.username());
-
-        // 按规范化用户名查询账户（含密码哈希，仅内部使用）
-        AccountEntity account =
-                accountMapper.findByUsernameKey(usernameKey);
-
-        // 不区分"用户名不存在 / 账户不可用 / 密码错误"这三种情况，
-        // 统一返回"凭据无效"，避免攻击者通过错误信息枚举出有效账户。
-        if (account == null
-                || !"ENABLED".equals(account.status())
-                || !passwordHasher.matches(
-                command.password(),
-                account.passwordHash()
-        )) {
-            throw new BusinessException(
-                    IdentityErrorCode.CREDENTIALS_INVALID
-            );
-        }
-
-        // 返回安全账户摘要（不含密码哈希）
-        return new AuthenticatedAccount(
-                account.id(),
-                account.username(),
-                account.nickname(),
-                account.role()
-        );
+    public void applyPendingTimeZones() {
+        timeZoneService.applyPending();
     }
 
-    // 用户名规范化：统一转小写，保证大小写不敏感的唯一性比较
-    private String normalizeUsername(String username) {
-        return username.toLowerCase(Locale.ROOT);
+    @Override
+    public PublicBootstrap bootstrap() {
+        PublicBootstrap result = publicQueryService.bootstrap();
+        return result;
     }
 
-    // 判断异常链里是否包含"用户名唯一约束"冲突。
-    // 通过约束名称 uq_app_user_username_key 识别，避免把其他完整性错误误判成用户名重复。
-    private boolean isUsernameUniqueViolation(Throwable exception) {
+    @Override
+    public TimeZonePage timeZones(String query, int limit, String cursor) {
+        TimeZonePage result = publicQueryService.timeZones(query, limit, cursor);
+        return result;
+    }
 
-        Throwable current = exception;
+    @Override
+    public CaptchaChallenge createCaptcha(Context context, String purpose) {
+        CaptchaChallenge result = captchaService.create(context, purpose);
+        return result;
+    }
 
-        while (current != null) {
-            String message = current.getMessage();
+    @Override
+    public CaptchaProof verifyCaptcha(Context context, UUID challengeId, double offsetX) {
+        CaptchaProof result = captchaService.verify(context, challengeId, offsetX);
+        return result;
+    }
 
-            if (message != null
-                    && message.contains("uq_app_user_username_key")) {
-                return true;
-            }
+    @Override
+    public RegistrationResult register(Context context, RegistrationInput input) {
+        RegistrationResult result = registrationService.register(context, input);
+        return result;
+    }
 
-            current = current.getCause();
-        }
+    @Override
+    public LoginGrant login(Context context, LoginInput input) {
+        LoginGrant result = authenticationService.login(context, input);
+        return result;
+    }
 
-        return false;
+    @Override
+    public LoginGrant validateSession(UUID userId, long credentialVersion, long securityVersion) {
+        LoginGrant result = authenticationService.validateSession(userId, credentialVersion, securityVersion);
+        return result;
+    }
+
+    @Override
+    public SelfSession current(Context context, CsrfInfo csrf) {
+        SelfSession result = profileService.current(context, csrf);
+        return result;
+    }
+
+    @Override
+    public ProfileResult updateProfile(Context context, ProfileInput input) {
+        ProfileResult result = profileService.updateProfile(context, input);
+        return result;
+    }
+
+    @Override
+    public PasswordChangeResult changePassword(Context context, PasswordInput input) {
+        PasswordChangeResult result = passwordService.changePassword(context, input);
+        return result;
+    }
+
+    @Override
+    public DeviceTimeZoneResult synchronizeZone(Context context, ZoneInput input) {
+        DeviceTimeZoneResult result = timeZoneService.synchronize(context, input);
+        return result;
+    }
+
+    @Override
+    public LogoutResult logout(Context context, Boolean confirmed, String sessionId) {
+        LogoutResult result = logoutService.logout(context, confirmed, sessionId);
+        return result;
+    }
+
+    @Override
+    public OperationSnapshot operation(Context context, String operation) {
+        OperationSnapshot result = idempotencyService.query(context, operation);
+        return result;
     }
 }

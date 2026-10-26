@@ -13,7 +13,9 @@ public record AccountPrincipal(
         UUID accountId,  // 账户 ID
         String username, // 用户名
         String nickname, // 昵称
-        String role      // 角色
+        String role,
+        long credentialVersion,
+        long securityVersion
 ) implements AuthenticatedPrincipal, Serializable {
 
     // 序列化版本号，保证反序列化兼容
@@ -22,6 +24,11 @@ public record AccountPrincipal(
     // 返回主体名，Spring Security 用它标识当前用户
     @Override
     public String getName() {
-        return username;
+        return accountId.toString();
+    }
+
+    // 兼容既有源代码的构造方式；旧版本缺少凭据依据的会话会被过滤器要求重新登录。
+    public AccountPrincipal(UUID accountId, String username, String nickname, String role) {
+        this(accountId, username, nickname, role, 0, 0);
     }
 }

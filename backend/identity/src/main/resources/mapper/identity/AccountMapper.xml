@@ -11,6 +11,34 @@
 
 <mapper namespace="com.asterway.identity.mapper.AccountMapper">
 
+    <!-- 本人资料使用独立投影，避免查询密码哈希。 -->
+    <resultMap id="AccountProfileMap"
+               type="com.asterway.identity.model.AccountProfile">
+        <constructor>
+            <idArg column="id" name="accountId" javaType="java.util.UUID"/>
+            <arg column="username" name="username" javaType="java.lang.String"/>
+            <arg column="nickname" name="nickname" javaType="java.lang.String"/>
+            <arg column="role" name="role" javaType="java.lang.String"/>
+            <arg column="status" name="status" javaType="java.lang.String"/>
+            <arg column="created_at" name="createdAt" javaType="java.time.OffsetDateTime"/>
+            <arg column="updated_at" name="updatedAt" javaType="java.time.OffsetDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <!-- 账户 ID 仅由服务端身份提供，使用参数绑定限定本人记录。 -->
+    <select id="findProfileById" resultMap="AccountProfileMap">
+        SELECT
+            id,
+            username,
+            nickname,
+            role,
+            status,
+            created_at,
+            updated_at
+        FROM app.app_user
+        WHERE id = #{accountId}
+    </select>
+
     <!--
       结果映射：把查询出的列映射到 AccountEntity 这个 record。
       因为 AccountEntity 是不可变 record（没有 setter），

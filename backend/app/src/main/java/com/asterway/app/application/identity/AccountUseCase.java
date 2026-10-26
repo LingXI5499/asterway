@@ -1,17 +1,20 @@
 package com.asterway.app.application.identity;
 
 import com.asterway.app.security.AccountPrincipal;
-import com.asterway.app.web.identity.response.LoginResponse;
-
+import com.asterway.common.error.CommonErrorCode;
+import com.asterway.common.exception.BusinessException;
 import com.asterway.identity.api.AccountApi;
-import com.asterway.identity.api.model.AuthenticatedAccount;
-import com.asterway.identity.api.model.LoginCommand;
-import com.asterway.identity.api.model.RegisterCommand;
-import com.asterway.identity.api.model.RegistrationResult;
-
+import com.asterway.identity.api.error.IdentityErrorCode;
+import com.asterway.identity.api.model.AccountModels.Context;
+import com.asterway.identity.api.model.AccountModels.CsrfInfo;
+import com.asterway.identity.api.model.AccountModels.LoginGrant;
+import com.asterway.identity.api.model.AccountModels.LoginInput;
+import com.asterway.identity.api.model.AccountModels.LogoutResult;
+import com.asterway.identity.api.model.AccountModels.PasswordChangeResult;
+import com.asterway.identity.api.model.AccountModels.PasswordInput;
+import com.asterway.identity.api.model.AccountModels.SelfSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,130 +23,113 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
-// 账户用例（业务编排层）。
-// 负责协调 identity 模块的业务能力与 Spring Security 的认证/会话机制。
-// 关键点：手动调用认证不等于走 Spring Security 的认证过滤器，
-// 所以必须在这里显式地：调用会话策略 -> 设置 SecurityContext -> 保存上下文，
-// 才算真正建立了服务端登录状态，而不是只返回一个"登录成功"的 JSON。
+// 只协调账户能力与框架会话，HTTP 和数据库事务不混在控制器中。
 @Component
 public class AccountUseCase {
 
-    // identity 模块的账户业务入口
     private final AccountApi accountApi;
-
-    // 会话认证策略：登录时做会话固定攻击防护、刷新 CSRF Token
+    private final AccountHttpContext contexts;
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
-
-    // 安全上下文仓库：把认证状态保存到会话（JDBC 会话表）
     private final SecurityContextRepository securityContextRepository;
-
-    // 注销处理器：退出登录时清理认证状态
     private final SecurityContextLogoutHandler logoutHandler;
-
-    // CSRF Token 仓库：注销后清除旧 token
     private final CsrfTokenRepository csrfTokenRepository;
 
     public AccountUseCase(
             AccountApi accountApi,
+            AccountHttpContext contexts,
             SessionAuthenticationStrategy sessionAuthenticationStrategy,
             SecurityContextRepository securityContextRepository,
             SecurityContextLogoutHandler logoutHandler,
             CsrfTokenRepository csrfTokenRepository
     ) {
         this.accountApi = accountApi;
-        this.sessionAuthenticationStrategy =
-                sessionAuthenticationStrategy;
-        this.securityContextRepository =
-                securityContextRepository;
+        this.contexts = contexts;
+        this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
+        this.securityContextRepository = securityContextRepository;
         this.logoutHandler = logoutHandler;
         this.csrfTokenRepository = csrfTokenRepository;
     }
 
-    // 注册：直接委托给 identity 模块，本身不做额外编排
-    public RegistrationResult register(RegisterCommand command) {
-        return accountApi.register(command);
+    public CsrfInfo csrf(HttpServletRequest request, HttpServletResponse response) {
+        contexts.context(request, null, true);
+        CsrfToken token = csrfTokenRepository.loadDeferredToken(request, response).get();
+        CsrfInfo result = new CsrfInfo(token.getHeaderName(), token.getToken());
+        return result;
     }
 
-    // 登录：校验凭据 -> 构造安全身份 -> 建立服务端会话
-    public LoginResponse login(
-            LoginCommand command,
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) {
-        // 1. 调 identity 模块校验用户名密码，拿到安全账户摘要
-        AuthenticatedAccount account =
-                accountApi.authenticate(command);
+    public SelfSession login(LoginInput input, HttpServletRequest request, HttpServletResponse response) {
+        UUID key = contexts.key(request);
+        Context context = contexts.context(request, key, true);
+        LoginGrant grant = accountApi.login(context, input);
+        AccountPrincipal existing = contexts.principal();
+        if (grant.replayed()) {
+            // 认证结果重放不能重新签发 Cookie；只允许已存在的同一身份核实快照。
+            if (existing == null || !existing.accountId().equals(grant.accountId())) {
+                throw new BusinessException(CommonErrorCode.AUTH_REQUIRED);
+            }
+        } else {
+            accountApi.validateSession(grant.accountId(), grant.credentialVersion(), grant.securityVersion());
+            establishSession(grant, request, response);
+        }
+        SelfSession snapshot = current(request, response);
+        return snapshot;
+    }
 
-        // 2. 把账户摘要包装成 Spring Security 的安全身份对象
+    private void establishSession(LoginGrant grant, HttpServletRequest request, HttpServletResponse response) {
         AccountPrincipal principal = new AccountPrincipal(
-                account.accountId(),
-                account.username(),
-                account.nickname(),
-                account.role()
+                grant.accountId(), grant.username(), grant.nickname(), grant.role(),
+                grant.credentialVersion(), grant.securityVersion()
         );
-
-        // 3. 构造一个"已认证"的 Authentication，附带角色权限
-        Authentication authentication =
-                UsernamePasswordAuthenticationToken.authenticated(
-                        principal,
-                        null,
-                        List.of(
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" + account.role()
-                                )
-                        )
-                );
-
-        // 4. 触发会话认证策略：换会话 ID（防会话固定攻击）+ 刷新 CSRF Token
-        sessionAuthenticationStrategy.onAuthentication(
-                authentication,
-                request,
-                response
-        );
-
-        // 5. 创建新的安全上下文并放入认证信息
-        SecurityContext context =
-                SecurityContextHolder.createEmptyContext();
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + grant.role()));
+        Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(principal, null, authorities);
+        sessionAuthenticationStrategy.onAuthentication(authentication, request, response);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
-
-        // 6. 显式保存上下文到会话，使后续请求能恢复登录状态（关键步骤）
-        securityContextRepository.saveContext(
-                context,
-                request,
-                response
-        );
-
-        // 7. 返回登录响应
-        return new LoginResponse(
-                account.accountId(),
-                account.username(),
-                account.nickname(),
-                account.role()
-        );
+        securityContextRepository.saveContext(context, request, response);
     }
 
-    // 注销：清理认证状态 + 清除 CSRF Token
-    public void logout(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) {
-        logoutHandler.logout(
-                request,
-                response,
-                SecurityContextHolder.getContext().getAuthentication()
-        );
+    public SelfSession current(HttpServletRequest request, HttpServletResponse response) {
+        Context context = contexts.context(request, null, false);
+        try {
+            SelfSession snapshot = accountApi.current(context, csrf(request, response));
+            return snapshot;
+        } catch (BusinessException exception) {
+            if (exception.getErrorCode() == CommonErrorCode.AUTH_REQUIRED
+                    || exception.getErrorCode() == IdentityErrorCode.ACCOUNT_UNAVAILABLE) {
+                clearSession(request, response);
+            }
+            throw exception;
+        }
+    }
 
-        // 注销后主动清空 CSRF Token，下次写请求需要重新获取
-        csrfTokenRepository.saveToken(
-                null,
-                request,
-                response
-        );
+    public PasswordChangeResult changePassword(
+            PasswordInput input, HttpServletRequest request, HttpServletResponse response
+    ) {
+        Context context = contexts.context(request, contexts.key(request), false);
+        PasswordChangeResult result = accountApi.changePassword(context, input);
+        clearSession(request, response);
+        return result;
+    }
+
+    public LogoutResult logout(Boolean confirmed, HttpServletRequest request, HttpServletResponse response) {
+        Context context = contexts.context(request, contexts.key(request), false);
+        String sessionId = request.getSession(false) == null ? null : request.getSession(false).getId();
+        LogoutResult result = accountApi.logout(context, confirmed, sessionId);
+        clearSession(request, response);
+        return result;
+    }
+
+    public void clearSession(HttpServletRequest request, HttpServletResponse response) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        logoutHandler.logout(request, response, authentication);
+        csrfTokenRepository.saveToken(null, request, response);
     }
 }
