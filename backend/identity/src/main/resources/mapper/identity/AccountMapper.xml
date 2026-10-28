@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.AccountMapper">
+
+    <sql id="stateColumns">
+        id, username, username_key, nickname, password_hash, role, status,
+        created_at, updated_at, version, deleted_at, security_version,
+        credential_version, login_name_version, password_changed_at,
+        current_zone_period_id, pending_zone_id, pending_zone_effective_at, pending_zone_requested_at
+    </sql>
+
+    <select id="now" resultType="java.time.OffsetDateTime">
+        SELECT clock_timestamp()
+    </select>
+
+    <select id="lockScope" resultType="string">
+        SELECT pg_advisory_xact_lock(hashtextextended(#{scope}, 0))
+    </select>
+
+    <select id="findState" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user WHERE id = #{userId}
+    </select>
+
+    <select id="findByLoginName" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user WHERE username_key = #{usernameKey}
+    </select>
+
+    <insert id="insertState">
+        INSERT INTO app.app_user (
+            id, username, nickname, password_hash, role, status, current_zone_period_id, password_changed_at
+        ) VALUES (
+            #{id}, #{username}, #{nickname}, #{passwordHash}, 'USER', 'ENABLED',
+            #{currentZonePeriodId}, clock_timestamp()
+        )
+    </insert>
+
+    <update id="updateProfile">
+        UPDATE app.app_user
+        SET username = #{username}, nickname = #{nickname}, version = version + 1,
+            login_name_version = login_name_version + CASE WHEN #{renamed} THEN 1 ELSE 0 END,
+            updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE app.app_user
+        SET password_hash = #{passwordHash}, password_changed_at = clock_timestamp(),
+            credential_version = credential_version + 1, security_version = security_version + 1,
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
+    <select id="listSecurityStates" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user ORDER BY id
+    </select>
+</mapper>

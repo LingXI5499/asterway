@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.AccountCaptchaMapper">
+
+    <sql id="captchaColumns">
+        id, purpose, binding_digest, verification_data, created_at, expires_at,
+        consumed_at, create_key, verify_key, verify_fingerprint, consumed_key, consumed_fingerprint, state
+    </sql>
+
+    <select id="findCaptcha" resultType="com.asterway.identity.model.CaptchaState">
+        SELECT <include refid="captchaColumns"/> FROM app.captcha_challenge WHERE id = #{id} FOR UPDATE
+    </select>
+
+    <select id="findCreatedCaptcha" resultType="com.asterway.identity.model.CaptchaState">
+        SELECT <include refid="captchaColumns"/> FROM app.captcha_challenge
+        WHERE binding_digest = #{binding} AND create_key = #{key}
+    </select>
+
+    <select id="countRecentCaptchas" resultType="long">
+        SELECT COUNT(*) FROM app.captcha_challenge
+        WHERE binding_digest = #{binding} AND created_at > clock_timestamp() - INTERVAL '60 seconds'
+    </select>
+
+    <insert id="insertCaptcha">
+        INSERT INTO app.captcha_challenge (
+            id, purpose, binding_digest, verification_data, created_at, expires_at, create_key, state
+        ) VALUES (
+            #{id}, #{purpose}, #{bindingDigest}, #{verificationData}, #{createdAt}, #{expiresAt}, #{createKey}, 'ISSUED'
+        )
+    </insert>
+
+    <update id="verifyCaptcha">
+        UPDATE app.captcha_challenge
+        SET verify_key = #{key}, verify_fingerprint = #{fingerprint}, state = #{state},
+            verification_data = #{material}, version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{id}
+    </update>
+
+    <update id="consumeCaptcha">
+        UPDATE app.captcha_challenge
+        SET state = 'CONSUMED', consumed_at = clock_timestamp(), consumed_key = #{key},
+            consumed_fingerprint = #{fingerprint},
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{id} AND state = 'VERIFIED'
+    </update>
+
+    <delete id="cleanExpiredCaptchas">
+        DELETE FROM app.captcha_challenge
+        WHERE id IN (SELECT id FROM app.captcha_challenge
+            WHERE expires_at &lt; clock_timestamp() - INTERVAL '10 minutes' LIMIT 100)
+    </delete>
+</mapper>

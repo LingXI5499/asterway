@@ -15,7 +15,7 @@ def main05():
 
 ### 3.1 仓库初始化
 
-仓库为 `LingXI5499/asterway`，默认分支为 `main`，工程基点见 09。本地仅使用现有 `feature/LIngXI-develop`，不新建、切换或拉取其他分支。远程仅保留 main 与该固定 feature。开发或文档成果完成后先交用户审阅，明确批准本次成果后才提交并推送 feature；一个模块完成、验证通过且获本次明确审批后才可合入 main。feature 推送批准不代表 main 合入批准。提交主题、拉取请求和合并标题使用 `LIngXI` 前缀，作者与提交者采用维护者 GitHub 账户。提交关联 FR、BUG 或 CR 编号；合并前检查依赖、构建、适用测试和文档。
+仓库为 `LingXI5499/asterway`，默认分支为 `main`，工程基点见 09。本地仅使用现有 `feature/LingXI-develop`，不新建、切换或拉取其他分支。远程仅保留 main 与该固定 feature。开发或文档成果完成后先交用户审阅，明确批准本次成果后才提交并推送 feature；一个模块完成、验证通过且获本次明确审批后才可合入 main。feature 推送批准不代表 main 合入批准。提交主题、拉取请求和合并标题使用 `LingXI` 前缀，作者与提交者采用维护者 GitHub 账户。提交关联 FR、BUG 或 CR 编号；合并前检查依赖、构建、适用测试和文档。
 
 后端已有 .gitignore；本地配置和秘密不得入库，保留已有暂存、未提交修改、文档 stash 和本地发布记录；不夹带其他成果，不自行恢复或清理备份。发布时只纳入已审查的正式文档与构建工具，历史参考资料按其维护范围保留。
 
@@ -62,18 +62,22 @@ def main05():
 # 在仓库根目录执行；先确认当前终端和 IDE 都使用 JDK 17
 mvn --version
 mvn -o -f backend/pom.xml validate
-# 后续实施阶段：依赖齐备并新增测试后执行
+# 本次已运行的编译与基础契约测试
+mvn -B -f backend/pom.xml clean compile
+mvn -B -f backend/pom.xml -pl app -am '-Dtest=ApiResponseContractTest,ApiErrorContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' test
+mvn -B -f backend/pom.xml test
+# 后续实施阶段再进行完整 verify / package / 真实启动验收
 mvn -f backend/pom.xml clean verify
 # 只有迁移、配置和安全基础齐备才进行应用启动验收
 mvn -f backend/pom.xml -pl app -am package
 java -jar backend/app/target/app-0.1.0-SNAPSHOT.jar
 ```
 
-本次在 2026-10-22 重跑离线 validate，父工程和 10 个子工程共 11 项均为 BUILD SUCCESS；它只检查工程模型。verify、package 和启动命令是后续实施步骤，不是本次已运行结果。不要从某个子工程单独 package 后就推断依赖已安装；从父 POM 使用 `-pl app -am` 才会把 app 所需的兄弟工程纳入同一次构建。不能用未准备的本地默认数据库连接去推断远程服务不可用。
+2026-10-22：统一 API 响应、公共错误码/业务异常、HTTP 错误响应工厂、全局 MVC 异常处理、请求追踪过滤器和字段校验错误响应已实现。Maven 3.9.4 / Java 17.0.18，11 项 Reactor 的 clean compile 通过；定向运行 ApiResponseContractTest（1 项）和 ApiErrorContractTest（5 项）通过，另行执行完整 Maven test，当前全部 6 项测试通过，失败/错误/跳过均为 0。MVC 验证采用 standalone MockMvc，不启动真实服务器或连接 PostgreSQL；72 个综合业务用例仍为 NOT_VERIFIED。 package、verify 和真实启动验收尚未执行。不要从某个子工程单独 package 后就推断依赖已安装；从父 POM 使用 `-pl app -am` 才会把 app 所需的兄弟工程纳入同一次构建。不能用未准备的本地默认数据库连接去推断远程服务不可用。
 
 ### 5.4 后端初始化完成标准
 
-聚合编译及适用测试通过；app 包含各模块 XML；迁移成功；身份、CSRF、越权和错误均可按真实 HTTP 验证；日志无秘密。当前仅 `validate` 已通过，不代表编译、打包或运行通过。
+聚合编译及适用测试通过；app 包含各模块 XML；迁移成功；身份、CSRF、越权和错误均可按真实 HTTP 验证；日志无秘密。当前多模块编译与 6 项基础契约测试通过，打包与真实运行验收未执行。
 
 ## 六、前端初始化流程
 
@@ -109,7 +113,11 @@ java -jar backend/app/target/app-0.1.0-SNAPSHOT.jar
     write('05-编码实施手册.md',t)
 
 def main06():
-    t=meta('06 测试文档')+'''> 测试构建：尚无业务测试构建。环境：设计期本地核对；测试责任角色：测试执行者与业务验收者，尚未指定具体个人。业务测试周期尚未开始；本次文档核对日期为 2026-10-21。
+    t=meta('06 测试文档')+'''> 当前基础测试：2 个测试类共 6 项通过；正式业务测试周期尚未开始。环境：Java 17.0.18 / Maven 3.9.4，本地单元测试与 standalone MockMvc；核对日期：2026-10-22。
+
+2026-10-22：统一 API 响应、公共错误码/业务异常、HTTP 错误响应工厂、全局 MVC 异常处理、请求追踪过滤器和字段校验错误响应已实现。Maven 3.9.4 / Java 17.0.18，11 项 Reactor 的 clean compile 通过；定向运行 ApiResponseContractTest（1 项）和 ApiErrorContractTest（5 项）通过，另行执行完整 Maven test，当前全部 6 项测试通过，失败/错误/跳过均为 0。MVC 验证采用 standalone MockMvc，不启动真实服务器或连接 PostgreSQL；72 个综合业务用例仍为 NOT_VERIFIED。
+
+正式账户注册请求 DTO、账户 Controller/Service、用户名唯一性检查与数据库写入、密码哈希、事务处理，以及真实 HTTP 与 PostgreSQL 的完整业务链路尚未完成。畸形 JSON、参数类型转换、405/415、Security/过滤器异常及异步/容器错误分派仍待专项实现与验证；成功响应的 traceId 需调用方显式传入，尚无自动填充机制。
 
 ## 一、测试目标与范围
 
@@ -186,7 +194,7 @@ def main06():
 | 测试退出 | 未达到：业务、数据库及前端未实现 |
 | 发布建议 | 不进入生产发布 |
 
-本次实际运行 `mvn -o -f backend/pom.xml validate` 成功，说明聚合工程模型可解析，不能证明编译、打包、API、数据库或业务正确。HTML 和文档检查结果独立记录在 10。
+2026-10-22：统一 API 响应、公共错误码/业务异常、HTTP 错误响应工厂、全局 MVC 异常处理、请求追踪过滤器和字段校验错误响应已实现。Maven 3.9.4 / Java 17.0.18，11 项 Reactor 的 clean compile 通过；定向运行 ApiResponseContractTest（1 项）和 ApiErrorContractTest（5 项）通过，另行执行完整 Maven test，当前全部 6 项测试通过，失败/错误/跳过均为 0。MVC 验证采用 standalone MockMvc，不启动真实服务器或连接 PostgreSQL；72 个综合业务用例仍为 NOT_VERIFIED。 定向命令中的 `surefire.failIfNoSpecifiedTests=false` 仅允许没有指定测试类的兄弟工程继续，app 的两类测试正常执行且跳过数为 0。首次定向命令因 PowerShell 拆分未加引号的 -D 参数而在执行测试前失败，加引号后成功；没有修改断言或跳过现有测试。HTML 和文档检查结果独立记录在 10。
 '''
     write('06-测试文档.md',t)
 
@@ -304,7 +312,7 @@ def main08():
 1. 固定现场版本、用户范围、业务日和请求链；日志脱敏。
 2. 检查前端请求/旧状态、接口认证/CSRF/参数、应用事务/锁、Mapper 条件、数据库约束、配置和外部账本。
 3. 在隔离环境按原步骤复现，定位根因；结果未知先查原意图，不重复写入。
-4. 在现有 `feature/LIngXI-develop` 修复并关联 BUG/FR/API，补充能复现原问题的回归用例；不另建 fix 分支。完成后先审阅，明确批准再推 feature；main 合入独立审批。
+4. 在现有 `feature/LingXI-develop` 修复并关联 BUG/FR/API，补充能复现原问题的回归用例；不另建 fix 分支。完成后先审阅，明确批准再推 feature；main 合入独立审批。
 5. 对影响数据的修复明确查询范围、前后快照、备份与恢复，取得相应执行授权后实施。
 6. 通过适用测试及评审再发布；原环境复验、观察并记录关闭依据。
 
@@ -358,7 +366,7 @@ def audit():
 
 仓库：LingXI5499/asterway；默认分支为 `main`，维护者为 `LingXI5499`。下表区分已提交基点与当前本地工作树；后端 POM、启动类、配置和 V001 已有用户未提交修改，不把它们描述为远程已发布内容。本文记录设计与验证边界；文档发布不表示业务软件已部署或通过运行验收。
 
-'''+mdtable(['证据','结果'],[['基点 commit',C['commit']],['提交时间',subprocess.check_output(['git','show','-s','--format=%cI',C['commit']],cwd=ROOT).decode().strip()],['工程版本','0.1.0-SNAPSHOT'],['实际代码','10 个 Java 源文件：1 启动类、9 包说明'],['实际业务层','Controller、Service、Mapper/XML、Entity、DTO、测试类均未建立'],['实际数据库','工作树 V001 定义最小账户表：1 表9列；用户说明已执行，数据库及历史 NOT_VERIFIED；暂存版本为空，提交前需核实'],['实际前端','frontend、package.json、路由及页面均不存在'],['设计目录','132 FR、84 NFR、95 API、36 表、20 页面、7 JOB、72 TEST'],['表列定义','公共字段展开后 420 列；设计数，不是已部署列数'],['文档来源',str(len(inv))+' 份正式设计与业务依据已纳入清点、指纹和版本比对'],['已执行工程检查','Maven 3.9.4 / Java 17.0.18；离线 validate 成功'],['未执行','compile、package、业务测试、数据库迁移、接口、前端和部署恢复']])+'''
+'''+mdtable(['证据','结果'],[['基点 commit',C['commit']],['提交时间',subprocess.check_output(['git','show','-s','--format=%cI',C['commit']],cwd=ROOT).decode().strip()],['工程版本','0.1.0-SNAPSHOT'],['实际代码','19 个生产 Java 文件；2 个测试类，含统一响应、公共错误与 MVC 异常/追踪基础'],['实际业务层','公共响应/异常与测试已建立；正式账户 Controller、Service、Mapper/XML、Entity、注册 DTO 尚未建立'],['实际数据库','工作树 V001 定义最小账户表：1 表9列；用户说明已执行，数据库及历史 NOT_VERIFIED；暂存版本为空，提交前需核实'],['实际前端','frontend、package.json、路由及页面均不存在'],['设计目录','132 FR、84 NFR、95 API、36 表、20 页面、7 JOB、72 TEST'],['表列定义','公共字段展开后 420 列；设计数，不是已部署列数'],['文档来源',str(len(inv))+' 份正式设计与业务依据已纳入清点、指纹和版本比对'],['已执行工程检查','Maven 3.9.4 / Java 17.0.18；11 项 clean compile、定向测试及完整 test 成功，共 6 项，失败/错误/跳过 0'],['未执行','package/verify、真实 HTTP 与 PostgreSQL 业务测试、迁移验收、前端和部署恢复']])+'''
 ## 二、来源优先级与差异处理
 
 本次明确范围优先；业务按现行业务规则 与有效 FR/NFR；工程版本按现行 POM、配置及 A08 技术版本基线；接口与字典按本地 V2.0 有效设计及本次待审细化。docs 仅发布 V2.0；编制输入与正文均位于同一版本目录，不另保留早期文档集。
@@ -378,12 +386,34 @@ def audit():
 
 以下为静态问题和实施前置，不是已运行缺陷，不虚构修复结果。
 
-'''+mdtable(['编号','事实与来源','设计决定/下一动作','验证标准'],[['OPEN-001','application.yml: jackson.default-property-inclusion=non_null；契约声明可空字段固定返回 null','实现接口前修正全局或明确 DTO 空值输出策略；本次不改源码','真实响应与 A03～A05 的 null 字段一致'],['OPEN-002','公共配置已部分绑定 migration_meta/app/session_store 且 create-schemas=false；会话表名/SQL与真实历史位置仍未核实','迁移前明确 schema 创建、历史表 schema、会话表名及查询/清理 SQL','新空库迁移与框架增删会话、无外键并发测试'],['OPEN-003','仅声明 Security/Session 依赖；无过滤链、撤销、账本和恢复门禁','实现公共安全与可信恢复，不以默认框架行为代替产品规则','权限、CSRF、失效会话、最后超管及恢复测试'],['OPEN-004','只有 Maven wrapper properties，无 wrapper 启动脚本','当前使用已安装 Maven 3.9.4；后续补齐 wrapper 再声明可用','新环境可执行固定版本构建'],['OPEN-005','无前端清单/锁文件；本机 Node 与目标版本不同；依赖版本来自既有文档记录','建工程前核对版本和兼容关系并锁定','npm ci、类型检查、构建和必要测试留证'],['OPEN-006','V001 工作树有 SQL，暂存为空；公共 baseline=false 被 local=true/version=0 覆盖','核对实际执行原文、history schema/version/script/checksum；保护 V001 并分配后续版本','原文一致、历史不重复、不 repair/clean 或重建现有表'],['OPEN-007','账户设计19列而 V001仅9列；哈希类型和生成列非空声明不同','新增版本兼容扩展和受控回填，禁止改已执行 V001','隔离空库与升级库逐列、约束和数据验证'],['OPEN-008','分层目录、两类只读投影、公共机制适配及405/415/500补充码为本版待审细化','用户审阅后按批准范围实施和推送 feature，main 独立审批','03/05/A09及全部模块分册保持同一口径']])+'''
+'''+mdtable(['编号','事实与来源','设计决定/下一动作','验证标准'],[['OPEN-001','application.yml: jackson.default-property-inclusion=non_null；契约声明可空字段固定返回 null','ApiResponse 已以 JsonInclude.ALWAYS 保留 null 字段，序列化测试通过；正式接口仍需运行核验','真实响应与 A03～A05 的 null 字段一致'],['OPEN-002','公共配置已部分绑定 migration_meta/app/session_store 且 create-schemas=false；会话表名/SQL与真实历史位置仍未核实','迁移前明确 schema 创建、历史表 schema、会话表名及查询/清理 SQL','新空库迁移与框架增删会话、无外键并发测试'],['OPEN-003','仅声明 Security/Session 依赖；无过滤链、撤销、账本和恢复门禁','实现公共安全与可信恢复，不以默认框架行为代替产品规则','权限、CSRF、失效会话、最后超管及恢复测试'],['OPEN-004','只有 Maven wrapper properties，无 wrapper 启动脚本','当前使用已安装 Maven 3.9.4；后续补齐 wrapper 再声明可用','新环境可执行固定版本构建'],['OPEN-005','无前端清单/锁文件；本机 Node 与目标版本不同；依赖版本来自既有文档记录','建工程前核对版本和兼容关系并锁定','npm ci、类型检查、构建和必要测试留证'],['OPEN-006','V001 工作树有 SQL，暂存为空；公共 baseline=false 被 local=true/version=0 覆盖','核对实际执行原文、history schema/version/script/checksum；保护 V001 并分配后续版本','原文一致、历史不重复、不 repair/clean 或重建现有表'],['OPEN-007','账户设计19列而 V001仅9列；哈希类型和生成列非空声明不同','新增版本兼容扩展和受控回填，禁止改已执行 V001','隔离空库与升级库逐列、约束和数据验证'],['OPEN-008','分层目录、两类只读投影、公共机制适配及405/415/500补充码为本版待审细化','用户审阅后按批准范围实施和推送 feature，main 独立审批','03/05/A09及全部模块分册保持同一口径']])+'''
 ## 四、真实工程文件清单
 
 '''
     files=subprocess.check_output(['git','ls-files','backend'],cwd=ROOT).decode('utf-8').splitlines()
-    desc=lambda p:'父工程与统一依赖' if p=='backend/pom.xml' else '启动类和统一扫描' if p.endswith('AsterwayApplication.java') else '模块包职责说明' if p.endswith('package-info.java') else '环境与资源绑定' if p.endswith('application.yml') else '最小账户表 V001，工作树已有；用户报告已执行，历史未核实' if p.endswith('V001__create_app_user.sql') else '迁移维护说明，现与工作树进度存在差异' if p.endswith('migration/README.md') else '子模块依赖与构建' if p.endswith('pom.xml') else '工程忽略规则' if p.endswith('.gitignore') else 'Wrapper 发行版本属性，非完整 Wrapper'
+    roles={
+        'ApiResponse.java':'统一 API 响应及空值序列化契约',
+        'ErrorData.java':'字段校验错误数据', 'Violation.java':'字段错误条目',
+        'ApiErrorFactory.java':'HTTP 错误状态与安全响应工厂',
+        'GlobalExceptionHandler.java':'MVC 业务、校验与未知异常处理',
+        'TraceIdFilter.java':'请求 traceId、响应头与 MDC 清理',
+        'ErrorCode.java':'公共错误码接口', 'CommonErrorCode.java':'公共错误码枚举',
+        'BusinessException.java':'保留错误码与根因的公共业务异常',
+        'ApiResponseContractTest.java':'统一响应序列化测试（1 项）',
+        'ApiErrorContractTest.java':'错误工厂与 MockMvc 异常测试（5 项）'
+    }
+    def desc(p):
+        name=Path(p).name
+        if name in roles:return roles[name]
+        if p=='backend/pom.xml':return '父工程与统一依赖'
+        if name=='AsterwayApplication.java':return '启动类和统一扫描'
+        if name=='package-info.java':return '模块包职责说明'
+        if name=='application.yml':return '环境与资源绑定；本次保留本地既有修改'
+        if name=='V001__create_app_user.sql':return '最小账户表 V001；本次不提交，真实历史未核实'
+        if p.endswith('migration/README.md'):return '迁移维护说明，现与工作树进度存在差异'
+        if name=='pom.xml':return '子模块依赖与构建'
+        if name=='.gitignore':return '工程忽略规则'
+        return 'Wrapper 发行版本属性，非完整 Wrapper'
     t+=mdtable(['真实路径','职责'],[[p,desc(p)] for p in files])
     t+='\n## 五、功能逐条追溯\n\n'+mdtable(['场景','功能','模块','接口或系统处理','主要表','开发批次','综合测试'],[[SCN[f['group']],f['id']+' '+f['name'],MID[f['group']],f['operations'],f['tables'],f['dev'],f['tests']+'（同号 TC）'] for f in FR])
     quality={g:(name,scope,owner,tests) for g,name,scope,owner,tests in NFR_CATEGORIES}
@@ -399,7 +429,7 @@ def audit():
 def readme():
     t=meta('Asterway 全栈开发文档')+'''从使用场景逐步进入需求、架构、模块、编码、测试、部署和运维。Markdown 为可编辑正文，index.html 为完整离线阅读版，可直接打开、搜索、折叠详情和打印。
 
-本版已将后端架构、包结构和异常链融入原有系统设计、实施手册及模块分册，仍为本地设计审阅稿。工作树已有最小账户表 V001，用户说明已执行，真实历史未核实；业务代码、完整迁移、前端和运行验收尚未完成。工程模型校验与业务测试分开记录。审阅通过后才同步 feature，main 合入另行审批。
+本版已将后端架构、包结构和异常链融入原有系统设计、实施手册及模块分册，仍为本地设计审阅稿。工作树已有最小账户表 V001，用户说明已执行，真实历史未核实；2026-10-22：统一 API 响应、公共错误码/业务异常、HTTP 错误响应工厂、全局 MVC 异常处理、请求追踪过滤器和字段校验错误响应已实现。Maven 3.9.4 / Java 17.0.18，11 项 Reactor 的 clean compile 通过；定向运行 ApiResponseContractTest（1 项）和 ApiErrorContractTest（5 项）通过，另行执行完整 Maven test，当前全部 6 项测试通过，失败/错误/跳过均为 0。MVC 验证采用 standalone MockMvc，不启动真实服务器或连接 PostgreSQL；72 个综合业务用例仍为 NOT_VERIFIED。 正式账户注册请求 DTO、账户 Controller/Service、用户名唯一性检查与数据库写入、密码哈希、事务处理，以及真实 HTTP 与 PostgreSQL 的完整业务链路尚未完成。畸形 JSON、参数类型转换、405/415、Security/过滤器异常及异步/容器错误分派仍待专项实现与验证；成功响应的 traceId 需调用方显式传入，尚无自动填充机制。 完整迁移、前端和运行验收尚未完成。审阅通过后才同步 feature，main 合入另行审批。
 
 ## 阅读目录
 

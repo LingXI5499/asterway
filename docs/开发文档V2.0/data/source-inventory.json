@@ -288,7 +288,7 @@
   },
   {
     "path": "docs/开发文档V2.0/编制源文件/06-后端结构与手写实现顺序.md",
-    "sha256": "874b7f92c0317bcfffdb0a7e72b53b73e2651bb96da6ecb74f4abfc7f29eb873",
+    "sha256": "f89210bc141271bd3dc52c62a584cd23db73d73b339aec469ba3cdd99ae50376",
     "bytes": 72854,
     "headings": [
       "06 后端结构与手写实现顺序",
@@ -392,7 +392,7 @@
   },
   {
     "path": "docs/开发文档V2.0/编制源文件/08-测试验收与部署运维设计.md",
-    "sha256": "0c89092b0500ce46e53ef74c2d1bfe1e1e2e6fde744f496ff1d6d3f937a0631a",
+    "sha256": "53c823e15ae77b3769d5fb7afeeebf0fef5f9d171f2ef6b0b2f334f44fbf3454",
     "bytes": 44881,
     "headings": [
       "08 测试验收与部署运维设计",

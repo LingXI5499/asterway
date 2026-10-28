@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.administration.mapper.SystemConfigMapper">
+
+    <select id="registrationOpen" resultType="boolean">
+        SELECT value_boolean FROM app.system_config WHERE config_key = 'REGISTRATION_OPEN' FOR SHARE
+    </select>
+
+    <select id="siteName" resultType="string">
+        SELECT value_text FROM app.system_config WHERE config_key = 'SITE_NAME'
+    </select>
+</mapper>

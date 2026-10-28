@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.AccountLoginAttemptMapper">
+
+    <select id="loginAttempt" resultType="com.asterway.identity.model.LoginAttempt">
+        SELECT failure_count, locked_until FROM app.login_attempt WHERE username_key = #{usernameKey}
+    </select>
+
+    <insert id="saveLoginAttempt">
+        INSERT INTO app.login_attempt (username_key, failure_count, locked_until, last_failed_at, retain_until)
+        VALUES (#{usernameKey}, #{failures}, #{lockedUntil,jdbcType=TIMESTAMP_WITH_TIMEZONE},
+            CASE WHEN #{failures} > 0 THEN clock_timestamp() ELSE NULL END,
+            clock_timestamp() + INTERVAL '1 day')
+        ON CONFLICT (username_key) DO UPDATE
+        SET failure_count = EXCLUDED.failure_count, locked_until = EXCLUDED.locked_until,
+            last_failed_at = EXCLUDED.last_failed_at, retain_until = EXCLUDED.retain_until,
+            version = app.login_attempt.version + 1, updated_at = clock_timestamp()
+    </insert>
+
+    <delete id="cleanExpiredAttempts">
+        DELETE FROM app.login_attempt WHERE username_key IN (
+            SELECT username_key FROM app.login_attempt WHERE retain_until &lt; clock_timestamp() LIMIT 100
+        )
+    </delete>
+</mapper>

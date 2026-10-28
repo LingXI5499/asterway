@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.growth.mapper.TaskQueryMapper">
+    <resultMap id="TaskNameMap" type="com.asterway.growth.model.TaskName">
+        <constructor>
+            <idArg column="task_id" javaType="java.util.UUID"/>
+            <arg column="task_name" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findNames" resultMap="TaskNameMap">
+        SELECT id AS task_id, name AS task_name
+        FROM app.task
+        WHERE user_id = #{userId} AND id IN
+        <foreach collection="taskIds" item="taskId" open="(" separator="," close=")">
+            #{taskId}
+        </foreach>
+    </select>
+</mapper>
+

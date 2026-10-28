@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Asterway · 接口文档</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./swagger-ui.css" />
+    <link rel="stylesheet" href="./asterway-theme.css" />
+  </head>
+  <body>
+    <header class="docs-header">
+      <a class="docs-brand" href="./index.html">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        Asterway
+        <span class="header-divider"></span>
+        <span class="header-label">接口文档</span>
+      </a>
+      <div class="header-actions">
+        <a href="../v3/api-docs" target="_blank" rel="noopener">
+          OpenAPI JSON
+          <span aria-hidden="true">↗</span>
+        </a>
+        <button id="reload-docs" type="button">刷新文档</button>
+      </div>
+    </header>
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="接口分组导航">
+        <p class="sidebar-caption">API REFERENCE</p>
+        <h2>账户模块</h2>
+        <nav id="tag-navigation" aria-label="接口分组"></nav>
+        <div class="sidebar-note">
+          <span class="status-dot"></span>
+          当前服务
+          <span id="service-origin"></span>
+        </div>
+      </aside>
+      <main class="docs-main">
+        <section class="docs-introduction">
+          <p class="eyebrow">DEVELOPER DOCUMENTATION</p>
+          <div class="title-row">
+            <h1>账户接口文档</h1>
+            <span class="version-badge">v1</span>
+          </div>
+          <p class="introduction-copy">账户认证、个人资料、安全设置与设备时区的接口说明。</p>
+          <div class="docs-metrics">
+            <span id="endpoint-count">正在加载接口…</span>
+            <span>OpenAPI 3</span>
+            <span>JSON</span>
+          </div>
+        </section>
+        <div class="usage-note">
+          <span class="note-icon" aria-hidden="true">i</span>
+          <p>
+            展开接口查看参数与响应示例。调试写请求时，请填写
+            <code>Idempotency-Key</code>
+            ；页面会自动附带当前会话的 CSRF 令牌。
+          </p>
+        </div>
+        <div id="documentation-status" class="documentation-status" role="status">
+          正在读取接口定义…
+        </div>
+        <div id="swagger-ui"></div>
+        <noscript>
+          请启用 JavaScript 后查看交互式接口文档，或通过顶部链接读取 OpenAPI JSON。
+        </noscript>
+      </main>
+    </div>
+    <script src="./swagger-ui-bundle.js"></script>
+    <script src="./asterway-docs.js"></script>
+  </body>
+</html>

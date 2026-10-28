@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.app.mapper.AccountAuditMapper">
+
+    <insert id="audit">
+        INSERT INTO app.audit_event (actor_user_id, target_user_id, action, object_id, outcome, trace_id)
+        VALUES (#{context.userId,jdbcType=OTHER}, #{targetId,jdbcType=OTHER}, #{action},
+            CAST(#{targetId,jdbcType=OTHER} AS TEXT), #{outcome}, #{context.traceId})
+    </insert>
+</mapper>
