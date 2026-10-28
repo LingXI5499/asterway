@@ -1,5 +1,7 @@
 package com.asterway.common.error;
 
+
+
 // 错误码契约：所有业务错误码（无论哪个模块）都必须实现这个接口。
 // code() 返回机器可读的稳定错误码字符串（例如 "USERNAME_TAKEN"），供前端判断；
 // message() 返回给用户看的错误提示文案。

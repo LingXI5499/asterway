@@ -1,20 +1,15 @@
 package com.asterway.app.security;
 
-import com.asterway.app.web.contract.ApiResponse;
-import com.asterway.app.web.error.ApiErrorFactory;
-import com.asterway.app.web.filter.TraceIdFilter;
+import com.asterway.app.web.error.ApiErrorWriter;
+import com.asterway.common.error.CommonErrorCode;
 import com.asterway.common.exception.BusinessException;
-import com.asterway.identity.api.AccountApi;
-import com.asterway.identity.api.error.AccountException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.asterway.identity.api.AccountAuthenticationApi;
+import com.asterway.identity.api.error.IdentityErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -22,29 +17,23 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 // 每次恢复认证身份后核对最新账户与凭据版本，不能只在 /me 中核对。
 public class AccountSessionFilter extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(AccountSessionFilter.class);
-
-    private final AccountApi accounts;
-    private final ObjectMapper objectMapper;
-    private final ApiErrorFactory errors;
+    private final AccountAuthenticationApi accounts;
+    private final ApiErrorWriter errorWriter;
     private final SecurityContextLogoutHandler logout;
     private final CsrfTokenRepository csrf;
 
     public AccountSessionFilter(
-            AccountApi accounts,
-            ObjectMapper objectMapper,
-            ApiErrorFactory errors,
+            AccountAuthenticationApi accounts,
+            ApiErrorWriter errorWriter,
             SecurityContextLogoutHandler logout,
             CsrfTokenRepository csrf
     ) {
         this.accounts = accounts;
-        this.objectMapper = objectMapper;
-        this.errors = errors;
+        this.errorWriter = errorWriter;
         this.logout = logout;
         this.csrf = csrf;
     }
@@ -58,35 +47,22 @@ public class AccountSessionFilter extends OncePerRequestFilter {
                 accounts.validateSession(principal.accountId(), principal.credentialVersion(), principal.securityVersion());
             } catch (BusinessException exception) {
                 String code = exception.getErrorCode().code();
-                if ("AUTH_REQUIRED".equals(code) || "ACCOUNT_UNAVAILABLE".equals(code)) {
+                if (CommonErrorCode.AUTH_REQUIRED.code().equals(code)
+                        || IdentityErrorCode.ACCOUNT_UNAVAILABLE.code().equals(code)) {
                     logout.logout(request, response, authentication);
                     csrf.saveToken(null, request, response);
                 }
-                writeFailure(exception, request, response);
+                errorWriter.writeFailure(exception, request, response);
                 return;
             } catch (DataAccessException exception) {
-                log.error("核对账户会话时数据库不可用", exception);
-                response.setStatus(503);
-                response.setContentType("application/json");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
-                ApiResponse<Void> payload = ApiResponse.failure("SERVICE_UNAVAILABLE", "服务暂时不可用，请稍后重试", null, traceId);
-                objectMapper.writeValue(response.getOutputStream(), payload);
+                BusinessException failure = new BusinessException(CommonErrorCode.SERVICE_UNAVAILABLE, exception);
+                errorWriter.writeFailure(failure, request, response);
+                return;
+            } catch (RuntimeException exception) {
+                errorWriter.writeInternalError(exception, request, response);
                 return;
             }
         }
         chain.doFilter(request, response);
-    }
-
-    private void writeFailure(BusinessException exception, HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
-        ResponseEntity<?> failure = exception instanceof AccountException accountException
-                ? errors.fromAccountException(accountException, traceId)
-                : errors.fromBusinessException(exception, traceId);
-        response.setStatus(failure.getStatusCode().value());
-        response.setContentType("application/json");
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        objectMapper.writeValue(response.getOutputStream(), failure.getBody());
     }
 }

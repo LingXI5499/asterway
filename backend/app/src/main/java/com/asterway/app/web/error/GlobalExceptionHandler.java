@@ -9,19 +9,16 @@ import com.asterway.common.exception.BusinessException;
 import com.asterway.identity.api.error.AccountException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
@@ -33,9 +30,6 @@ import java.util.Map;
 // RestAuthenticationEntryPoint / RestAccessDeniedHandler 单独处理。
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    private static final Logger log =
-            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // 负责把异常转换成响应
     private final ApiErrorFactory apiErrorFactory;
@@ -57,32 +51,31 @@ public class GlobalExceptionHandler {
     // JSON 语法及基础类型错误返回 400，未知契约字段返回 422，不回显请求正文。
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class})
-    public ResponseEntity<ApiResponse<Void>> handleUnreadableRequest(Exception exception, HttpServletRequest request) {
+    public ResponseEntity<?> handleUnreadableRequest(Exception exception, HttpServletRequest request) {
+        String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
         boolean unknownField = false;
         Throwable cause = exception;
         while (cause != null) {
+            // 严格请求反序列化器抛出的业务校验异常保持原有错误数据和状态。
+            if (cause instanceof AccountException accountException) {
+                return apiErrorFactory.fromAccountException(accountException, traceId);
+            }
+            if (cause instanceof BusinessException businessException) {
+                return apiErrorFactory.fromBusinessException(businessException, traceId);
+            }
             if (cause instanceof UnrecognizedPropertyException) {
                 unknownField = true;
-                break;
             }
             cause = cause.getCause();
         }
-        HttpStatus status = unknownField ? HttpStatus.UNPROCESSABLE_ENTITY : HttpStatus.BAD_REQUEST;
-        String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
-        ApiResponse<Void> payload = ApiResponse.failure("VALIDATION_ERROR", "请求格式或字段不符合接口约定", null, traceId);
-        ResponseEntity<ApiResponse<Void>> response = ResponseEntity.status(status).body(payload);
-        return response;
+        return apiErrorFactory.unreadableRequest(unknownField, traceId);
     }
 
     @ExceptionHandler({HttpRequestMethodNotSupportedException.class, HttpMediaTypeNotSupportedException.class})
     public ResponseEntity<ApiResponse<Void>> handleUnsupportedRequest(Exception exception, HttpServletRequest request) {
         boolean unsupportedMethod = exception instanceof HttpRequestMethodNotSupportedException;
-        HttpStatus status = unsupportedMethod ? HttpStatus.METHOD_NOT_ALLOWED : HttpStatus.UNSUPPORTED_MEDIA_TYPE;
-        String code = unsupportedMethod ? "METHOD_NOT_ALLOWED" : "UNSUPPORTED_MEDIA_TYPE";
         String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
-        ApiResponse<Void> payload = ApiResponse.failure(code, "请求方法或内容类型不受支持", null, traceId);
-        ResponseEntity<ApiResponse<Void>> response = ResponseEntity.status(status).body(payload);
-        return response;
+        return apiErrorFactory.unsupportedRequest(unsupportedMethod, traceId);
     }
 
     // 业务异常：交给 ApiErrorFactory 按错误码映射状态码
@@ -118,9 +111,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         String traceId = (String) request.getAttribute(TraceIdFilter.TRACE_ID_ATTRIBUTE);
-        log.error("数据库暂时不可用，traceId={}", traceId, exception);
-
-        BusinessException businessException = new BusinessException(CommonErrorCode.SERVICE_UNAVAILABLE);
+        BusinessException businessException = new BusinessException(CommonErrorCode.SERVICE_UNAVAILABLE, exception);
         ResponseEntity<ApiResponse<Void>> response =
                 apiErrorFactory.fromBusinessException(businessException, traceId);
         return response;
@@ -132,24 +123,30 @@ public class GlobalExceptionHandler {
             Exception exception,
             HttpServletRequest request
     ) {
-        log.error("发生未预期的服务器异常", exception);
-
         String traceId = (String) request.getAttribute(
                 TraceIdFilter.TRACE_ID_ATTRIBUTE
         );
 
-        return apiErrorFactory.internalError(traceId);
+        return apiErrorFactory.internalError(exception, traceId);
     }
 
     // 参数校验失败：提取各字段错误，返回 422
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<ErrorData>> handleValidationException(
+    public ResponseEntity<? extends ApiResponse<?>> handleValidationException(
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
         String traceId = (String) request.getAttribute(
                 TraceIdFilter.TRACE_ID_ATTRIBUTE
         );
+
+        // 查询 DTO 的类型转换错误沿用原请求参数的 400，不当作业务字段校验失败。
+        boolean bindingFailure = exception.getBindingResult().getFieldErrors().stream()
+                .anyMatch(error -> error.isBindingFailure());
+        if (bindingFailure) {
+            ResponseEntity<ApiResponse<Void>> response = apiErrorFactory.unreadableRequest(false, traceId);
+            return response;
+        }
 
         // 把每个字段的校验错误转成 Violation 列表
         List<Violation> violations = exception.getBindingResult()

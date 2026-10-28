@@ -1,151 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-<!--
-  账户数据访问 SQL 映射文件。
-  对应接口：com.asterway.identity.mapper.AccountMapper
-  包含三个 SQL：insertAccount（新增）、findByUsernameKey（按用户名查）、existsByUsernameKey（判断存在）。
--->
-
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.asterway.identity.mapper.AccountMapper">
 
-    <!-- 本人资料使用独立投影，避免查询密码哈希。 -->
-    <resultMap id="AccountProfileMap"
-               type="com.asterway.identity.model.AccountProfile">
-        <constructor>
-            <idArg column="id" name="accountId" javaType="java.util.UUID"/>
-            <arg column="username" name="username" javaType="java.lang.String"/>
-            <arg column="nickname" name="nickname" javaType="java.lang.String"/>
-            <arg column="role" name="role" javaType="java.lang.String"/>
-            <arg column="status" name="status" javaType="java.lang.String"/>
-            <arg column="created_at" name="createdAt" javaType="java.time.OffsetDateTime"/>
-            <arg column="updated_at" name="updatedAt" javaType="java.time.OffsetDateTime"/>
-        </constructor>
-    </resultMap>
+    <sql id="stateColumns">
+        id, username, username_key, nickname, password_hash, role, status,
+        created_at, updated_at, version, deleted_at, security_version,
+        credential_version, login_name_version, password_changed_at,
+        current_zone_period_id, pending_zone_id, pending_zone_effective_at, pending_zone_requested_at
+    </sql>
 
-    <!-- 账户 ID 仅由服务端身份提供，使用参数绑定限定本人记录。 -->
-    <select id="findProfileById" resultMap="AccountProfileMap">
-        SELECT
-            id,
-            username,
-            nickname,
-            role,
-            status,
-            created_at,
-            updated_at
-        FROM app.app_user
-        WHERE id = #{accountId}
+    <select id="now" resultType="java.time.OffsetDateTime">
+        SELECT clock_timestamp()
     </select>
 
-    <!--
-      结果映射：把查询出的列映射到 AccountEntity 这个 record。
-      因为 AccountEntity 是不可变 record（没有 setter），
-      所以用 <constructor> 按构造器参数顺序映射，每个参数都要写 name + javaType。
-    -->
-    <resultMap id="AccountEntityMap"
-               type="com.asterway.identity.model.AccountEntity">
+    <select id="lockScope" resultType="string">
+        SELECT pg_advisory_xact_lock(hashtextextended(#{scope}, 0))
+    </select>
 
-        <constructor>
-            <!-- 主键 id 用 <idArg> -->
-            <idArg column="id"
-                   name="id"
-                   javaType="java.util.UUID"/>
+    <select id="findState" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user WHERE id = #{userId}
+    </select>
 
-            <arg column="username"
-                 name="username"
-                 javaType="java.lang.String"/>
+    <select id="findByLoginName" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user WHERE username_key = #{usernameKey}
+    </select>
 
-            <arg column="username_key"
-                 name="usernameKey"
-                 javaType="java.lang.String"/>
-
-            <arg column="nickname"
-                 name="nickname"
-                 javaType="java.lang.String"/>
-
-            <arg column="password_hash"
-                 name="passwordHash"
-                 javaType="java.lang.String"/>
-
-            <arg column="role"
-                 name="role"
-                 javaType="java.lang.String"/>
-
-            <arg column="status"
-                 name="status"
-                 javaType="java.lang.String"/>
-
-            <arg column="created_at"
-                 name="createdAt"
-                 javaType="java.time.OffsetDateTime"/>
-
-            <arg column="updated_at"
-                 name="updatedAt"
-                 javaType="java.time.OffsetDateTime"/>
-        </constructor>
-
-    </resultMap>
-
-    <!--
-      新增账户。
-      注意：id、username_key、created_at、updated_at 由数据库生成，这里不插入。
-    -->
-    <insert id="insertAccount"
-            parameterType="com.asterway.identity.model.AccountEntity">
-
+    <insert id="insertState">
         INSERT INTO app.app_user (
-        username,
-        nickname,
-        password_hash,
-        role,
-        status
+            id, username, nickname, password_hash, role, status, current_zone_period_id, password_changed_at
+        ) VALUES (
+            #{id}, #{username}, #{nickname}, #{passwordHash}, 'USER', 'ENABLED',
+            #{currentZonePeriodId}, clock_timestamp()
         )
-        VALUES (
-        #{username},
-        #{nickname},
-        #{passwordHash},
-        #{role},
-        #{status}
-        )
-
     </insert>
 
-    <!--
-      按规范化用户名查询账户（返回完整实体，含密码哈希）。
-      仅在登录校验时使用，不能把密码哈希返回给前端。
-    -->
-    <select id="findByUsernameKey"
-            resultMap="AccountEntityMap">
+    <update id="updateProfile">
+        UPDATE app.app_user
+        SET username = #{username}, nickname = #{nickname}, version = version + 1,
+            login_name_version = login_name_version + CASE WHEN #{renamed} THEN 1 ELSE 0 END,
+            updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
 
-        SELECT
-        id,
-        username,
-        username_key,
-        nickname,
-        password_hash,
-        role,
-        status,
-        created_at,
-        updated_at
-        FROM app.app_user
-        WHERE username_key = #{usernameKey}
-
+    <update id="updatePassword">
+        UPDATE app.app_user
+        SET password_hash = #{passwordHash}, password_changed_at = clock_timestamp(),
+            credential_version = credential_version + 1, security_version = security_version + 1,
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
+    <select id="listSecurityStates" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user ORDER BY id
     </select>
-
-    <!--
-      判断用户名是否已存在（只查存在性，不读密码哈希等敏感字段）。
-      用于注册时的查重，返回 true / false。
-    -->
-    <select id="existsByUsernameKey" resultType="boolean">
-
-        SELECT EXISTS (
-            SELECT 1
-            FROM app.app_user
-            WHERE username_key = #{usernameKey}
-        )
-
-    </select>
-
 </mapper>

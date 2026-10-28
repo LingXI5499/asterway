@@ -1,5 +1,7 @@
 package com.asterway.identity.api;
 
+
+
 // 密码哈希器契约。
 // identity 模块只需要知道"如何生成哈希"和"如何校验密码"，不需要知道具体算法（Argon2/BCrypt/scrypt...）。
 // 具体实现由 app 模块提供（当前是 Argon2PasswordHasher）。

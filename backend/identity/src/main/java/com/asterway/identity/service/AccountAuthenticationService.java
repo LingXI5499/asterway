@@ -1,19 +1,27 @@
 package com.asterway.identity.service;
 
 import com.asterway.common.exception.BusinessException;
+import com.asterway.common.utils.SecureRandomUtils;
+import com.asterway.common.utils.TransactionUtils;
+import com.asterway.identity.api.AccountAuditPort;
+import com.asterway.identity.api.AccountAuthenticationApi;
+import com.asterway.identity.api.AccountOperationCode;
+import com.asterway.identity.api.AccountOperationPort;
+import com.asterway.identity.api.AccountSecurityPort;
 import com.asterway.identity.api.PasswordHasher;
 import com.asterway.identity.api.error.AccountException;
 import com.asterway.identity.api.error.IdentityErrorCode;
-import com.asterway.identity.api.model.AccountModels.Context;
-import com.asterway.identity.api.model.AccountModels.LoginGrant;
-import com.asterway.identity.api.model.AccountModels.LoginInput;
-import com.asterway.identity.infrastructure.security.SecureTokenGenerator;
-import com.asterway.identity.infrastructure.transaction.AccountTransactionExecutor;
-import com.asterway.identity.mapper.AccountLifecycleMapper;
+import com.asterway.identity.api.model.AccountContext;
+import com.asterway.identity.api.model.LoginGrant;
+import com.asterway.identity.api.model.LoginInput;
+import com.asterway.identity.constant.LoginConstants;
+import com.asterway.identity.mapper.AccountLoginAttemptMapper;
+import com.asterway.identity.mapper.AccountMapper;
 import com.asterway.identity.model.AccountState;
 import com.asterway.identity.model.LoginAttempt;
-import com.asterway.identity.validation.AccountValidator;
+import com.asterway.identity.utils.AccountValidationUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -23,42 +31,52 @@ import java.util.UUID;
 
 // 每个有效认证意图只累计一次失败，滑动错误不累计凭据失败。
 @Service
-public class AccountAuthenticationService {
+public class AccountAuthenticationService implements AccountAuthenticationApi {
 
-    private final AccountLifecycleMapper mapper;
-    private final AccountTransactionExecutor transactionExecutor;
-    private final AccountIdempotencyService idempotencyService;
+    private final AccountAuditPort audit;
+
+    private final AccountSecurityPort security;
+
+    private final AccountLoginAttemptMapper loginAttemptMapper;
+
+    private final AccountMapper mapper;
+    private final PlatformTransactionManager transactionManager;
+    private final AccountOperationPort idempotencyService;
     private final AccountCaptchaService captchas;
     private final AccountAccessService accessService;
-    private final AccountValidator validator;
     private final PasswordHasher passwordHasher;
     private final String dummyHash;
 
     public AccountAuthenticationService(
-            AccountLifecycleMapper mapper,
-            AccountTransactionExecutor transactionExecutor,
-            AccountIdempotencyService idempotencyService,
+            AccountAuditPort audit,
+            AccountSecurityPort security,
+            AccountLoginAttemptMapper loginAttemptMapper,
+            AccountMapper mapper,
+            PlatformTransactionManager transactionManager,
+            AccountOperationPort idempotencyService,
             AccountCaptchaService captchas,
             AccountAccessService accessService,
-            AccountValidator validator,
             PasswordHasher passwordHasher
     ) {
+        this.audit = audit;
+        this.security = security;
+        this.loginAttemptMapper = loginAttemptMapper;
         this.mapper = mapper;
-        this.transactionExecutor = transactionExecutor;
+        this.transactionManager = transactionManager;
         this.idempotencyService = idempotencyService;
         this.captchas = captchas;
         this.accessService = accessService;
-        this.validator = validator;
         this.passwordHasher = passwordHasher;
-        dummyHash = passwordHasher.hash(SecureTokenGenerator.token());
+        dummyHash = passwordHasher.hash(SecureRandomUtils.token());
     }
 
-    public LoginGrant login(Context context, LoginInput input) {
-        validator.username(input.username());
-        validator.password(input.password(), "password", false);
-        validator.captcha(input.captchaChallengeId(), input.captchaVerificationToken());
-        AccountIdempotencyService.Execution<LoginGrant> previous = idempotencyService.existing(
-                context, "API-AUTH-005", input, LoginGrant.class);
+    @Override
+    public LoginGrant login(AccountContext context, LoginInput input) {
+        AccountValidationUtils.username(input.username());
+        AccountValidationUtils.password(input.password(), "password", false);
+        AccountValidationUtils.captcha(input.captchaChallengeId(), input.captchaVerificationToken());
+        AccountOperationPort.Execution<LoginGrant> previous = idempotencyService.existing(
+                context, AccountOperationCode.LOGIN.code(), input, LoginGrant.class);
         if (previous != null) {
             LoginGrant replay = withReplay(previous.data(), true);
             return replay;
@@ -67,7 +85,7 @@ public class AccountAuthenticationService {
             throw new BusinessException(IdentityErrorCode.STATE_CONFLICT);
         }
         String usernameKey = input.username().toLowerCase(Locale.ROOT);
-        transactionExecutor.independent(() -> {
+        TransactionUtils.independent(transactionManager, () -> {
             mapper.lockScope("login:" + usernameKey);
             currentAttempt(usernameKey);
             return Boolean.TRUE;
@@ -76,22 +94,22 @@ public class AccountAuthenticationService {
         AccountState candidate = mapper.findByLoginName(usernameKey);
         String encoded = candidate == null ? dummyHash : candidate.passwordHash();
         boolean matches = passwordHasher.matches(input.password(), encoded);
-        AccountIdempotencyService.Execution<LoginGrant> execution = idempotencyService.execute(
-                context, "API-AUTH-005", input, LoginGrant.class,
+        AccountOperationPort.Execution<LoginGrant> execution = idempotencyService.execute(
+                context, AccountOperationCode.LOGIN.code(), input, LoginGrant.class,
                 () -> authenticateLocked(context, usernameKey, candidate, matches)
         );
         LoginGrant result = withReplay(execution.data(), execution.replayed());
         return result;
     }
 
-    private AccountIdempotencyService.Outcome<LoginGrant> authenticateLocked(
-            Context context, String usernameKey, AccountState candidate, boolean matches
+    private AccountOperationPort.Outcome<LoginGrant> authenticateLocked(
+            AccountContext context, String usernameKey, AccountState candidate, boolean matches
     ) {
         mapper.lockScope("login:" + usernameKey);
         LoginAttempt attempt = currentAttempt(usernameKey);
         AccountState account = mapper.findByLoginName(usernameKey);
         if (account != null) {
-            mapper.lockAccount(account.id());
+            security.lockAccount(account.id());
             account = mapper.findByLoginName(usernameKey);
         }
         boolean stale = candidate == null || account == null
@@ -99,25 +117,25 @@ public class AccountAuthenticationService {
                 || candidate.credentialVersion() != account.credentialVersion()
                 || candidate.loginNameVersion() != account.loginNameVersion();
         if (!matches || stale) {
-            int failures = Math.min(5, attempt.failureCount() + 1);
-            OffsetDateTime lockedUntil = failures == 5 ? mapper.now().plusMinutes(5) : null;
-            mapper.saveLoginAttempt(usernameKey, failures, lockedUntil);
-            mapper.audit(context, account == null ? null : account.id(), "ACCOUNT_LOGIN", "REJECTED");
-            BusinessException error = failures == 5
-                    ? new AccountException(IdentityErrorCode.ACCOUNT_LOCKED, Map.of("retryAfterSeconds", "300"))
+            int failures = Math.min(LoginConstants.MAX_FAILURES, attempt.failureCount() + 1);
+            OffsetDateTime lockedUntil = failures == LoginConstants.MAX_FAILURES ? mapper.now().plusMinutes(LoginConstants.LOCK_MINUTES) : null;
+            loginAttemptMapper.saveLoginAttempt(usernameKey, failures, lockedUntil);
+            audit.record(context, account == null ? null : account.id(), "ACCOUNT_LOGIN", "REJECTED");
+            BusinessException error = failures == LoginConstants.MAX_FAILURES
+                    ? new AccountException(IdentityErrorCode.ACCOUNT_LOCKED, Map.of("retryAfterSeconds", Integer.toString(LoginConstants.LOCK_SECONDS)))
                     : new BusinessException(IdentityErrorCode.CREDENTIALS_INVALID);
-            AccountIdempotencyService.Outcome<LoginGrant> outcome = AccountIdempotencyService.failure(error);
+            AccountOperationPort.Outcome<LoginGrant> outcome = AccountOperationPort.failure(error);
             return outcome;
         }
         accessService.requireAvailable(account);
-        mapper.saveLoginAttempt(usernameKey, 0, null);
-        mapper.audit(context, account.id(), "ACCOUNT_LOGIN", "SUCCESS");
-        AccountIdempotencyService.Outcome<LoginGrant> outcome = AccountIdempotencyService.success(grant(account));
+        loginAttemptMapper.saveLoginAttempt(usernameKey, 0, null);
+        audit.record(context, account.id(), "ACCOUNT_LOGIN", "SUCCESS");
+        AccountOperationPort.Outcome<LoginGrant> outcome = AccountOperationPort.success(grant(account));
         return outcome;
     }
 
     private LoginAttempt currentAttempt(String usernameKey) {
-        LoginAttempt attempt = mapper.loginAttempt(usernameKey);
+        LoginAttempt attempt = loginAttemptMapper.loginAttempt(usernameKey);
         if (attempt == null) {
             return new LoginAttempt(0, null);
         }
@@ -128,12 +146,13 @@ public class AccountAuthenticationService {
                 throw new AccountException(IdentityErrorCode.ACCOUNT_LOCKED,
                         Map.of("retryAfterSeconds", Long.toString(seconds)));
             }
-            mapper.saveLoginAttempt(usernameKey, 0, null);
+            loginAttemptMapper.saveLoginAttempt(usernameKey, 0, null);
             return new LoginAttempt(0, null);
         }
         return attempt;
     }
 
+    @Override
     public LoginGrant validateSession(UUID userId, long credentialVersion, long securityVersion) {
         AccountState state = mapper.findState(userId);
         accessService.requireSession(state, credentialVersion, securityVersion);

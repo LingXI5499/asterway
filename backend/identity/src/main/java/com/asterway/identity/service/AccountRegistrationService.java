@@ -1,16 +1,23 @@
 package com.asterway.identity.service;
 
 import com.asterway.common.exception.BusinessException;
+import com.asterway.identity.api.AccountAuditPort;
+import com.asterway.identity.api.AccountConfigurationPort;
+import com.asterway.identity.api.AccountOperationCode;
+import com.asterway.identity.api.AccountOperationPort;
+import com.asterway.identity.api.AccountRegistrationApi;
+import com.asterway.identity.api.AccountSecurityPort;
 import com.asterway.identity.api.PasswordHasher;
 import com.asterway.identity.api.error.IdentityErrorCode;
-import com.asterway.identity.api.model.AccountModels.Context;
-import com.asterway.identity.api.model.AccountModels.RegistrationInput;
+import com.asterway.identity.api.model.AccountContext;
+import com.asterway.identity.api.model.RegistrationInput;
 import com.asterway.identity.api.model.RegistrationResult;
-import com.asterway.identity.infrastructure.security.AccountSecurityLedger;
-import com.asterway.identity.mapper.AccountLifecycleMapper;
+import com.asterway.identity.constant.AccountConstants;
+import com.asterway.identity.mapper.AccountMapper;
+import com.asterway.identity.mapper.AccountTimeZoneMapper;
 import com.asterway.identity.model.AccountState;
 import com.asterway.identity.model.ZonePeriod;
-import com.asterway.identity.validation.AccountValidator;
+import com.asterway.identity.utils.AccountValidationUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -19,62 +26,72 @@ import java.util.UUID;
 
 // 注册原子建立普通账户、初始时区及账户控制行，不自动创建认证会话。
 @Service
-public class AccountRegistrationService {
+public class AccountRegistrationService implements AccountRegistrationApi {
 
-    private final AccountLifecycleMapper mapper;
-    private final AccountIdempotencyService idempotencyService;
+    private final AccountConfigurationPort configuration;
+
+    private final AccountAuditPort audit;
+
+    private final AccountTimeZoneMapper timeZoneMapper;
+
+    private final AccountMapper mapper;
+    private final AccountOperationPort idempotencyService;
     private final AccountCaptchaService captchas;
-    private final AccountValidator validator;
-    private final AccountSecurityLedger ledger;
+    private final AccountSecurityPort ledger;
     private final PasswordHasher passwordHasher;
 
     public AccountRegistrationService(
-            AccountLifecycleMapper mapper,
-            AccountIdempotencyService idempotencyService,
+            AccountConfigurationPort configuration,
+            AccountAuditPort audit,
+            AccountTimeZoneMapper timeZoneMapper,
+            AccountMapper mapper,
+            AccountOperationPort idempotencyService,
             AccountCaptchaService captchas,
-            AccountValidator validator,
-            AccountSecurityLedger ledger,
+            AccountSecurityPort ledger,
             PasswordHasher passwordHasher
     ) {
+        this.configuration = configuration;
+        this.audit = audit;
+        this.timeZoneMapper = timeZoneMapper;
         this.mapper = mapper;
         this.idempotencyService = idempotencyService;
         this.captchas = captchas;
-        this.validator = validator;
         this.ledger = ledger;
         this.passwordHasher = passwordHasher;
     }
 
-    public RegistrationResult register(Context context, RegistrationInput input) {
+    @Override
+    public RegistrationResult register(AccountContext context, RegistrationInput input) {
         if (context.userId() != null) {
             throw new BusinessException(IdentityErrorCode.STATE_CONFLICT);
         }
-        validator.username(input.username());
+        AccountValidationUtils.username(input.username());
         if (input.nickname() != null) {
-            validator.nickname(input.nickname());
+            AccountValidationUtils.nickname(input.nickname());
         }
-        validator.password(input.password(), "password", true);
-        validator.matchingPasswords(input.password(), input.confirmPassword());
-        validator.zone(input.zoneId());
-        validator.captcha(input.captchaChallengeId(), input.captchaVerificationToken());
-        AccountIdempotencyService.Execution<RegistrationResult> existing = idempotencyService.existing(
-                context, "API-AUTH-004", input, RegistrationResult.class);
+        AccountValidationUtils.password(input.password(), "password", true);
+        AccountValidationUtils.matchingPasswords(input.password(), input.confirmPassword());
+        AccountValidationUtils.zone(input.zoneId());
+        AccountValidationUtils.captcha(input.captchaChallengeId(), input.captchaVerificationToken());
+        AccountOperationPort.Execution<RegistrationResult> existing = idempotencyService.existing(
+                context, AccountOperationCode.REGISTER.code(), input, RegistrationResult.class);
         if (existing != null) {
             return existing.data();
         }
-        if (!mapper.registrationOpen()) {
+        if (!configuration.registrationOpen()) {
             throw new BusinessException(IdentityErrorCode.REGISTRATION_CLOSED);
         }
         captchas.consume(context, "REGISTER", input.captchaChallengeId(), input.captchaVerificationToken(), input);
         String passwordHash = passwordHasher.hash(input.password());
-        AccountIdempotencyService.Execution<RegistrationResult> result = idempotencyService.execute(
-                context, "API-AUTH-004", input, RegistrationResult.class,
-                () -> AccountIdempotencyService.success(insertLocked(context, input, passwordHash))
+        AccountOperationPort.Execution<RegistrationResult> result = idempotencyService.execute(
+                context, AccountOperationCode.REGISTER.code(), input, RegistrationResult.class,
+                () -> AccountOperationPort.success(insertLocked(context, input, passwordHash))
         );
         return result.data();
     }
 
-    private RegistrationResult insertLocked(Context context, RegistrationInput input, String passwordHash) {
-        if (!mapper.registrationOpen()) {
+    private RegistrationResult insertLocked(AccountContext context, RegistrationInput input, String passwordHash) {
+        if (!configuration.registrationOpen()) {
             throw new BusinessException(IdentityErrorCode.REGISTRATION_CLOSED);
         }
         if (mapper.findByLoginName(input.username().toLowerCase(Locale.ROOT)) != null) {
@@ -90,8 +107,8 @@ public class AccountRegistrationService {
                 input.username().toLowerCase(Locale.ROOT),
                 nickname,
                 passwordHash,
-                "USER",
-                "ENABLED",
+                AccountConstants.USER_ROLE,
+                AccountConstants.ENABLED_STATUS,
                 now,
                 now,
                 0,
@@ -105,13 +122,13 @@ public class AccountRegistrationService {
                 null,
                 null
         );
-        ledger.prepare(context, "REGISTER", null, account);
+        ledger.prepare(context, "REGISTER", null, account.securityState());
         if (mapper.insertState(account) != 1) {
             throw new IllegalStateException("账户新增影响行数异常");
         }
-        mapper.insertZone(zone);
-        mapper.insertGuard(id);
-        mapper.audit(context, id, "ACCOUNT_REGISTER", "SUCCESS");
+        timeZoneMapper.insertZone(zone);
+        ledger.insertGuard(id);
+        audit.record(context, id, "ACCOUNT_REGISTER", "SUCCESS");
         AccountState saved = mapper.findState(id);
         RegistrationResult result = new RegistrationResult(id, saved.username(), true, saved.createdAt().toInstant());
         return result;

@@ -96,32 +96,74 @@ async function submit() {
 </script>
 
 <template>
-  <section class="auth-card">
-    <h1>登录 {{ siteName }}</h1>
-    <p v-if="route.query.registered === '1'" class="success">注册成功，请登录。</p>
-    <p v-if="notice" role="status">{{ notice }}</p>
-    <p v-if="checking">正在确认登录状态…</p>
-    <form v-else @submit.prevent="submit">
-      <fieldset :disabled="loading || Boolean(pending)">
-        <label>
-          用户名
-          <input v-model="username" required autocomplete="username" />
-        </label>
-        <label>
-          密码
-          <input v-model="password" type="password" required autocomplete="current-password" />
-        </label>
-      </fieldset>
-      <CaptchaPuzzle ref="captcha" v-model="proof" purpose="LOGIN" />
-      <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-      <button :disabled="loading || (!proof && !pending)">
-        {{ loading ? '登录中…' : pending ? '重试原登录请求' : '登录' }}
-      </button>
-    </form>
-    <p v-if="registrationOpen" class="switch-link">
-      没有账户？
-      <RouterLink to="/register">去注册</RouterLink>
-    </p>
-    <p v-else>当前未开放注册，已有账户仍可登录。</p>
+  <section class="auth-shell">
+    <el-card class="auth-card" shadow="never">
+      <p class="eyebrow">欢迎回来</p>
+      <h1>登录 {{ siteName }}</h1>
+      <p class="page-description">登录后管理你的账户资料与安全设置。</p>
+      <el-alert
+        v-if="route.query.registered === '1'"
+        title="注册成功，请登录。"
+        type="success"
+        show-icon
+        :closable="false"
+      />
+      <el-alert v-if="notice" :title="notice" type="info" show-icon :closable="false" />
+      <el-skeleton v-if="checking" :rows="4" animated />
+      <el-form v-else class="account-form" label-position="top" @submit.prevent="submit">
+        <el-form-item label="用户名" for="login-username" required>
+          <el-input
+            id="login-username"
+            v-model="username"
+            autocomplete="username"
+            placeholder="请输入用户名"
+            size="large"
+            :disabled="loading || Boolean(pending)"
+            required
+          />
+        </el-form-item>
+        <el-form-item label="密码" for="login-password" required>
+          <el-input
+            id="login-password"
+            v-model="password"
+            type="password"
+            show-password
+            autocomplete="current-password"
+            placeholder="请输入密码"
+            size="large"
+            :disabled="loading || Boolean(pending)"
+            required
+          />
+        </el-form-item>
+        <CaptchaPuzzle
+          ref="captcha"
+          v-model="proof"
+          purpose="LOGIN"
+          :disabled="loading || Boolean(pending)"
+        />
+        <el-alert
+          v-if="errorMessage"
+          :title="errorMessage"
+          type="error"
+          show-icon
+          :closable="false"
+        />
+        <el-button
+          class="full-width"
+          type="primary"
+          size="large"
+          native-type="submit"
+          :loading="loading"
+          :disabled="loading || (!proof && !pending)"
+        >
+          {{ pending ? '重试原登录请求' : '登录' }}
+        </el-button>
+      </el-form>
+      <p v-if="registrationOpen" class="switch-link">
+        还没有账户？
+        <RouterLink to="/register">创建账户</RouterLink>
+      </p>
+      <p v-else class="switch-link muted">当前未开放注册，已有账户仍可登录。</p>
+    </el-card>
   </section>
 </template>

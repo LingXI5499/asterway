@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.app.mapper.AccountSessionMapper">
+
+    <delete id="deleteCurrentSessionAttributes">
+        DELETE FROM session_store.spring_session_attributes WHERE session_primary_id IN (
+            SELECT primary_id FROM session_store.spring_session WHERE session_id = #{sessionId} FOR UPDATE
+        )
+    </delete>
+
+    <delete id="deleteCurrentSession">
+        DELETE FROM session_store.spring_session WHERE session_id = #{sessionId}
+    </delete>
+
+    <delete id="deleteAccountSessionAttributes">
+        DELETE FROM session_store.spring_session_attributes WHERE session_primary_id IN (
+            SELECT primary_id FROM session_store.spring_session WHERE principal_name = CAST(#{userId} AS TEXT) FOR UPDATE
+        )
+    </delete>
+
+    <delete id="deleteAccountSessions">
+        DELETE FROM session_store.spring_session WHERE principal_name = CAST(#{userId} AS TEXT)
+    </delete>
+</mapper>

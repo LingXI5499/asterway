@@ -1,5 +1,7 @@
 package com.asterway.common.error;
 
+
+
 // 公共（跨模块通用）错误码。
 // 这里只放不归属任何具体业务模块、整个系统都会用到的错误码。
 // 业务专属的错误码（如身份相关的）放在各模块自己的枚举里，比如 identity 模块的 IdentityErrorCode。

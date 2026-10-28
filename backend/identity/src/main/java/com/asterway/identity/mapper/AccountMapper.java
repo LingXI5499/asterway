@@ -1,36 +1,33 @@
 package com.asterway.identity.mapper;
 
-import com.asterway.identity.model.AccountEntity;
-import com.asterway.identity.model.AccountProfile;
+import com.asterway.identity.model.AccountState;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
-// 账户数据访问接口（MyBatis Mapper）。
-// 这里只声明 SQL 方法签名，具体 SQL 写在 AccountMapper.xml 里（项目约定：SQL 统一放 XML）。
+// 账户主体和数据库时间的数据访问契约。
 public interface AccountMapper {
 
-    // 按当前认证账户 ID 查询基础资料，不读取密码哈希。
-    AccountProfile findProfileById(@Param("accountId") UUID accountId);
+    OffsetDateTime now();
 
-    // 新增一条账户记录。
-    // 注意：id、username_key、created_at、updated_at 都由数据库生成，插入时不传入。
-    // account：待插入的账户实体
-    // 返回：受影响行数（正常应为 1）
-    int insertAccount(AccountEntity account);
+    void lockScope(@Param("scope") String scope);
 
-    // 按规范化用户名查询账户。
-    // 返回完整实体（含密码哈希），仅在登录校验时使用，不能返回给前端。
-    // usernameKey：规范化后的用户名（小写）
-    // 返回：账户实体，不存在时返回 null
-    AccountEntity findByUsernameKey(
-            @Param("usernameKey") String usernameKey
+    AccountState findState(@Param("userId") UUID userId);
+
+    AccountState findByLoginName(@Param("usernameKey") String usernameKey);
+
+    int insertState(AccountState account);
+
+    int updateProfile(
+            @Param("userId") UUID userId,
+            @Param("username") String username,
+            @Param("nickname") String nickname,
+            @Param("renamed") boolean renamed
     );
 
-    // 判断用户名是否已存在（只查存在性，不读密码哈希等敏感字段）。
-    // usernameKey：规范化后的用户名（小写）
-    // 返回：存在返回 true，否则 false
-    boolean existsByUsernameKey(
-            @Param("usernameKey") String usernameKey
-    );
+    int updatePassword(@Param("userId") UUID userId, @Param("passwordHash") String passwordHash);
+
+    List<AccountState> listSecurityStates();
 }

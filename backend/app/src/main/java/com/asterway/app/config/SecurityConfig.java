@@ -1,28 +1,23 @@
 package com.asterway.app.config;
 
-import com.asterway.app.security.RestAccessDeniedHandler;
 import com.asterway.app.security.AccountSessionFilter;
 import com.asterway.app.security.AccountThrottleFilter;
-import com.asterway.app.web.error.ApiErrorFactory;
-import com.asterway.identity.api.AccountApi;
+import com.asterway.app.security.RestAccessDeniedHandler;
 import com.asterway.app.security.RestAuthenticationEntryPoint;
 import com.asterway.app.security.SpaCsrfTokenRequestHandler;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.asterway.app.web.error.ApiErrorWriter;
+import com.asterway.identity.api.AccountAuthenticationApi;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
@@ -32,7 +27,6 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
-import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 import java.util.List;
 
@@ -98,9 +92,8 @@ public class SecurityConfig {
             HttpSecurity http,
             CsrfTokenRepository csrfTokenRepository,
             SecurityContextRepository securityContextRepository,
-            ObjectMapper objectMapper,
-            AccountApi accounts,
-            ApiErrorFactory errors,
+            AccountAuthenticationApi authenticationApi,
+            ApiErrorWriter errorWriter,
             SecurityContextLogoutHandler logoutHandler
     ) throws Exception {
 
@@ -127,14 +120,10 @@ public class SecurityConfig {
                 // 未认证/无权限时，用自定义的 REST 风格错误响应
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(
-                                new RestAuthenticationEntryPoint(
-                                        objectMapper
-                                )
+                                new RestAuthenticationEntryPoint(errorWriter)
                         )
                         .accessDeniedHandler(
-                                new RestAccessDeniedHandler(
-                                        objectMapper
-                                )
+                                new RestAccessDeniedHandler(errorWriter)
                         )
                 )
                 // 访问控制规则
@@ -171,9 +160,9 @@ public class SecurityConfig {
                 // 所有注销必须通过账户用例，不能走框架默认入口绕过未结束执行检查。
                 .logout(AbstractHttpConfigurer::disable)
                 .requestCache(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new AccountThrottleFilter(objectMapper), AuthorizationFilter.class)
+                .addFilterBefore(new AccountThrottleFilter(errorWriter), AuthorizationFilter.class)
                 .addFilterBefore(new AccountSessionFilter(
-                        accounts, objectMapper, errors, logoutHandler, csrfTokenRepository
+                        authenticationApi, errorWriter, logoutHandler, csrfTokenRepository
                 ), AuthorizationFilter.class);
 
         return http.build();

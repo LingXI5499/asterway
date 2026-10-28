@@ -1,7 +1,6 @@
 package com.asterway.app.security;
 
 import com.asterway.identity.api.PasswordHasher;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 

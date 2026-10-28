@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.app.mapper.AccountSecurityMapper">
+
+    <select id="lockAccount" resultType="java.util.UUID">
+        SELECT user_id FROM app.account_guard WHERE user_id = #{userId} FOR UPDATE
+    </select>
+
+    <select id="recoveryState" resultType="string">
+        SELECT recovery_state FROM app.account_guard WHERE user_id = #{userId}
+    </select>
+
+    <update id="isolateAccount">
+        UPDATE app.account_guard
+        SET recovery_state = 'ISOLATED', isolation_reason = 'SECURITY_LEDGER_MISMATCH',
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE user_id = #{userId}
+    </update>
+
+    <insert id="insertGuard">
+        INSERT INTO app.account_guard (user_id) VALUES (#{userId})
+    </insert>
+
+    <insert id="recordSecurityChange">
+        INSERT INTO app.security_change (
+            operation_id, target_user_id, actor_user_id, change_type, expected_security_version,
+            before_login_name_version, after_security_version, after_credential_version,
+            after_login_name_version, safe_summary
+        ) VALUES (
+            #{operationId}, #{after.id}, #{context.userId,jdbcType=OTHER}, #{type},
+            #{before.securityVersion}, #{before.loginNameVersion}, #{after.securityVersion},
+            #{after.credentialVersion}, #{after.loginNameVersion}, '{}'
+        )
+    </insert>
+
+    <select id="securityChangeCommitted" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM app.security_change WHERE operation_id = #{operationId} AND db_outcome = 'COMMITTED')
+    </select>
+
+    <select id="securityHistoryExists" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM app.security_change)
+    </select>
+
+    <update id="markLedgerSynced">
+        UPDATE app.security_change SET external_state = 'RESULT_SAVED', last_sync_at = clock_timestamp()
+        WHERE operation_id = #{operationId}
+    </update>
+
+</mapper>

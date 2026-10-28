@@ -100,45 +100,88 @@ async function submit() {
 </script>
 
 <template>
-  <section class="auth-card">
-    <h1>创建账户</h1>
-    <p v-if="checking">正在读取注册状态…</p>
-    <p v-else-if="!registrationOpen">当前未开放注册。</p>
-    <form v-else @submit.prevent="submit">
-      <fieldset :disabled="loading || Boolean(pending)">
-        <label>
-          用户名
-          <input
-            v-model="username"
+  <section class="auth-shell register-shell">
+    <el-card class="auth-card register-card" shadow="never">
+      <p class="eyebrow">开始使用 Asterway</p>
+      <h1>创建账户</h1>
+      <p class="page-description">填写基本信息，创建你的个人账户。</p>
+      <el-skeleton v-if="checking" :rows="5" animated />
+      <el-empty v-else-if="!registrationOpen" description="当前未开放注册" :image-size="88" />
+      <el-form v-else class="account-form" label-position="top" @submit.prevent="submit">
+        <div class="form-grid">
+          <el-form-item label="用户名" for="register-username" required>
+            <el-input
+              id="register-username"
+              v-model="username"
+              autocomplete="username"
+              placeholder="中文、英文字母或数字"
+              :disabled="loading || Boolean(pending)"
+              required
+            />
+          </el-form-item>
+          <el-form-item label="昵称（可选）" for="register-nickname">
+            <el-input
+              id="register-nickname"
+              v-model="nickname"
+              placeholder="留空时使用用户名"
+              :disabled="loading || Boolean(pending)"
+            />
+          </el-form-item>
+        </div>
+        <el-form-item label="密码" for="register-password" required>
+          <el-input
+            id="register-password"
+            v-model="password"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            placeholder="8～50 个字符"
+            :disabled="loading || Boolean(pending)"
             required
-            autocomplete="username"
-            placeholder="中文、英文字母或数字"
           />
-        </label>
-        <label>
-          昵称（可选）
-          <input v-model="nickname" placeholder="留空时使用本次用户名" />
-        </label>
-        <label>
-          密码
-          <input v-model="password" type="password" required autocomplete="new-password" />
-        </label>
-        <p v-if="password">密码强度：{{ strength }}（仅作提示）</p>
-        <label>
-          确认密码
-          <input v-model="confirmPassword" type="password" required autocomplete="new-password" />
-        </label>
-        <TimeZoneSelect v-model="zoneId" />
-      </fieldset>
-      <CaptchaPuzzle ref="captcha" v-model="proof" purpose="REGISTER" />
-      <button :disabled="loading || (!proof && !pending)">
-        {{ loading ? '注册中…' : pending ? '重试原注册请求' : '注册' }}
-      </button>
-    </form>
-    <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-    <p class="switch-link">
-      已有账户？
-      <RouterLink to="/login">去登录</RouterLink>
-    </p>
+          <p v-if="password" class="field-note">密码强度：{{ strength }}，仅作提示。</p>
+        </el-form-item>
+        <el-form-item label="确认密码" for="register-confirm-password" required>
+          <el-input
+            id="register-confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            placeholder="请再次输入密码"
+            :disabled="loading || Boolean(pending)"
+            required
+          />
+        </el-form-item>
+        <TimeZoneSelect v-model="zoneId" :disabled="loading || Boolean(pending)" />
+        <CaptchaPuzzle
+          ref="captcha"
+          v-model="proof"
+          purpose="REGISTER"
+          :disabled="loading || Boolean(pending)"
+        />
+        <el-button
+          class="full-width"
+          type="primary"
+          size="large"
+          native-type="submit"
+          :loading="loading"
+          :disabled="loading || (!proof && !pending)"
+        >
+          {{ pending ? '重试原注册请求' : '创建账户' }}
+        </el-button>
+      </el-form>
+      <el-alert
+        v-if="errorMessage"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+      />
+      <p class="switch-link">
+        已有账户？
+        <RouterLink to="/login">前往登录</RouterLink>
+      </p>
+    </el-card>
   </section>
 </template>

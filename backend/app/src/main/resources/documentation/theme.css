@@ -1,0 +1,613 @@
+/* 文档页使用独立亮色样式，不覆盖账户业务页面。 */
+:root {
+  color-scheme: light;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  color: #253349;
+  background: #f7f9fc;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  min-width: 360px;
+  margin: 0;
+}
+a {
+  color: #356ae6;
+  text-decoration: none;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #b6ccff;
+  outline-offset: 4px;
+}
+.docs-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 72px;
+  padding: 0 32px;
+  border-bottom: 1px solid #e4eaf2;
+  background: #fff;
+}
+.docs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #253349;
+  font-size: 20px;
+  font-weight: 700;
+}
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  background: #356ae6;
+  font-size: 21px;
+}
+.header-divider {
+  height: 20px;
+  margin: 0 6px;
+  border-left: 1px solid #e2e7ef;
+}
+.header-label {
+  color: #7b879b;
+  font-size: 14px;
+  font-weight: 400;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 13px;
+}
+.header-actions a {
+  color: #67748b;
+}
+.header-actions button {
+  padding: 9px 14px;
+  border: 1px solid #dce3ee;
+  border-radius: 7px;
+  color: #526078;
+  background: #fff;
+}
+.header-actions button:hover {
+  border-color: #abc0ef;
+  color: #356ae6;
+  background: #f4f7ff;
+}
+.docs-layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  max-width: 1480px;
+  margin: 0 auto;
+}
+.docs-sidebar {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+  height: calc(100vh - 72px);
+  padding: 38px 22px;
+  border-right: 1px solid #e5ebf3;
+}
+.sidebar-caption {
+  margin: 0 0 12px;
+  color: #8c98ac;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+}
+.docs-sidebar h2 {
+  margin: 0 0 26px;
+  color: #33425a;
+  font-size: 15px;
+  font-weight: 600;
+}
+#tag-navigation {
+  display: grid;
+  gap: 7px;
+}
+#tag-navigation a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  color: #67748b;
+  font-size: 13px;
+}
+#tag-navigation a:hover,
+#tag-navigation a.is-active {
+  color: #356ae6;
+  background: #eaf0fd;
+}
+.group-count {
+  display: inline-grid;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  place-items: center;
+  border-radius: 5px;
+  color: #7b879b;
+  background: #e9edf4;
+  font-size: 11px;
+}
+.is-active .group-count {
+  color: #356ae6;
+  background: #dae6ff;
+}
+.sidebar-note {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding: 18px 12px 0;
+  border-top: 1px solid #e4eaf2;
+  color: #7b879b;
+  font-size: 12px;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #44aa82;
+}
+#service-origin {
+  grid-column: 2;
+  overflow-wrap: anywhere;
+  color: #9aa4b5;
+  font-size: 11px;
+}
+.docs-main {
+  min-width: 0;
+  padding: 40px 42px 64px;
+}
+.eyebrow {
+  margin: 0 0 14px;
+  color: #6682b7;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.6px;
+}
+.version-badge {
+  padding: 4px 8px;
+  border: 1px solid #dde7fa;
+  border-radius: 6px;
+  color: #5275bd;
+  background: #eef3fd;
+  font-size: 11px;
+}
+.introduction-copy {
+  margin: 15px 0 22px;
+  color: #7b879b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.docs-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.docs-metrics span {
+  padding: 5px 10px;
+  border: 1px solid #e1e7ef;
+  border-radius: 6px;
+  color: #77849b;
+  background: #fff;
+  font-size: 11px;
+}
+.usage-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  border: 1px solid #dfe8f9;
+  border-radius: 9px;
+  background: #f0f5ff;
+}
+.note-icon {
+  display: grid;
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  place-items: center;
+  border: 1px solid #8ba8df;
+  border-radius: 50%;
+  color: #6686be;
+  font-size: 11px;
+}
+.usage-note p {
+  margin: 0;
+  color: #6c7f9f;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.usage-note code {
+  color: #4a699c;
+}
+.documentation-status {
+  padding: 24px;
+  border: 1px solid #e1e7ef;
+  border-radius: 9px;
+  color: #7b879b;
+  background: #fff;
+  font-size: 14px;
+}
+.documentation-status.is-error {
+  color: #b94b4b;
+  background: #fff5f5;
+}
+
+/* 复用 Swagger 的交互和结构，仅调整排版、方法色及代码区。 */
+.swagger-ui {
+  color: #33425a;
+  font-family: inherit;
+}
+.swagger-ui .wrapper {
+  max-width: none;
+  padding: 0;
+}
+.swagger-ui .information-container {
+  display: none;
+}
+.swagger-ui .scheme-container {
+  margin: 0 0 20px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid #e4eaf2;
+  background: transparent;
+  box-shadow: none;
+}
+.swagger-ui .scheme-container .schemes {
+  padding: 0;
+}
+.swagger-ui .servers > label {
+  color: #67748b;
+  font-size: 12px;
+}
+.swagger-ui select {
+  padding: 9px 32px 9px 12px;
+  border: 1px solid #dce3ee;
+  border-radius: 7px;
+  color: #526078;
+  background-color: #fff;
+  box-shadow: none;
+}
+.swagger-ui .filter-container {
+  margin: 0 0 20px;
+}
+.swagger-ui .filter-container .filter {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.swagger-ui .filter-container .operation-filter-input {
+  /* 覆盖 Swagger 筛选框的内联宽度，保持与接口列表对齐。 */
+  width: 100% !important;
+  max-width: none !important;
+  padding: 13px 15px;
+  border: 1px solid #dce3ee;
+  border-radius: 8px;
+  color: #526078;
+  background: #fff;
+  font-size: 13px;
+}
+.swagger-ui .opblock-tag-section {
+  margin-bottom: 26px;
+}
+.swagger-ui .opblock-tag {
+  margin: 0 0 14px;
+  padding: 12px 0;
+  border-bottom: 0;
+  color: #33425a;
+  font-size: 17px;
+  font-weight: 600;
+}
+.swagger-ui .opblock-tag:hover {
+  background: transparent;
+}
+.swagger-ui .opblock-tag small {
+  margin-left: 10px;
+  color: #8b96a8;
+  font-size: 12px;
+  font-weight: 400;
+}
+.swagger-ui .opblock {
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid #e0e7f0;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgb(40 58 90 / 2%);
+}
+.swagger-ui .opblock .opblock-summary {
+  min-height: 62px;
+  padding: 13px 15px;
+  border-color: #e7edf5;
+}
+.swagger-ui .opblock .opblock-summary-method {
+  min-width: 66px;
+  padding: 7px 0;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 650;
+  text-shadow: none;
+}
+.swagger-ui .opblock .opblock-summary-path {
+  min-width: 0;
+  color: #465770;
+  font-size: 12px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.swagger-ui .opblock .opblock-summary-description {
+  color: #8490a4;
+  font-size: 12px;
+}
+.swagger-ui .opblock.opblock-get {
+  border-color: #dbe7f5;
+  background: #fff;
+}
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+  color: #3d7bc6;
+  background: #eaf3ff;
+}
+.swagger-ui .opblock.opblock-post {
+  border-color: #dcebe5;
+  background: #fff;
+}
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+  color: #278667;
+  background: #e9f7f0;
+}
+.swagger-ui .opblock.opblock-put {
+  border-color: #eee4d3;
+  background: #fff;
+}
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+  color: #b38736;
+  background: #fff4dc;
+}
+.swagger-ui .opblock.opblock-patch {
+  border-color: #e3dff2;
+  background: #fff;
+}
+.swagger-ui .opblock.opblock-patch .opblock-summary-method {
+  color: #8c6bc3;
+  background: #f2edfc;
+}
+.swagger-ui .opblock.opblock-delete {
+  border-color: #efdddd;
+  background: #fff;
+}
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+  color: #c36a6a;
+  background: #fff0f0;
+}
+.swagger-ui .opblock .opblock-section-header {
+  min-height: 44px;
+  padding: 10px 20px;
+  background: #f8fafc;
+  box-shadow: none;
+}
+.swagger-ui .opblock .opblock-section-header h4 {
+  color: #67748b;
+  font-size: 13px;
+}
+.swagger-ui .opblock-description-wrapper p,
+.swagger-ui .opblock-external-docs-wrapper p {
+  color: #6b7a91;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.swagger-ui .btn {
+  padding: 8px 16px;
+  border-width: 1px;
+  border-radius: 6px;
+  color: #526078;
+  background: #fff;
+  box-shadow: none;
+  font-size: 12px;
+}
+.swagger-ui .btn.execute {
+  border-color: #356ae6;
+  color: #fff;
+  background: #356ae6;
+}
+.swagger-ui .btn.try-out__btn {
+  border-color: #c8d7f4;
+  color: #5278bf;
+  background: #f3f7ff;
+}
+.swagger-ui .btn.cancel {
+  border-color: #edcece;
+  color: #bd6a6a;
+  background: #fff5f5;
+}
+.swagger-ui input[type='text'],
+.swagger-ui input[type='password'],
+.swagger-ui textarea {
+  padding: 10px 12px;
+  border: 1px solid #dce3ee;
+  border-radius: 6px;
+  color: #465770;
+  background: #fff;
+  font-size: 13px;
+}
+.swagger-ui .parameter__name {
+  color: #465770;
+  font-size: 13px;
+}
+.swagger-ui .parameter__type,
+.swagger-ui .parameter__in {
+  color: #8b96a8;
+  font-size: 11px;
+}
+.swagger-ui table thead tr th {
+  color: #8490a4;
+  font-size: 12px;
+  font-weight: 500;
+}
+.swagger-ui table tbody tr td {
+  color: #67748b;
+  font-size: 12px;
+}
+.swagger-ui .response-col_status {
+  color: #526078;
+}
+.swagger-ui pre,
+.swagger-ui .microlight {
+  border: 1px solid #e4eaf2;
+  border-radius: 7px;
+  color: #465770 !important;
+  background: #f7f9fc !important;
+  font-size: 12px !important;
+  line-height: 1.8 !important;
+}
+.swagger-ui .highlight-code {
+  background: transparent;
+}
+.swagger-ui .highlight-code > .microlight {
+  padding: 16px !important;
+}
+.swagger-ui .highlight-code .copy-to-clipboard {
+  background: #e7edf6;
+}
+.swagger-ui .highlight-code .copy-to-clipboard button {
+  color: #526078;
+  background-color: #e7edf6;
+}
+.swagger-ui .tab li {
+  color: #8490a4;
+  font-size: 12px;
+}
+.swagger-ui .tab li.active {
+  color: #356ae6;
+}
+.swagger-ui section.models {
+  border: 1px solid #e1e7ef;
+  border-radius: 9px;
+  background: #fff;
+}
+.swagger-ui section.models h4 {
+  color: #67748b;
+  font-size: 15px;
+}
+.swagger-ui .model-box,
+.swagger-ui .model-container {
+  color: #526078;
+  background: #f8fafc;
+}
+.swagger-ui .model {
+  color: #526078;
+}
+.swagger-ui .model-title {
+  color: #526078;
+  font-size: 13px;
+}
+.swagger-ui .markdown code {
+  color: #59759f;
+  background: #eef3fa;
+}
+.swagger-ui .errors-wrapper {
+  border-radius: 8px;
+}
+
+@media (max-width: 1050px) {
+  .docs-layout {
+    grid-template-columns: 195px minmax(0, 1fr);
+  }
+  .docs-main {
+    padding: 32px 24px 50px;
+  }
+  .docs-sidebar {
+    padding: 32px 14px;
+  }
+  .swagger-ui .opblock .opblock-summary-description {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .docs-header {
+    height: 64px;
+    padding: 0 18px;
+  }
+  .docs-brand {
+    gap: 9px;
+    font-size: 17px;
+  }
+  .header-divider,
+  .header-label {
+    display: none;
+  }
+  .header-actions {
+    gap: 12px;
+    font-size: 11px;
+  }
+  .header-actions button {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-sidebar {
+    display: none;
+  }
+  .docs-main {
+    padding: 30px 16px 44px;
+  }
+  h1 {
+    font-size: 25px;
+  }
+  .swagger-ui .opblock .opblock-summary {
+    padding: 11px 10px;
+  }
+  .swagger-ui .opblock .opblock-summary-method {
+    min-width: 50px;
+  }
+  .swagger-ui .opblock .opblock-summary-path {
+    font-size: 11px;
+  }
+  .swagger-ui .opblock-tag small {
+    display: none;
+  }
+}

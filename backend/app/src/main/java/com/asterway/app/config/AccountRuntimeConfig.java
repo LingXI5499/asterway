@@ -1,6 +1,6 @@
 package com.asterway.app.config;
 
-import com.asterway.identity.api.AccountApi;
+import com.asterway.identity.api.AccountSecurityPort;
 import com.fasterxml.jackson.databind.cfg.CoercionAction;
 import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.databind.type.LogicalType;
@@ -16,8 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class AccountRuntimeConfig {
 
     @Bean
-    public ApplicationRunner accountSecurityInitialization(AccountApi accounts) {
-        ApplicationRunner runner = arguments -> accounts.initializeSecurity();
+    public ApplicationRunner accountSecurityInitialization(AccountSecurityPort security) {
+        ApplicationRunner runner = arguments -> security.initialize();
         return runner;
     }
 

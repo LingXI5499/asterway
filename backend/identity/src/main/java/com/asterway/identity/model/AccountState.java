@@ -1,5 +1,7 @@
 package com.asterway.identity.model;
 
+import com.asterway.identity.api.model.AccountSecurityState;
+
 import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.UUID;
@@ -81,6 +83,16 @@ public record AccountState(
                 pendingZoneRequestedAt
         );
         return changed;
+    }
+
+    // 提供受保护的最小安全事实，字段编码与既有账本摘要保持一致。
+    public AccountSecurityState securityState() {
+        AccountSecurityState state = new AccountSecurityState(
+                id, usernameKey, passwordHash, role, status,
+                deletedAt == null ? null : deletedAt.toInstant().toString(),
+                securityVersion, credentialVersion, loginNameVersion
+        );
+        return state;
     }
 
     @Override

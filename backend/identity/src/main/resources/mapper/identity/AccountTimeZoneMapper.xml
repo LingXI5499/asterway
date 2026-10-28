@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.AccountTimeZoneMapper">
+
+    <sql id="stateColumns">
+        id, username, username_key, nickname, password_hash, role, status,
+        created_at, updated_at, version, deleted_at, security_version,
+        credential_version, login_name_version, password_changed_at,
+        current_zone_period_id, pending_zone_id, pending_zone_effective_at, pending_zone_requested_at
+    </sql>
+
+    <select id="dueZoneAccounts" resultType="com.asterway.identity.model.AccountState">
+        SELECT <include refid="stateColumns"/> FROM app.app_user
+        WHERE pending_zone_effective_at &lt;= clock_timestamp() AND deleted_at IS NULL AND status = 'ENABLED'
+        ORDER BY pending_zone_effective_at, id LIMIT 100
+    </select>
+
+    <select id="findZone" resultType="com.asterway.identity.model.ZonePeriod">
+        SELECT id, user_id, revision, zone_id, tzdb_version, valid_from, valid_to, source
+        FROM app.user_zone_period WHERE id = #{id} AND user_id = #{userId}
+    </select>
+
+    <insert id="insertZone">
+        INSERT INTO app.user_zone_period (id, user_id, revision, zone_id, tzdb_version, valid_from, source)
+        VALUES (#{id}, #{userId}, #{revision}, #{zoneId}, #{tzdbVersion}, #{validFrom}, #{source})
+    </insert>
+
+    <update id="closeZone">
+        UPDATE app.user_zone_period SET valid_to = #{at} WHERE id = #{id} AND valid_to IS NULL
+    </update>
+
+    <update id="applyZone">
+        UPDATE app.app_user
+        SET current_zone_period_id = #{periodId}, pending_zone_id = NULL,
+            pending_zone_effective_at = NULL, pending_zone_requested_at = NULL,
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
+
+    <update id="updatePendingZone">
+        UPDATE app.app_user
+        SET pending_zone_id = #{zoneId,jdbcType=VARCHAR},
+            pending_zone_effective_at = #{effectiveAt,jdbcType=TIMESTAMP_WITH_TIMEZONE},
+            pending_zone_requested_at = CASE WHEN #{zoneId,jdbcType=VARCHAR} IS NULL
+                THEN NULL ELSE clock_timestamp() END,
+            version = version + 1, updated_at = clock_timestamp()
+        WHERE id = #{userId}
+    </update>
+</mapper>

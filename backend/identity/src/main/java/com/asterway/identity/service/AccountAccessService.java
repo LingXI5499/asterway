@@ -3,11 +3,12 @@ package com.asterway.identity.service;
 import com.asterway.common.error.CommonErrorCode;
 import com.asterway.common.exception.BusinessException;
 import com.asterway.identity.api.AccountExecutionPort;
+import com.asterway.identity.api.AccountSecurityPort;
 import com.asterway.identity.api.error.AccountException;
 import com.asterway.identity.api.error.IdentityErrorCode;
-import com.asterway.identity.api.model.AccountModels.Context;
-import com.asterway.identity.infrastructure.security.AccountSecurityLedger;
-import com.asterway.identity.mapper.AccountLifecycleMapper;
+import com.asterway.identity.api.model.AccountContext;
+import com.asterway.identity.constant.AccountConstants;
+import com.asterway.identity.mapper.AccountMapper;
 import com.asterway.identity.model.AccountState;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +19,13 @@ import java.util.UUID;
 @Service
 public class AccountAccessService {
 
-    private final AccountLifecycleMapper mapper;
-    private final AccountSecurityLedger ledger;
+    private final AccountMapper mapper;
+    private final AccountSecurityPort ledger;
     private final AccountExecutionPort executions;
 
     public AccountAccessService(
-            AccountLifecycleMapper mapper,
-            AccountSecurityLedger ledger,
+            AccountMapper mapper,
+            AccountSecurityPort ledger,
             AccountExecutionPort executions
     ) {
         this.mapper = mapper;
@@ -32,8 +33,8 @@ public class AccountAccessService {
         this.executions = executions;
     }
 
-    public AccountState locked(Context context) {
-        if (context.userId() == null || mapper.lockAccount(context.userId()) == null) {
+    public AccountState locked(AccountContext context) {
+        if (context.userId() == null || ledger.lockAccount(context.userId()) == null) {
             throw new BusinessException(CommonErrorCode.AUTH_REQUIRED);
         }
         AccountState account = mapper.findState(context.userId());
@@ -45,11 +46,11 @@ public class AccountAccessService {
         if (account == null) {
             throw new BusinessException(CommonErrorCode.AUTH_REQUIRED);
         }
-        if (account.deletedAt() != null || !"ENABLED".equals(account.status())
-                || !"CLEAR".equals(mapper.recoveryState(account.id()))) {
+        if (account.deletedAt() != null || !AccountConstants.ENABLED_STATUS.equals(account.status())
+                || !AccountConstants.CLEAR_RECOVERY_STATE.equals(ledger.recoveryState(account.id()))) {
             throw new BusinessException(IdentityErrorCode.ACCOUNT_UNAVAILABLE);
         }
-        ledger.verify(account);
+        ledger.verify(account.securityState());
     }
 
     public void requireSession(AccountState account, long credentialVersion, long securityVersion) {

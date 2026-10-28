@@ -1,12 +1,15 @@
 package com.asterway.identity.service;
 
-import com.asterway.identity.api.model.AccountModels.PublicBootstrap;
-import com.asterway.identity.api.model.AccountModels.TimeZoneItem;
-import com.asterway.identity.api.model.AccountModels.TimeZonePage;
-import com.asterway.identity.infrastructure.security.AccountCryptography;
-import com.asterway.identity.infrastructure.serialization.AccountJsonCodec;
-import com.asterway.identity.mapper.AccountLifecycleMapper;
-import com.asterway.identity.validation.AccountValidator;
+import com.asterway.common.api.CryptographyApi;
+import com.asterway.common.utils.JsonUtils;
+import com.asterway.identity.api.AccountConfigurationPort;
+import com.asterway.identity.api.AccountPublicApi;
+import com.asterway.identity.api.model.PublicBootstrap;
+import com.asterway.identity.api.model.TimeZoneItem;
+import com.asterway.identity.api.model.TimeZonePage;
+import com.asterway.identity.mapper.AccountMapper;
+import com.asterway.identity.utils.AccountValidationUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -19,36 +22,39 @@ import java.util.Locale;
 
 // 公开数据只包含页面需要的固定配置与服务端支持的 IANA 名称。
 @Service
-public class AccountPublicQueryService {
+public class AccountPublicQueryService implements AccountPublicApi {
 
-    private final AccountLifecycleMapper mapper;
-    private final AccountCryptography cryptography;
-    private final AccountValidator validator;
-    private final AccountJsonCodec jsonCodec;
+    private final AccountConfigurationPort configuration;
+
+    private final AccountMapper mapper;
+    private final CryptographyApi cryptography;
+    private final ObjectMapper objectMapper;
 
     public AccountPublicQueryService(
-            AccountLifecycleMapper mapper,
-            AccountCryptography cryptography,
-            AccountValidator validator,
-            AccountJsonCodec jsonCodec
+            AccountConfigurationPort configuration,
+            AccountMapper mapper,
+            CryptographyApi cryptography,
+            ObjectMapper objectMapper
     ) {
+        this.configuration = configuration;
         this.mapper = mapper;
         this.cryptography = cryptography;
-        this.validator = validator;
-        this.jsonCodec = jsonCodec;
+        this.objectMapper = objectMapper;
     }
 
+    @Override
     public PublicBootstrap bootstrap() {
-        PublicBootstrap bootstrap = new PublicBootstrap(mapper.siteName(), mapper.registrationOpen(), mapper.now().toInstant());
+        PublicBootstrap bootstrap = new PublicBootstrap(configuration.siteName(), configuration.registrationOpen(), mapper.now().toInstant());
         return bootstrap;
     }
 
+    @Override
     public TimeZonePage timeZones(String query, int limit, String cursor) {
         if (limit < 1 || limit > 100) {
-            validator.invalid("limit", "每页数量必须为1到100");
+            AccountValidationUtils.invalid("limit", "每页数量必须为1到100");
         }
         if (query != null) {
-            validator.text(query, "q", 1, 64);
+            AccountValidationUtils.text(query, "q", 1, 64);
         }
         String filter = query == null ? "" : query.toLowerCase(Locale.ROOT);
         String after = cursor == null ? "" : readCursor(cursor, filter, limit);
@@ -66,7 +72,7 @@ public class AccountPublicQueryService {
         if (hasMore) {
             Cursor nextCursor = new Cursor(filter, limit, items.get(items.size() - 1).zoneId());
             String body = Base64.getUrlEncoder().withoutPadding()
-                    .encodeToString(jsonCodec.write(nextCursor).getBytes(StandardCharsets.UTF_8));
+                    .encodeToString(JsonUtils.write(objectMapper, nextCursor).getBytes(StandardCharsets.UTF_8));
             next = body + "." + cryptography.digestHex("zone-cursor", body);
         }
         TimeZonePage page = new TimeZonePage(items, next, hasMore);
@@ -85,13 +91,13 @@ public class AccountPublicQueryService {
                 throw new IllegalArgumentException("cursor");
             }
             String json = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
-            Cursor cursor = jsonCodec.read(json, Cursor.class);
+            Cursor cursor = JsonUtils.read(objectMapper, json, Cursor.class);
             if (!filter.equals(cursor.filter()) || limit != cursor.limit()) {
                 throw new IllegalArgumentException("cursor");
             }
             return cursor.after();
         } catch (IllegalArgumentException | IllegalStateException exception) {
-            validator.invalid("cursor", "分页游标无效或与筛选条件不匹配");
+            AccountValidationUtils.invalid("cursor", "分页游标无效或与筛选条件不匹配");
             throw new IllegalStateException("游标校验未终止", exception);
         }
     }

@@ -1,9 +1,11 @@
 import { createApp } from 'vue'
+import { registerElementPlus } from './plugins/element-plus'
 import App from './App.vue'
 import router from './router'
 import './style.css'
 
-// 应用入口：创建 Vue 应用，挂载路由，渲染到 #app 节点
-createApp(App)
-  .use(router)
-  .mount('#app')
+// 统一使用简体中文组件，业务校验继续由各页面和服务端负责。
+const app = createApp(App)
+app.use(router)
+registerElementPlus(app)
+app.mount('#app')

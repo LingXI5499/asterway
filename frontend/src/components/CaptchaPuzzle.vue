@@ -3,7 +3,11 @@ import { onMounted, ref } from 'vue'
 import { apiRequest } from '../api/http'
 import { createIntent, errorText, resultUncertain, sendIntent } from '../api/account'
 
-const props = defineProps({ purpose: { type: String, required: true } })
+const props = defineProps({
+  purpose: { type: String, required: true },
+  modelValue: { type: Object, default: null },
+  disabled: Boolean,
+})
 const emit = defineEmits(['update:modelValue'])
 const challenge = ref(null)
 const proof = ref(null)
@@ -44,7 +48,7 @@ async function refresh() {
 }
 
 async function verify() {
-  if (!challenge.value || busy.value || proof.value) {
+  if (!challenge.value || busy.value || proof.value || props.disabled) {
     return
   }
   busy.value = true
@@ -67,8 +71,14 @@ defineExpose({ reset: refresh })
 </script>
 
 <template>
-  <fieldset class="captcha" :disabled="busy">
-    <legend>滑动拼图验证</legend>
+  <section class="captcha-panel" aria-label="滑动拼图验证">
+    <div class="captcha-heading">
+      <span>滑动拼图验证</span>
+      <el-tag :type="proof ? 'success' : 'info'" size="small" effect="light">
+        {{ proof ? '已通过' : '待验证' }}
+      </el-tag>
+    </div>
+    <el-skeleton v-if="busy && !challenge" :rows="3" animated />
     <div v-if="challenge" class="captcha-board">
       <img :src="challenge.backgroundImage" alt="将拼图移动到背景缺口处" />
       <img
@@ -82,23 +92,38 @@ defineExpose({ reset: refresh })
         }"
       />
     </div>
-    <label v-if="challenge">
-      移动拼图到缺口，再点击验证
-      <input
-        v-model="offset"
-        type="range"
-        min="0"
-        :max="challenge.imageWidth - challenge.pieceWidth"
-        step="0.5"
-        :disabled="Boolean(proof) || Boolean(verifyIntent)"
-      />
-    </label>
-    <div class="button-row">
-      <button type="button" :disabled="!challenge || Boolean(proof)" @click="verify">
-        {{ busy ? '处理中…' : '验证拼图位置' }}
-      </button>
-      <button type="button" class="secondary" @click="refresh">换一张</button>
+    <template v-if="challenge">
+      <p class="captcha-instruction">拖动滑条，将拼图移至缺口，再点击验证。</p>
+      <div class="captcha-slider">
+        <el-slider
+          v-model="offset"
+          :min="0"
+          :max="challenge.imageWidth - challenge.pieceWidth"
+          :step="0.5"
+          :show-tooltip="false"
+          :disabled="disabled || busy || Boolean(proof) || Boolean(verifyIntent)"
+          aria-label="拼图水平位移"
+        />
+      </div>
+    </template>
+    <div class="captcha-actions">
+      <el-button
+        type="primary"
+        plain
+        :loading="busy && Boolean(challenge)"
+        :disabled="disabled || busy || !challenge || Boolean(proof)"
+        @click="verify"
+      >
+        验证拼图位置
+      </el-button>
+      <el-button :disabled="disabled || busy" @click="refresh">换一张</el-button>
     </div>
-    <p v-if="message" role="status">{{ message }}</p>
-  </fieldset>
+    <el-alert
+      v-if="message"
+      :title="message"
+      :type="proof ? 'success' : 'error'"
+      :closable="false"
+      show-icon
+    />
+  </section>
 </template>

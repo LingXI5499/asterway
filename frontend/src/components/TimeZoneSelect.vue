@@ -7,11 +7,13 @@ defineProps({ modelValue: { type: String, default: '' }, disabled: Boolean })
 const emit = defineEmits(['update:modelValue'])
 const zones = ref([])
 const errorMessage = ref('')
+const loading = ref(false)
 let timer = null
 let requestGeneration = 0
 
 async function search(value = '') {
   const generation = ++requestGeneration
+  loading.value = true
   try {
     const query = value ? `&q=${encodeURIComponent(value)}` : ''
     const result = await apiRequest(`/public/time-zones?limit=100${query}`)
@@ -23,12 +25,14 @@ async function search(value = '') {
     if (generation === requestGeneration) {
       errorMessage.value = errorText(error)
     }
+  } finally {
+    if (generation === requestGeneration) {
+      loading.value = false
+    }
   }
 }
 
-function input(event) {
-  const value = event.target.value
-  emit('update:modelValue', value)
+function queueSearch(value) {
   clearTimeout(timer)
   timer = setTimeout(() => search(value), 250)
 }
@@ -41,19 +45,32 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <label>
-    初始时区
-    <input
-      :value="modelValue"
+  <el-form-item label="初始时区" for="register-zone" required>
+    <el-select
+      id="register-zone"
+      class="zone-select"
+      :model-value="modelValue"
       :disabled="disabled"
-      list="account-time-zones"
-      placeholder="例如 Asia/Shanghai；可输入名称筛选"
-      required
-      @input="input"
-    />
-    <datalist id="account-time-zones">
-      <option v-for="zone in zones" :key="zone.zoneId" :value="zone.zoneId" />
-    </datalist>
-    <span v-if="errorMessage" class="error">{{ errorMessage }}</span>
-  </label>
+      :loading="loading"
+      filterable
+      remote
+      :remote-method="queueSearch"
+      placeholder="输入时区名称筛选，例如 Asia/Shanghai"
+      @update:model-value="emit('update:modelValue', $event)"
+    >
+      <el-option
+        v-if="modelValue && !zones.some((zone) => zone.zoneId === modelValue)"
+        :label="modelValue"
+        :value="modelValue"
+      />
+      <el-option
+        v-for="zone in zones"
+        :key="zone.zoneId"
+        :label="zone.zoneId"
+        :value="zone.zoneId"
+      />
+    </el-select>
+    <p class="field-note">已尝试识别设备时区，也可以搜索后手动选择。</p>
+    <el-alert v-if="errorMessage" :title="errorMessage" type="error" :closable="false" />
+  </el-form-item>
 </template>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.app.mapper.AccountOperationMapper">
+
+    <select id="lockScope" resultType="string">
+        SELECT pg_advisory_xact_lock(hashtextextended(#{scope}, 0))
+    </select>
+
+    <select id="findOperation" resultType="com.asterway.app.model.AccountOperationRecord">
+        SELECT request_fingerprint, state, http_status, result_code, result_summary::text AS result_summary
+        FROM app.request_dedup
+        WHERE scope_key = #{context.scope} AND operation = #{operation}
+            AND idempotency_key = #{context.key} AND expires_at > clock_timestamp()
+    </select>
+
+    <insert id="insertOperation">
+        INSERT INTO app.request_dedup (
+            scope_key, user_id, operation, idempotency_key, request_fingerprint, state, expires_at
+        ) VALUES (
+            #{context.scope}, #{context.userId,jdbcType=OTHER}, #{operation}, #{context.key},
+            #{fingerprint}, 'PROCESSING', clock_timestamp() + INTERVAL '1 day'
+        )
+        ON CONFLICT (scope_key, operation, idempotency_key) DO UPDATE
+        SET request_fingerprint = EXCLUDED.request_fingerprint, state = 'PROCESSING',
+            http_status = NULL, result_code = NULL, result_summary = '{}',
+            expires_at = EXCLUDED.expires_at, updated_at = clock_timestamp()
+        WHERE app.request_dedup.expires_at &lt;= clock_timestamp()
+    </insert>
+
+    <update id="finishOperation">
+        UPDATE app.request_dedup
+        SET state = CASE WHEN #{code} = 'OK' THEN 'SUCCEEDED' ELSE 'REJECTED' END,
+            http_status = #{status}, result_code = #{code}, result_type = 'ACCOUNT',
+            result_summary = CAST(#{summary} AS JSONB), version = version + 1, updated_at = clock_timestamp()
+        WHERE scope_key = #{context.scope} AND operation = #{operation} AND idempotency_key = #{context.key}
+    </update>
+
+    <select id="logoutKeyUsedElsewhere" resultType="boolean">
+        SELECT EXISTS (SELECT 1 FROM app.request_dedup
+            WHERE operation = 'API-AUTH-009' AND idempotency_key = #{context.key}
+                AND scope_key != #{context.scope} AND expires_at > clock_timestamp())
+    </select>
+
+    <delete id="cleanExpiredOperations">
+        DELETE FROM app.request_dedup WHERE id IN (
+            SELECT id FROM app.request_dedup
+            WHERE expires_at &lt; clock_timestamp() AND state != 'PROCESSING' LIMIT 100
+        )
+    </delete>
+</mapper>
