@@ -1,40 +1,42 @@
 package com.asterway.common.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+/** JSONB 字符串与明确类型之间的转换，不提供未知类型的动态反序列化。 */
+@Component
+public class JsonUtils {
 
-// 显式使用调用方的 ObjectMapper，避免静态全局配置改变既有安全材料编码。
-public final class JsonUtils {
+    private final ObjectMapper mapper;
 
-    private JsonUtils() {
+    public JsonUtils(ObjectMapper mapper) {
+        this.mapper = mapper;
     }
 
-    public static String write(ObjectMapper objectMapper, Object value) {
+    public String write(Object value) {
         try {
-            String json = objectMapper.writeValueAsString(value);
-            return json;
-        } catch (IOException exception) {
-            throw new IllegalStateException("对象序列化失败", exception);
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException error) {
+            throw new IllegalStateException("JSON 数据转换失败");
         }
     }
 
-    public static <T> T read(ObjectMapper objectMapper, String json, Class<T> type) {
+    public Map<String, Object> object(String value) {
         try {
-            T value = objectMapper.readValue(json, type);
-            return value;
-        } catch (IOException exception) {
-            throw new IllegalStateException("持久化材料无法读取", exception);
+            return mapper.readValue(value, new TypeReference<Map<String, Object>>() { });
+        } catch (JsonProcessingException error) {
+            throw new IllegalStateException("JSON 对象格式无效");
         }
     }
 
-    public static <T> T read(ObjectMapper objectMapper, String json, TypeReference<T> type) {
+    public String text(String value) {
         try {
-            T value = objectMapper.readValue(json, type);
-            return value;
-        } catch (IOException exception) {
-            throw new IllegalStateException("持久化材料无法读取", exception);
+            return mapper.readValue(value, String.class);
+        } catch (JsonProcessingException error) {
+            throw new IllegalStateException("JSON 字符串格式无效");
         }
     }
 }

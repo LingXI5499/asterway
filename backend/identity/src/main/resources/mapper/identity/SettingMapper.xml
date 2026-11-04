@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.SettingMapper">
+    <resultMap id="entityMap" type="com.asterway.identity.entity.SettingEntity">
+        <result column="setting_key" property="settingKey"/>
+        <result column="setting_value" property="settingValue"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="updated_by" property="updatedBy"/>
+    </resultMap>
+    <sql id="columns">
+        setting_key,
+        setting_value,
+        version,
+        created_at,
+        updated_at,
+        updated_by
+    </sql>
+
+    <select id="findAll" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_setting ORDER BY setting_key
+    </select>
+    <select id="lockRegistration" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_setting WHERE setting_key='registration_enabled' FOR SHARE
+    </select>
+    <update id="update">
+        UPDATE identity_setting SET setting_value=#{settingValue}::jsonb,version=version+1,updated_by=#{updatedBy},updated_at=now()
+        WHERE setting_key=#{settingKey} AND version=#{version}
+    </update>
+</mapper>

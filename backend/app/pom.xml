@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.asterway</groupId>
@@ -10,92 +8,63 @@
     </parent>
     <artifactId>app</artifactId>
     <name>asterway-app</name>
-    <description>唯一可执行应用：启动、配置、HTTP、安全/会话适配、跨模块协调、调度、迁移与集成测试。</description>
-
+    <description>唯一启动工程，仅保留启动类、本地配置和业务 SQL。</description>
     <dependencies>
-        <!-- 内部模块：app 依赖 common 及 8 个业务模块 -->
-        <dependency>
-            <groupId>com.asterway</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>identity</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>growth</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>planning</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>execution</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>habit</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>insights</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>notification</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.asterway</groupId><artifactId>administration</artifactId><version>${project.version}</version></dependency>
-
-        <!-- Web / 安全 / 校验 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-
-        <!-- 持久化：MyBatis XML + PostgreSQL + Flyway + Spring Session JDBC -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.session</groupId>
-            <artifactId>spring-session-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-        </dependency>
-
-        <!-- 账户接口文档 -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.17</version>
-        </dependency>
-
-        <!-- 测试 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.80</version>
+            <groupId>com.asterway</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>identity</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>goal</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>stage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>task</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>planning</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>execution</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>habit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>dashboard</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>statistics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>notification</artifactId>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
-            <!-- 仅 app 生成可执行包；其余模块继承普通 jar 打包 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals><goal>repackage</goal></goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

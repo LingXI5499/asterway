@@ -1,103 +1,35 @@
+# 仅供本机 WSL2 开发；以下口令是本地专用开发口令，不用于远程或生产环境。
 server:
-  # 本地默认使用 8088；部署时可通过 SERVER_PORT 环境变量覆盖。
-  port: ${SERVER_PORT:8088}
-  shutdown: graceful
+  # 8088 已被本机其他项目占用，本项目使用独立开发端口。
+  port: 8089
 
 spring:
-
-  # 默认激活本地开发配置（application-local.yml，已被 .gitignore 忽略、不进仓库）；
-  # 测试/生产通过环境变量 SPRING_PROFILES_ACTIVE 覆盖，保持三环境隔离。
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
   application:
     name: asterway-app
-
-  # 远程 PostgreSQL 17.11；连接与凭据外置，不写入代码库（RULE/秘密外置）
   datasource:
-    url: ${ASTERWAY_DB_URL:jdbc:postgresql://127.0.0.1:5432/asterway_dev}
-    username: ${ASTERWAY_DB_USER:}
-    password: ${ASTERWAY_DB_PASSWORD:}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      minimum-idle: 2
-      maximum-pool-size: 24
+    url: jdbc:postgresql://127.0.0.1:5432/asterway_dev
+    username: asterway_dev
+    password: asterway_dev_local
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 3s
+  autoconfigure:
+    # 使用账户模块的 JWT 登录，不创建框架默认的内存用户。
+    exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  sql:
+    init:
+      mode: never
 
-  # 迁移脚本集中在 app 的 db/migration；无物理外键，会话表由迁移维护
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: false
-    default-schema: migration_meta
-    schemas:
-      - migration_meta
-      - app
-      - session_store
-    create-schemas: false
-    placeholders:
-      legacyAccountZone: ${ASTERWAY_LEGACY_ACCOUNT_ZONE:Asia/Shanghai}
-
-  # 服务端可撤销会话；initialize-schema=never，交由受控迁移建立无外键会话表
-  session:
-    store-type: jdbc
-    jdbc:
-      initialize-schema: never
-      # 会话表建在独立 schema session_store；
-      # 该库 search_path 为 "$user", public，不含 session_store，必须显式限定。
-      # Spring Session 会自动推导属性表为 session_store.SPRING_SESSION_ATTRIBUTES。
-      table-name: session_store.SPRING_SESSION
-
-  jackson:
-    default-property-inclusion: always
-    deserialization:
-      fail-on-unknown-properties: true
-
-# 业务 SQL 与结果映射只写 XML；Mapper 接口不写注解（RULE-003）
 mybatis:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-handlers-package: com.asterway.identity.mapper
   configuration:
     map-underscore-to-camel-case: true
 
-logging:
-  pattern:
-    level: "%5p [traceId:%X{traceId:-}]"
-  level:
-    root: INFO
-    com.asterway: INFO
-
-# 默认关闭接口文档，开发环境通过下方 local 配置启用。
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
-  paths-to-match:
-    - /api/v1/auth/**
-    - /api/v1/public/**
-    - /api/v1/operations/**
-
 asterway:
-  identity:
-    private-directory: ${ASTERWAY_IDENTITY_PRIVATE_DIR:.asterway-private}
-    secure-cookie: ${ASTERWAY_SECURE_COOKIE:true}
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
-    csrf:
-      enabled: true
-      cookie-name: XSRF-TOKEN
-      header-name: X-CSRF-TOKEN
-
-asterway:
-  identity:
-    secure-cookie: ${ASTERWAY_SECURE_COOKIE:false}
+  security:
+    session-idle: 7d
+    # 仅用于本机开发的签名材料，不作为部署密钥。
+    jwt-secret: asterway-local-development-signing-material-change-before-deployment

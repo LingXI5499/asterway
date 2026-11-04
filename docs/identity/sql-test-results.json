@@ -1,0 +1,523 @@
+{
+  "database": "asterway_identity_test",
+  "postgresql": "17.11 (Ubuntu 17.11-1.pgdg24.04+2)",
+  "sql_sha256": "e04dab2e3e43f363e1f817186c35aff7a5d229e9b1a7c2024aca37ea23e01c13",
+  "tests": 84,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "records": [
+    {
+      "test": "test_01_server_version",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_02_exactly_ten_tables",
+      "status": "PASS",
+      "seconds": 0.0016
+    },
+    {
+      "test": "test_03_no_foreign_keys",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_04_no_triggers",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_05_three_builtin_roles",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_06_seed_counts",
+      "status": "PASS",
+      "seconds": 0.0008
+    },
+    {
+      "test": "test_07_username_case_insensitive",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_08_deleted_username_reserved",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_09_valid_username_boundaries",
+      "status": "PASS",
+      "seconds": 0.0013
+    },
+    {
+      "test": "test_10_nicknames_can_repeat",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_11_user_role_pair_unique",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_12_role_permission_pair_unique",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_13_role_menu_pair_unique",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_14_normal_permissions",
+      "status": "PASS",
+      "seconds": 0.0015
+    },
+    {
+      "test": "test_15_admin_permission_union",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_16_super_has_all_seed_permissions",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_17_disabled_user_no_permissions",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_18_deleted_user_no_permissions",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_19_disabled_role_filters_rights",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_20_permission_change_visible_next_query",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_21_admin_target_scope",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_22_normal_menu_tree",
+      "status": "PASS",
+      "seconds": 0.0016
+    },
+    {
+      "test": "test_23_admin_menu_tree",
+      "status": "PASS",
+      "seconds": 0.0015
+    },
+    {
+      "test": "test_24_disabled_parent_hides_branch",
+      "status": "PASS",
+      "seconds": 0.0015
+    },
+    {
+      "test": "test_25_menu_grant_does_not_grant_api",
+      "status": "PASS",
+      "seconds": 0.0019
+    },
+    {
+      "test": "test_26_orphan_association_is_not_db_constraint",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_27_seed_associations_are_valid",
+      "status": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "test_28_optimistic_version_compare",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_29_user_role_transaction_rollback",
+      "status": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "test_30_grant_replacement_rollback",
+      "status": "PASS",
+      "seconds": 0.0011
+    },
+    {
+      "test": "test_31_soft_delete_preserves_logs",
+      "status": "PASS",
+      "seconds": 0.0014
+    },
+    {
+      "test": "test_32_security_version_increments",
+      "status": "PASS",
+      "seconds": 0.0003
+    },
+    {
+      "test": "test_33_registration_settings",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_34_timezone_names_validation_query",
+      "status": "PASS",
+      "seconds": 0.011
+    },
+    {
+      "test": "test_35_timezone_dst_day_lengths",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_36_pending_timezone_not_early",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_37_pending_timezone_apply_once",
+      "status": "PASS",
+      "seconds": 0.0008
+    },
+    {
+      "test": "test_38_unknown_username_login_log",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_39_success_login_requires_session",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_40_safe_operation_summary_roundtrip",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_41_pagination_stable",
+      "status": "PASS",
+      "seconds": 0.0008
+    },
+    {
+      "test": "test_42_initialization_failure_is_atomic",
+      "status": "PASS",
+      "seconds": 0.0216
+    },
+    {
+      "test": "test_43_reapplication_refuses_existing_schema",
+      "status": "PASS",
+      "seconds": 0.0034
+    },
+    {
+      "test": "test_44_concurrent_username_uniqueness",
+      "status": "PASS",
+      "seconds": 0.01
+    },
+    {
+      "test": "test_45_last_super_guard_serializes",
+      "status": "PASS",
+      "seconds": 0.0149
+    },
+    {
+      "test": "test_46_index_query_plans",
+      "status": "PASS",
+      "seconds": 0.0009
+    },
+    {
+      "test": "test_47_menu_multi_node_cycle_detectable",
+      "status": "PASS",
+      "seconds": 0.0017
+    },
+    {
+      "test": "test_48_menu_seed_references_valid",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_49_log_append_only_application_privileges",
+      "status": "PASS",
+      "seconds": 0.0016
+    },
+    {
+      "test": "test_50_transaction_rechecks_registration_switch",
+      "status": "PASS",
+      "seconds": 0.0111
+    },
+    {
+      "test": "test_51_disabled_user_no_menus",
+      "status": "PASS",
+      "seconds": 0.0012
+    },
+    {
+      "test": "test_52_deleted_user_no_menus",
+      "status": "PASS",
+      "seconds": 0.0011
+    },
+    {
+      "test": "test_invalid_button_missing_permission",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_directory_has_component",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_duplicate_menu_route",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_duplicate_permission",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_duplicate_role",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_invalid_builtin",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_invalid_ip",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_invalid_permission_code",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_menu_self_parent",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_page_missing_path",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_registration_not_boolean",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_site_blank",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_site_empty",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_site_not_string",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_summary_not_object",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_unknown_setting",
+      "status": "PASS",
+      "seconds": 0.0003
+    },
+    {
+      "test": "test_invalid_user_blank_nickname",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_user_blank_zone",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_date_without_pending",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_user_deleted_still_enabled",
+      "status": "PASS",
+      "seconds": 0.0007
+    },
+    {
+      "test": "test_invalid_user_emoji",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_user_empty_username",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_long_nickname",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_negative_auth_version",
+      "status": "PASS",
+      "seconds": 0.0006
+    },
+    {
+      "test": "test_invalid_user_negative_version",
+      "status": "PASS",
+      "seconds": 0.0005
+    },
+    {
+      "test": "test_invalid_user_null_username",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_pending_same_zone",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_pending_without_date",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_plaintext_password",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_space",
+      "status": "PASS",
+      "seconds": 0.0004
+    },
+    {
+      "test": "test_invalid_user_too_long",
+      "status": "PASS",
+      "seconds": 0.0003
+    },
+    {
+      "test": "test_invalid_user_underscore",
+      "status": "PASS",
+      "seconds": 0.0003
+    }
+  ],
+  "index_plans": [
+    {
+      "query": "EXPLAIN (FORMAT JSON) SELECT id FROM identity_user WHERE lower(username COLLATE \"C\")=lower(%s COLLATE \"C\")",
+      "plan": [
+        {
+          "Plan": {
+            "Node Type": "Index Scan",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Scan Direction": "Forward",
+            "Index Name": "uk_identity_user_username",
+            "Relation Name": "identity_user",
+            "Alias": "identity_user",
+            "Startup Cost": 0.14,
+            "Total Cost": 8.16,
+            "Plan Rows": 1,
+            "Plan Width": 8,
+            "Index Cond": "(lower((username)::text) = '测试用户'::text COLLATE \"C\")"
+          }
+        }
+      ],
+      "note": "Small fixture: sequential scan disabled only to check index eligibility; not a performance benchmark."
+    },
+    {
+      "query": "EXPLAIN (FORMAT JSON) SELECT id FROM identity_user WHERE deleted_at IS NULL ORDER BY created_at DESC,id DESC LIMIT 10",
+      "plan": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 0.14,
+            "Total Cost": 8.16,
+            "Plan Rows": 1,
+            "Plan Width": 16,
+            "Plans": [
+              {
+                "Node Type": "Index Only Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Scan Direction": "Forward",
+                "Index Name": "ix_identity_user_active_page",
+                "Relation Name": "identity_user",
+                "Alias": "identity_user",
+                "Startup Cost": 0.14,
+                "Total Cost": 8.16,
+                "Plan Rows": 1,
+                "Plan Width": 16
+              }
+            ]
+          }
+        }
+      ],
+      "note": "Small fixture: sequential scan disabled only to check index eligibility; not a performance benchmark."
+    },
+    {
+      "query": "EXPLAIN (FORMAT JSON) SELECT id FROM identity_login_log WHERE user_id=%s ORDER BY occurred_at DESC,id DESC LIMIT 10",
+      "plan": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 0.14,
+            "Total Cost": 8.16,
+            "Plan Rows": 1,
+            "Plan Width": 16,
+            "Plans": [
+              {
+                "Node Type": "Index Only Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Scan Direction": "Forward",
+                "Index Name": "ix_identity_login_log_user_time",
+                "Relation Name": "identity_login_log",
+                "Alias": "identity_login_log",
+                "Startup Cost": 0.14,
+                "Total Cost": 8.16,
+                "Plan Rows": 1,
+                "Plan Width": 16,
+                "Index Cond": "(user_id = 1)"
+              }
+            ]
+          }
+        }
+      ],
+      "note": "Small fixture: sequential scan disabled only to check index eligibility; not a performance benchmark."
+    }
+  ],
+  "boundary": "SQL constraints, queries and transaction prototypes only; no Mapper, Service, JWT, CAPTCHA or HTTP implementation has been tested."
+}

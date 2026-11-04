@@ -1,30 +1,52 @@
 package com.asterway.common.exception;
 
-import com.asterway.common.error.ErrorCode;
-
-// 业务异常。
-// 当业务规则不满足（如用户名已存在、密码不一致）时，业务层主动抛出这个异常。
-// 它携带一个 ErrorCode，最终由全局异常处理器 GlobalExceptionHandler 统一转成 HTTP 错误响应。
-// 业务代码里不要直接 throw new RuntimeException(...)，而应抛出携带明确错误码的 BusinessException。
+/** 预期业务拒绝，包含 HTTP 状态和可公开数据；不携带密码等敏感信息。 */
 public class BusinessException extends RuntimeException {
 
-    // 本次异常对应的错误码
-    private final ErrorCode errorCode;
+    private final int status;
+    private final String code;
+    private final Object data;
 
-    // 只带错误码的构造器，异常消息默认取错误码的文案
-    public BusinessException(ErrorCode errorCode) {
-        super(errorCode.message());
-        this.errorCode = errorCode;
+    public BusinessException(int status, String code, String message) {
+        this(status, code, message, null);
     }
 
-    // 同时带错误码和原始异常（cause）的构造器，常用于包装底层异常时保留完整堆栈
-    public BusinessException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode.message(), cause);
-        this.errorCode = errorCode;
+    public BusinessException(int status, String code, String message, Object data) {
+        super(message);
+        this.status = status;
+        this.code = code;
+        this.data = data;
     }
 
-    // 返回本次异常对应的错误码
-    public ErrorCode getErrorCode() {
-        return errorCode;
+    public int getStatus() {
+        return status;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public static BusinessException badRequest(String message) {
+        return new BusinessException(400, "INVALID_ARGUMENT", message);
+    }
+
+    public static BusinessException conflict(String message) {
+        return new BusinessException(409, "STATE_CONFLICT", message);
+    }
+
+    public static BusinessException notFound() {
+        return new BusinessException(404, "NOT_FOUND", "资源不存在或不在可访问范围内");
+    }
+
+    public static BusinessException unauthorized() {
+        return new BusinessException(401, "UNAUTHORIZED", "登录已失效，请重新登录");
+    }
+
+    public static BusinessException forbidden() {
+        return new BusinessException(403, "FORBIDDEN", "没有执行此操作的权限");
     }
 }

@@ -1,18 +1,9 @@
 <script setup>
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import { RouterView } from "vue-router";
 </script>
-
+<!-- 后台子路由共享同一个布局，仅登录与注册切换时重新创建认证页。 -->
 <template>
-  <el-config-provider :locale="zhCn">
-    <header class="site-header">
-      <RouterLink to="/" class="brand" aria-label="Asterway 首页">
-        <span class="brand-mark" aria-hidden="true">A</span>
-        <span>Asterway</span>
-      </RouterLink>
-      <span class="header-caption">账户管理</span>
-    </header>
-    <main class="app-container">
-      <RouterView />
-    </main>
-  </el-config-provider>
+  <RouterView v-slot="{ Component, route }">
+    <component :is="Component" :key="route.matched[0]?.path" />
+  </RouterView>
 </template>

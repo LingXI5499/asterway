@@ -1,0 +1,2098 @@
+{
+  "columns": [
+    {
+      "table_name": "identity_login_log",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "user_id",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑引用账户，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "username_snapshot",
+      "data_type": "character varying(128)",
+      "nullable": false,
+      "default_value": null,
+      "description": "尝试登录时的用户名快照；未知用户也能记录",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "outcome",
+      "data_type": "character varying(16)",
+      "nullable": false,
+      "default_value": null,
+      "description": "SUCCESS 或 FAILURE",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "reason_code",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "结果或拒绝原因编码",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "session_id",
+      "data_type": "uuid",
+      "nullable": true,
+      "default_value": null,
+      "description": "登录成功关联的 UUID 会话标识，不是 JWT",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "ip_address",
+      "data_type": "inet",
+      "nullable": true,
+      "default_value": null,
+      "description": "请求来源 IP；代理来源必须经过可信配置",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "user_agent",
+      "data_type": "character varying(512)",
+      "nullable": false,
+      "default_value": "''::character varying",
+      "description": "截断后的客户端描述，不参与授权",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "device_label",
+      "data_type": "character varying(128)",
+      "nullable": false,
+      "default_value": "''::character varying",
+      "description": "设备展示描述，不参与授权",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "trace_id",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "请求追踪标识，不存认证凭据",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_login_log",
+      "column_name": "occurred_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "事件发生时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "code",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "全历史唯一业务编码；内置编码由应用保护",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "parent_id",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "父菜单逻辑标识；根节点为空；更长循环及悬空父节点由应用拒绝",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "name",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "界面展示名称",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "menu_type",
+      "data_type": "character varying(16)",
+      "nullable": false,
+      "default_value": null,
+      "description": "DIRECTORY 目录、PAGE 页面、BUTTON 按钮",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "route_path",
+      "data_type": "character varying(255)",
+      "nullable": true,
+      "default_value": null,
+      "description": "目录或页面路径，必须以斜杠开头；按钮为空",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "component_key",
+      "data_type": "character varying(100)",
+      "nullable": true,
+      "default_value": null,
+      "description": "页面组件白名单键，不存任意文件路径",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "permission_id",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑引用动作权限，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "icon",
+      "data_type": "character varying(64)",
+      "nullable": true,
+      "default_value": null,
+      "description": "图标键，由前端白名单解释",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "sort_order",
+      "data_type": "integer",
+      "nullable": false,
+      "default_value": "0",
+      "description": "同级非负排序值",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "is_visible",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "true",
+      "description": "导航展示状态，不代替接口授权",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "is_builtin",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "false",
+      "description": "内置对象标志；核心对象不能由管理接口删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "is_enabled",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "true",
+      "description": "是否启用；不等同于逻辑删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "乐观锁版本；应用更新时比较并递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "最近修改时刻；由应用写入，无自动更新时间触发器",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "updated_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "最近修改者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_menu",
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑删除时刻；为空表示未删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "actor_id",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "操作者账户标识，匿名失败场景可空",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "actor_username",
+      "data_type": "character varying(30)",
+      "nullable": true,
+      "default_value": null,
+      "description": "操作时用户名快照",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "target_user_id",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "被管理账户标识，用于管理员日志范围筛选",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "resource_type",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "被操作资源类别",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "resource_id",
+      "data_type": "character varying(100)",
+      "nullable": true,
+      "default_value": null,
+      "description": "被操作资源标识快照",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "action_code",
+      "data_type": "character varying(100)",
+      "nullable": false,
+      "default_value": null,
+      "description": "动作权限或审计动作编码",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "outcome",
+      "data_type": "character varying(16)",
+      "nullable": false,
+      "default_value": null,
+      "description": "SUCCESS 或 FAILURE",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "reason_code",
+      "data_type": "character varying(64)",
+      "nullable": true,
+      "default_value": null,
+      "description": "结果或拒绝原因编码",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "change_summary",
+      "data_type": "jsonb",
+      "nullable": false,
+      "default_value": "'{}'::jsonb",
+      "description": "仅安全字段的 JSON 对象，应用负责拒绝密码、JWT 和验证码答案",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "ip_address",
+      "data_type": "inet",
+      "nullable": true,
+      "default_value": null,
+      "description": "请求来源 IP；代理来源必须经过可信配置",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "trace_id",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "请求追踪标识，不存认证凭据",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_operation_log",
+      "column_name": "occurred_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "事件发生时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "code",
+      "data_type": "character varying(100)",
+      "nullable": false,
+      "default_value": null,
+      "description": "全历史唯一业务编码；内置编码由应用保护",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "name",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "界面展示名称",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "description",
+      "data_type": "character varying(255)",
+      "nullable": false,
+      "default_value": "''::character varying",
+      "description": "用途说明",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "is_builtin",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "false",
+      "description": "内置对象标志；核心对象不能由管理接口删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "is_enabled",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "true",
+      "description": "是否启用；不等同于逻辑删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "乐观锁版本；应用更新时比较并递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "最近修改时刻；由应用写入，无自动更新时间触发器",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "updated_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "最近修改者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_permission",
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑删除时刻；为空表示未删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "code",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "全历史唯一业务编码；内置编码由应用保护",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "name",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "界面展示名称",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "description",
+      "data_type": "character varying(255)",
+      "nullable": false,
+      "default_value": "''::character varying",
+      "description": "用途说明",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "is_builtin",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "false",
+      "description": "内置对象标志；核心对象不能由管理接口删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "is_enabled",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "true",
+      "description": "是否启用；不等同于逻辑删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "乐观锁版本；应用更新时比较并递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "最近修改时刻；由应用写入，无自动更新时间触发器",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "updated_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "最近修改者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role",
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑删除时刻；为空表示未删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_menu",
+      "column_name": "role_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用角色，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_menu",
+      "column_name": "menu_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用菜单，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_menu",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_menu",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_permission",
+      "column_name": "role_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用角色，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_permission",
+      "column_name": "permission_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用动作权限，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_permission",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_role_permission",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "setting_key",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "仅 site_name 与 registration_enabled，不允许任意扩展配置键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "setting_value",
+      "data_type": "jsonb",
+      "nullable": false,
+      "default_value": null,
+      "description": "站点名称为 JSON 字符串，注册开关为 JSON 布尔值",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "乐观锁版本；应用更新时比较并递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "最近修改时刻；由应用写入，无自动更新时间触发器",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_setting",
+      "column_name": "updated_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "最近修改者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "数据库自增主键；对外作为字符串传输",
+      "attidentity": "a"
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "username",
+      "data_type": "character varying(30)",
+      "nullable": false,
+      "default_value": null,
+      "description": "登录名；大小写无关且全历史唯一，保留展示形式",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "password_hash",
+      "data_type": "character varying(255)",
+      "nullable": false,
+      "default_value": null,
+      "description": "Argon2id 编码摘要；数据库只做格式前缀检查，完整哈希与密码规则由应用验证",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "nickname",
+      "data_type": "character varying(30)",
+      "nullable": false,
+      "default_value": null,
+      "description": "显示昵称，可重复，注册未填时由应用取用户名",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "is_enabled",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "true",
+      "description": "是否启用；不等同于逻辑删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "must_change_password",
+      "data_type": "boolean",
+      "nullable": false,
+      "default_value": "false",
+      "description": "初始或重置密码后要求修改密码",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "auth_version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "安全版本；密码与安全状态变化时递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "time_zone",
+      "data_type": "character varying(64)",
+      "nullable": false,
+      "default_value": null,
+      "description": "有效 IANA 时区；应用通过可用时区列表验证",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "pending_time_zone",
+      "data_type": "character varying(64)",
+      "nullable": true,
+      "default_value": null,
+      "description": "待生效时区；没有待切换时为空",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "time_zone_effective_at",
+      "data_type": "timestamp with time zone",
+      "nullable": true,
+      "default_value": null,
+      "description": "待切换时刻，与待生效时区同时设置或清空",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "version",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": "0",
+      "description": "乐观锁版本；应用更新时比较并递增",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "最近修改时刻；由应用写入，无自动更新时间触发器",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "updated_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "最近修改者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user",
+      "column_name": "deleted_at",
+      "data_type": "timestamp with time zone",
+      "nullable": true,
+      "default_value": null,
+      "description": "逻辑删除时刻；为空表示未删除",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user_role",
+      "column_name": "user_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用账户，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user_role",
+      "column_name": "role_id",
+      "data_type": "bigint",
+      "nullable": false,
+      "default_value": null,
+      "description": "逻辑引用角色，关联有效性由应用检查",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user_role",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "nullable": false,
+      "default_value": "CURRENT_TIMESTAMP",
+      "description": "创建时刻",
+      "attidentity": ""
+    },
+    {
+      "table_name": "identity_user_role",
+      "column_name": "created_by",
+      "data_type": "bigint",
+      "nullable": true,
+      "default_value": null,
+      "description": "创建者账户标识；初始化时可空；无物理外键",
+      "attidentity": ""
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "identity_login_log",
+      "conname": "identity_login_log_check",
+      "definition": "CHECK ((((outcome)::text <> 'SUCCESS'::text) OR ((user_id IS NOT NULL) AND (session_id IS NOT NULL) AND ((reason_code)::text = 'SUCCESS'::text))))"
+    },
+    {
+      "table_name": "identity_login_log",
+      "conname": "identity_login_log_outcome_check",
+      "definition": "CHECK (((outcome)::text = ANY ((ARRAY['SUCCESS'::character varying, 'FAILURE'::character varying])::text[])))"
+    },
+    {
+      "table_name": "identity_login_log",
+      "conname": "identity_login_log_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_login_log",
+      "conname": "identity_login_log_reason_code_check",
+      "definition": "CHECK (((reason_code)::text ~ '^[A-Z][A-Z0-9_]*$'::text))"
+    },
+    {
+      "table_name": "identity_login_log",
+      "conname": "identity_login_log_user_id_check",
+      "definition": "CHECK ((user_id > 0))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "ck_identity_menu_shape",
+      "definition": "CHECK (((((menu_type)::text = 'DIRECTORY'::text) AND (route_path IS NOT NULL) AND ((route_path)::text ~~ '/%'::text) AND (component_key IS NULL) AND (permission_id IS NULL)) OR (((menu_type)::text = 'PAGE'::text) AND (route_path IS NOT NULL) AND ((route_path)::text ~~ '/%'::text) AND (component_key IS NOT NULL) AND (btrim((component_key)::text) <> ''::text) AND (permission_id IS NOT NULL)) OR (((menu_type)::text = 'BUTTON'::text) AND (route_path IS NULL) AND (component_key IS NULL) AND (permission_id IS NOT NULL))))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_check",
+      "definition": "CHECK (((parent_id > 0) AND (parent_id <> id)))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_check1",
+      "definition": "CHECK (((deleted_at IS NULL) OR (NOT is_enabled)))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_code_check",
+      "definition": "CHECK (((code)::text ~ '^[a-z][a-z0-9_]{1,63}$'::text))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_code_key",
+      "definition": "UNIQUE (code)"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_menu_type_check",
+      "definition": "CHECK (((menu_type)::text = ANY ((ARRAY['DIRECTORY'::character varying, 'PAGE'::character varying, 'BUTTON'::character varying])::text[])))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_name_check",
+      "definition": "CHECK (((name)::text ~ '[^[:space:]]'::text))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_permission_id_check",
+      "definition": "CHECK ((permission_id > 0))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_sort_order_check",
+      "definition": "CHECK ((sort_order >= 0))"
+    },
+    {
+      "table_name": "identity_menu",
+      "conname": "identity_menu_version_check",
+      "definition": "CHECK ((version >= 0))"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "conname": "identity_operation_log_actor_id_check",
+      "definition": "CHECK ((actor_id > 0))"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "conname": "identity_operation_log_change_summary_check",
+      "definition": "CHECK ((jsonb_typeof(change_summary) = 'object'::text))"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "conname": "identity_operation_log_outcome_check",
+      "definition": "CHECK (((outcome)::text = ANY ((ARRAY['SUCCESS'::character varying, 'FAILURE'::character varying])::text[])))"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "conname": "identity_operation_log_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_operation_log",
+      "conname": "identity_operation_log_target_user_id_check",
+      "definition": "CHECK ((target_user_id > 0))"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_check",
+      "definition": "CHECK (((deleted_at IS NULL) OR (NOT is_enabled)))"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_code_check",
+      "definition": "CHECK (((code)::text ~ '^[a-z][a-z0-9_]*(:[a-z][a-z0-9_]*){2,3}$'::text))"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_code_key",
+      "definition": "UNIQUE (code)"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_name_check",
+      "definition": "CHECK (((name)::text ~ '[^[:space:]]'::text))"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_permission",
+      "conname": "identity_permission_version_check",
+      "definition": "CHECK ((version >= 0))"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_check",
+      "definition": "CHECK (((NOT is_builtin) OR ((code)::text = ANY ((ARRAY['USER'::character varying, 'ADMIN'::character varying, 'SUPER_ADMIN'::character varying])::text[]))))"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_check1",
+      "definition": "CHECK (((deleted_at IS NULL) OR (NOT is_enabled)))"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_code_check",
+      "definition": "CHECK (((code)::text ~ '^[A-Z][A-Z0-9_]{1,63}$'::text))"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_code_key",
+      "definition": "UNIQUE (code)"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_name_check",
+      "definition": "CHECK (((name)::text ~ '[^[:space:]]'::text))"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_role",
+      "conname": "identity_role_version_check",
+      "definition": "CHECK ((version >= 0))"
+    },
+    {
+      "table_name": "identity_role_menu",
+      "conname": "identity_role_menu_menu_id_check",
+      "definition": "CHECK ((menu_id > 0))"
+    },
+    {
+      "table_name": "identity_role_menu",
+      "conname": "identity_role_menu_pkey",
+      "definition": "PRIMARY KEY (role_id, menu_id)"
+    },
+    {
+      "table_name": "identity_role_menu",
+      "conname": "identity_role_menu_role_id_check",
+      "definition": "CHECK ((role_id > 0))"
+    },
+    {
+      "table_name": "identity_role_permission",
+      "conname": "identity_role_permission_permission_id_check",
+      "definition": "CHECK ((permission_id > 0))"
+    },
+    {
+      "table_name": "identity_role_permission",
+      "conname": "identity_role_permission_pkey",
+      "definition": "PRIMARY KEY (role_id, permission_id)"
+    },
+    {
+      "table_name": "identity_role_permission",
+      "conname": "identity_role_permission_role_id_check",
+      "definition": "CHECK ((role_id > 0))"
+    },
+    {
+      "table_name": "identity_setting",
+      "conname": "ck_identity_setting_value",
+      "definition": "CHECK (((((setting_key)::text = 'registration_enabled'::text) AND (jsonb_typeof(setting_value) = 'boolean'::text)) OR (((setting_key)::text = 'site_name'::text) AND (jsonb_typeof(setting_value) = 'string'::text) AND ((char_length((setting_value #>> '{}'::text[])) >= 1) AND (char_length((setting_value #>> '{}'::text[])) <= 30)) AND ((setting_value #>> '{}'::text[]) ~ '[^[:space:]]'::text))))"
+    },
+    {
+      "table_name": "identity_setting",
+      "conname": "identity_setting_pkey",
+      "definition": "PRIMARY KEY (setting_key)"
+    },
+    {
+      "table_name": "identity_setting",
+      "conname": "identity_setting_version_check",
+      "definition": "CHECK ((version >= 0))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "ck_identity_user_pending_timezone",
+      "definition": "CHECK ((((pending_time_zone IS NULL) AND (time_zone_effective_at IS NULL)) OR ((pending_time_zone IS NOT NULL) AND (btrim((pending_time_zone)::text) <> ''::text) AND ((pending_time_zone)::text <> (time_zone)::text) AND (time_zone_effective_at IS NOT NULL))))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "ck_identity_user_username",
+      "definition": "CHECK ((((char_length((username)::text) >= 1) AND (char_length((username)::text) <= 30)) AND (((username)::text COLLATE \"C\") ~ '^[A-Za-z0-9㐀-䶿一-鿿豈-﫿𠀀-𯨟]+$'::text)))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_auth_version_check",
+      "definition": "CHECK ((auth_version >= 0))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_check",
+      "definition": "CHECK (((deleted_at IS NULL) OR (NOT is_enabled)))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_nickname_check",
+      "definition": "CHECK ((((char_length((nickname)::text) >= 1) AND (char_length((nickname)::text) <= 30)) AND ((nickname)::text ~ '[^[:space:]]'::text)))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_password_hash_check",
+      "definition": "CHECK (((password_hash)::text ~~ '$argon2id$%'::text))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_time_zone_check",
+      "definition": "CHECK ((btrim((time_zone)::text) <> ''::text))"
+    },
+    {
+      "table_name": "identity_user",
+      "conname": "identity_user_version_check",
+      "definition": "CHECK ((version >= 0))"
+    },
+    {
+      "table_name": "identity_user_role",
+      "conname": "identity_user_role_pkey",
+      "definition": "PRIMARY KEY (user_id, role_id)"
+    },
+    {
+      "table_name": "identity_user_role",
+      "conname": "identity_user_role_role_id_check",
+      "definition": "CHECK ((role_id > 0))"
+    },
+    {
+      "table_name": "identity_user_role",
+      "conname": "identity_user_role_user_id_check",
+      "definition": "CHECK ((user_id > 0))"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "identity_login_log",
+      "indexname": "identity_login_log_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_login_log_pkey ON public.identity_login_log USING btree (id)"
+    },
+    {
+      "tablename": "identity_login_log",
+      "indexname": "ix_identity_login_log_time",
+      "indexdef": "CREATE INDEX ix_identity_login_log_time ON public.identity_login_log USING btree (occurred_at DESC, id DESC)"
+    },
+    {
+      "tablename": "identity_login_log",
+      "indexname": "ix_identity_login_log_user_time",
+      "indexdef": "CREATE INDEX ix_identity_login_log_user_time ON public.identity_login_log USING btree (user_id, occurred_at DESC, id DESC)"
+    },
+    {
+      "tablename": "identity_menu",
+      "indexname": "identity_menu_code_key",
+      "indexdef": "CREATE UNIQUE INDEX identity_menu_code_key ON public.identity_menu USING btree (code)"
+    },
+    {
+      "tablename": "identity_menu",
+      "indexname": "identity_menu_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_menu_pkey ON public.identity_menu USING btree (id)"
+    },
+    {
+      "tablename": "identity_menu",
+      "indexname": "ix_identity_menu_parent",
+      "indexdef": "CREATE INDEX ix_identity_menu_parent ON public.identity_menu USING btree (parent_id, sort_order, id) WHERE (deleted_at IS NULL)"
+    },
+    {
+      "tablename": "identity_menu",
+      "indexname": "ix_identity_menu_permission",
+      "indexdef": "CREATE INDEX ix_identity_menu_permission ON public.identity_menu USING btree (permission_id) WHERE (deleted_at IS NULL)"
+    },
+    {
+      "tablename": "identity_menu",
+      "indexname": "uk_identity_menu_route",
+      "indexdef": "CREATE UNIQUE INDEX uk_identity_menu_route ON public.identity_menu USING btree (route_path) WHERE ((deleted_at IS NULL) AND (route_path IS NOT NULL))"
+    },
+    {
+      "tablename": "identity_operation_log",
+      "indexname": "identity_operation_log_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_operation_log_pkey ON public.identity_operation_log USING btree (id)"
+    },
+    {
+      "tablename": "identity_operation_log",
+      "indexname": "ix_identity_operation_log_actor_time",
+      "indexdef": "CREATE INDEX ix_identity_operation_log_actor_time ON public.identity_operation_log USING btree (actor_id, occurred_at DESC, id DESC)"
+    },
+    {
+      "tablename": "identity_operation_log",
+      "indexname": "ix_identity_operation_log_target_time",
+      "indexdef": "CREATE INDEX ix_identity_operation_log_target_time ON public.identity_operation_log USING btree (target_user_id, occurred_at DESC, id DESC)"
+    },
+    {
+      "tablename": "identity_operation_log",
+      "indexname": "ix_identity_operation_log_time",
+      "indexdef": "CREATE INDEX ix_identity_operation_log_time ON public.identity_operation_log USING btree (occurred_at DESC, id DESC)"
+    },
+    {
+      "tablename": "identity_permission",
+      "indexname": "identity_permission_code_key",
+      "indexdef": "CREATE UNIQUE INDEX identity_permission_code_key ON public.identity_permission USING btree (code)"
+    },
+    {
+      "tablename": "identity_permission",
+      "indexname": "identity_permission_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_permission_pkey ON public.identity_permission USING btree (id)"
+    },
+    {
+      "tablename": "identity_role",
+      "indexname": "identity_role_code_key",
+      "indexdef": "CREATE UNIQUE INDEX identity_role_code_key ON public.identity_role USING btree (code)"
+    },
+    {
+      "tablename": "identity_role",
+      "indexname": "identity_role_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_role_pkey ON public.identity_role USING btree (id)"
+    },
+    {
+      "tablename": "identity_role_menu",
+      "indexname": "identity_role_menu_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_role_menu_pkey ON public.identity_role_menu USING btree (role_id, menu_id)"
+    },
+    {
+      "tablename": "identity_role_menu",
+      "indexname": "ix_identity_role_menu_reverse",
+      "indexdef": "CREATE INDEX ix_identity_role_menu_reverse ON public.identity_role_menu USING btree (menu_id, role_id)"
+    },
+    {
+      "tablename": "identity_role_permission",
+      "indexname": "identity_role_permission_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_role_permission_pkey ON public.identity_role_permission USING btree (role_id, permission_id)"
+    },
+    {
+      "tablename": "identity_role_permission",
+      "indexname": "ix_identity_role_permission_reverse",
+      "indexdef": "CREATE INDEX ix_identity_role_permission_reverse ON public.identity_role_permission USING btree (permission_id, role_id)"
+    },
+    {
+      "tablename": "identity_setting",
+      "indexname": "identity_setting_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_setting_pkey ON public.identity_setting USING btree (setting_key)"
+    },
+    {
+      "tablename": "identity_user",
+      "indexname": "identity_user_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_user_pkey ON public.identity_user USING btree (id)"
+    },
+    {
+      "tablename": "identity_user",
+      "indexname": "ix_identity_user_active_page",
+      "indexdef": "CREATE INDEX ix_identity_user_active_page ON public.identity_user USING btree (created_at DESC, id DESC) WHERE (deleted_at IS NULL)"
+    },
+    {
+      "tablename": "identity_user",
+      "indexname": "ix_identity_user_pending_timezone",
+      "indexdef": "CREATE INDEX ix_identity_user_pending_timezone ON public.identity_user USING btree (time_zone_effective_at, id) WHERE ((deleted_at IS NULL) AND (pending_time_zone IS NOT NULL))"
+    },
+    {
+      "tablename": "identity_user",
+      "indexname": "uk_identity_user_username",
+      "indexdef": "CREATE UNIQUE INDEX uk_identity_user_username ON public.identity_user USING btree (lower(((username)::text COLLATE \"C\")))"
+    },
+    {
+      "tablename": "identity_user_role",
+      "indexname": "identity_user_role_pkey",
+      "indexdef": "CREATE UNIQUE INDEX identity_user_role_pkey ON public.identity_user_role USING btree (user_id, role_id)"
+    },
+    {
+      "tablename": "identity_user_role",
+      "indexname": "ix_identity_user_role_reverse",
+      "indexdef": "CREATE INDEX ix_identity_user_role_reverse ON public.identity_user_role USING btree (role_id, user_id)"
+    }
+  ],
+  "permissions": [
+    {
+      "code": "identity:profile:read",
+      "name": "查看本人资料",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:profile:update",
+      "name": "修改本人资料",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:password:update",
+      "name": "修改本人密码",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:timezone:read",
+      "name": "查看本人时区",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:timezone:update",
+      "name": "修改本人时区",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:device:list",
+      "name": "查看本人登录设备",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:device:revoke",
+      "name": "退出本人登录设备",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity:user:count",
+      "name": "查看用户数量",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:list",
+      "name": "查询用户",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:read",
+      "name": "查看用户详情",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:create",
+      "name": "新增普通用户",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:update",
+      "name": "修改用户",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:delete",
+      "name": "逻辑删除用户",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:status",
+      "name": "启停用户",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:reset_password",
+      "name": "重置用户密码",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:user:assign_role",
+      "name": "分配角色（仅超管）",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:role:list",
+      "name": "查询角色",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:role:read",
+      "name": "查看角色授权",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:role:update",
+      "name": "修改角色展示信息",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:role:grant_permission",
+      "name": "分配角色权限",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:role:grant_menu",
+      "name": "分配角色菜单",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:permission:list",
+      "name": "查询权限",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:permission:read",
+      "name": "查看权限详情",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:permission:create",
+      "name": "新增扩展权限",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:permission:update",
+      "name": "修改权限",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:permission:delete",
+      "name": "删除未引用的扩展权限",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:menu:list",
+      "name": "查询菜单树",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:menu:read",
+      "name": "查看菜单详情",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:menu:create",
+      "name": "新增菜单",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:menu:update",
+      "name": "修改菜单",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:menu:delete",
+      "name": "删除未引用的扩展菜单",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:session:list",
+      "name": "查询管理范围内会话",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:session:revoke",
+      "name": "强退管理范围内会话",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:login_log:list",
+      "name": "查询管理范围内登录日志",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:operation_log:list",
+      "name": "查询管理范围内操作日志",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:setting:read",
+      "name": "读取账户配置",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity:setting:update",
+      "name": "修改账户配置",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    }
+  ],
+  "menus": [
+    {
+      "code": "account_root",
+      "name": "账户中心",
+      "menu_type": "DIRECTORY",
+      "parent_code": null,
+      "route_path": "/account",
+      "component_key": null,
+      "permission_code": null,
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "system_root",
+      "name": "系统管理",
+      "menu_type": "DIRECTORY",
+      "parent_code": null,
+      "route_path": "/system",
+      "component_key": null,
+      "permission_code": null,
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "profile",
+      "name": "个人资料",
+      "menu_type": "PAGE",
+      "parent_code": "account_root",
+      "route_path": "/account/profile",
+      "component_key": "account/profile",
+      "permission_code": "identity:profile:read",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "devices",
+      "name": "登录设备",
+      "menu_type": "PAGE",
+      "parent_code": "account_root",
+      "route_path": "/account/devices",
+      "component_key": "account/devices",
+      "permission_code": "identity:device:list",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "users",
+      "name": "用户管理",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/users",
+      "component_key": "system/users",
+      "permission_code": "identity:user:list",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "roles",
+      "name": "角色授权",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/roles",
+      "component_key": "system/roles",
+      "permission_code": "identity:role:list",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "permissions",
+      "name": "权限管理",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/permissions",
+      "component_key": "system/permissions",
+      "permission_code": "identity:permission:list",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "menus",
+      "name": "菜单管理",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/menus",
+      "component_key": "system/menus",
+      "permission_code": "identity:menu:list",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "sessions",
+      "name": "登录会话",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/sessions",
+      "component_key": "system/sessions",
+      "permission_code": "identity:session:list",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "login_logs",
+      "name": "登录日志",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/login-logs",
+      "component_key": "system/login_logs",
+      "permission_code": "identity:login_log:list",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "operation_logs",
+      "name": "操作日志",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/operation-logs",
+      "component_key": "system/operation_logs",
+      "permission_code": "identity:operation_log:list",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "account_settings",
+      "name": "账户配置",
+      "menu_type": "PAGE",
+      "parent_code": "system_root",
+      "route_path": "/system/account-settings",
+      "component_key": "system/account_settings",
+      "permission_code": "identity:setting:read",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_profile_update",
+      "name": "修改本人资料",
+      "menu_type": "BUTTON",
+      "parent_code": "profile",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:profile:update",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity_password_update",
+      "name": "修改本人密码",
+      "menu_type": "BUTTON",
+      "parent_code": "profile",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:password:update",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity_timezone_read",
+      "name": "查看本人时区",
+      "menu_type": "BUTTON",
+      "parent_code": "profile",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:timezone:read",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity_timezone_update",
+      "name": "修改本人时区",
+      "menu_type": "BUTTON",
+      "parent_code": "profile",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:timezone:update",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity_device_revoke",
+      "name": "退出本人登录设备",
+      "menu_type": "BUTTON",
+      "parent_code": "devices",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:device:revoke",
+      "roles": [
+        "SUPER_ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "code": "identity_user_count",
+      "name": "查看用户数量",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:count",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_read",
+      "name": "查看用户详情",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:read",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_create",
+      "name": "新增普通用户",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:create",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_update",
+      "name": "修改用户",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:update",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_delete",
+      "name": "逻辑删除用户",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:delete",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_status",
+      "name": "启停用户",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:status",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_reset_password",
+      "name": "重置用户密码",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:reset_password",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_user_assign_role",
+      "name": "分配角色（仅超管）",
+      "menu_type": "BUTTON",
+      "parent_code": "users",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:user:assign_role",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_role_read",
+      "name": "查看角色授权",
+      "menu_type": "BUTTON",
+      "parent_code": "roles",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:role:read",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_role_update",
+      "name": "修改角色展示信息",
+      "menu_type": "BUTTON",
+      "parent_code": "roles",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:role:update",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_role_grant_permission",
+      "name": "分配角色权限",
+      "menu_type": "BUTTON",
+      "parent_code": "roles",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:role:grant_permission",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_role_grant_menu",
+      "name": "分配角色菜单",
+      "menu_type": "BUTTON",
+      "parent_code": "roles",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:role:grant_menu",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_permission_read",
+      "name": "查看权限详情",
+      "menu_type": "BUTTON",
+      "parent_code": "permissions",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:permission:read",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_permission_create",
+      "name": "新增扩展权限",
+      "menu_type": "BUTTON",
+      "parent_code": "permissions",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:permission:create",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_permission_update",
+      "name": "修改权限",
+      "menu_type": "BUTTON",
+      "parent_code": "permissions",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:permission:update",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_permission_delete",
+      "name": "删除未引用的扩展权限",
+      "menu_type": "BUTTON",
+      "parent_code": "permissions",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:permission:delete",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_menu_read",
+      "name": "查看菜单详情",
+      "menu_type": "BUTTON",
+      "parent_code": "menus",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:menu:read",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_menu_create",
+      "name": "新增菜单",
+      "menu_type": "BUTTON",
+      "parent_code": "menus",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:menu:create",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_menu_update",
+      "name": "修改菜单",
+      "menu_type": "BUTTON",
+      "parent_code": "menus",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:menu:update",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_menu_delete",
+      "name": "删除未引用的扩展菜单",
+      "menu_type": "BUTTON",
+      "parent_code": "menus",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:menu:delete",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_session_revoke",
+      "name": "强退管理范围内会话",
+      "menu_type": "BUTTON",
+      "parent_code": "sessions",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:session:revoke",
+      "roles": [
+        "ADMIN",
+        "SUPER_ADMIN"
+      ]
+    },
+    {
+      "code": "identity_setting_update",
+      "name": "修改账户配置",
+      "menu_type": "BUTTON",
+      "parent_code": "account_settings",
+      "route_path": null,
+      "component_key": null,
+      "permission_code": "identity:setting:update",
+      "roles": [
+        "SUPER_ADMIN"
+      ]
+    }
+  ]
+}

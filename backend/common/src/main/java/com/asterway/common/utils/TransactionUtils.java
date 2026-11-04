@@ -1,35 +1,37 @@
 package com.asterway.common.utils;
 
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-// 只封装事务执行方式；业务顺序、锁及持久化仍由 Service 明确管理。
+/** 数据库提交后的辅助资源清理。安全失效以数据库 auth_version 为最终依据。 */
 public final class TransactionUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransactionUtils.class);
 
     private TransactionUtils() {
     }
 
-    public static <T> T required(PlatformTransactionManager manager, Supplier<T> work) {
-        T result = required(manager, status -> work.get());
-        return result;
-    }
-
-    public static <T> T required(PlatformTransactionManager manager, Function<TransactionStatus, T> work) {
-        TransactionTemplate transaction = new TransactionTemplate(manager);
-        T result = transaction.execute(work::apply);
-        return Objects.requireNonNull(result, "事务结果不能为空");
-    }
-
-    public static <T> T independent(PlatformTransactionManager manager, Supplier<T> work) {
-        TransactionTemplate transaction = new TransactionTemplate(manager);
-        transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        T result = transaction.execute(status -> work.get());
-        return Objects.requireNonNull(result, "事务结果不能为空");
+    /** 提交后尽力清理 Redis；失败不将已经提交的数据库操作误报为未保存。 */
+    public static void afterCommit(Runnable action) {
+        Runnable safeAction = () -> {
+            try {
+                action.run();
+            } catch (RuntimeException error) {
+                LOGGER.warn("提交后会话清理失败，将由数据库安全版本阻止旧身份访问，异常类型：{}",
+                        error.getClass().getSimpleName());
+            }
+        };
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            safeAction.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                safeAction.run();
+            }
+        });
     }
 }

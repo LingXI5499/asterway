@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.OperationLogMapper">
+    <resultMap id="entityMap" type="com.asterway.identity.entity.OperationLogEntity">
+        <result column="id" property="id"/>
+        <result column="actor_id" property="actorId"/>
+        <result column="actor_username" property="actorUsername"/>
+        <result column="target_user_id" property="targetUserId"/>
+        <result column="resource_type" property="resourceType"/>
+        <result column="resource_id" property="resourceId"/>
+        <result column="action_code" property="actionCode"/>
+        <result column="outcome" property="outcome"/>
+        <result column="reason_code" property="reasonCode"/>
+        <result column="change_summary" property="changeSummary"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="trace_id" property="traceId"/>
+        <result column="occurred_at" property="occurredAt"/>
+    </resultMap>
+    <sql id="columns">
+        id,
+        actor_id,
+        actor_username,
+        target_user_id,
+        resource_type,
+        resource_id,
+        action_code,
+        outcome,
+        reason_code,
+        change_summary,
+        ip_address,
+        trace_id,
+        occurred_at
+    </sql>
+
+    <sql id="filters">
+        WHERE true
+        <if test="regularOnly">AND l.actor_id=#{actorId} AND l.target_user_id IS NOT NULL AND EXISTS (SELECT 1 FROM identity_user u WHERE u.id=l.target_user_id AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id WHERE ur.user_id=u.id AND r.code IN ('ADMIN','SUPER_ADMIN')))</if>
+        <if test="userId != null">AND l.target_user_id=#{userId}</if>
+    </sql>
+    <insert id="insert">INSERT INTO identity_operation_log(actor_id,actor_username,target_user_id,resource_type,resource_id,action_code,outcome,reason_code,change_summary,ip_address,trace_id)
+        VALUES (#{actorId},
+            #{actorUsername},
+            #{targetUserId},
+            #{resourceType},
+            #{resourceId},
+            #{actionCode},
+            #{outcome},
+            #{reasonCode},
+            #{changeSummary}::jsonb,
+            #{ipAddress}::inet,
+            #{traceId})</insert>
+    <select id="findPage" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_operation_log l <include refid="filters"/>
+        ORDER BY occurred_at DESC,id DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM identity_operation_log l <include refid="filters"/>
+    </select>
+</mapper>

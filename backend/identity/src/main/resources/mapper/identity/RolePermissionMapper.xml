@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.RolePermissionMapper">
+    <resultMap id="entityMap" type="com.asterway.identity.entity.RolePermissionEntity">
+        <result column="role_id" property="roleId"/>
+        <result column="permission_id" property="permissionId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="created_by" property="createdBy"/>
+    </resultMap>
+    <sql id="columns">
+        role_id,
+        permission_id,
+        created_at,
+        created_by
+    </sql>
+
+    <select id="findIds" resultType="long">
+        SELECT permission_id FROM identity_role_permission WHERE role_id = #{roleId} ORDER BY permission_id
+    </select>
+    <delete id="deleteByOwner">
+        DELETE FROM identity_role_permission WHERE role_id = #{roleId}
+    </delete>
+    <insert id="insert">
+        INSERT INTO identity_role_permission (role_id, permission_id, created_by)
+        VALUES (#{roleId}, #{permissionId}, #{actorId})
+    </insert>
+</mapper>

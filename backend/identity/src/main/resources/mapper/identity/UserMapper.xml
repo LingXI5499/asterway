@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.identity.mapper.UserMapper">
+    <resultMap id="entityMap" type="com.asterway.identity.entity.UserEntity">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="nickname" property="nickname"/>
+        <result column="is_enabled" property="enabled"/>
+        <result column="must_change_password" property="mustChangePassword"/>
+        <result column="auth_version" property="authVersion"/>
+        <result column="time_zone" property="timeZone"/>
+        <result column="pending_time_zone" property="pendingTimeZone"/>
+        <result column="time_zone_effective_at" property="timeZoneEffectiveAt"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+    <sql id="columns">
+        id,
+        username,
+        password_hash,
+        nickname,
+        is_enabled,
+        must_change_password,
+        auth_version,
+        time_zone,
+        pending_time_zone,
+        time_zone_effective_at,
+        version,
+        created_at,
+        updated_at,
+        created_by,
+        updated_by,
+        deleted_at
+    </sql>
+
+    <select id="findById" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_user WHERE id = #{id}
+    </select>
+    <select id="findByUsername" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_user
+        WHERE lower(username COLLATE "C") = lower(#{username} COLLATE "C")
+    </select>
+    <select id="lockById" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_user WHERE id = #{id} FOR UPDATE
+    </select>
+    <sql id="filters">
+        WHERE u.deleted_at IS NULL
+        <if test="keyword != null and keyword != ''">
+            AND (u.username ILIKE '%' || #{keyword} || '%' OR u.nickname ILIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="enabled != null">AND u.is_enabled = #{enabled}</if>
+        <if test="role != null and role != ''">
+            AND EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id
+                WHERE ur.user_id = u.id AND r.code = #{role})
+        </if>
+        <if test="regularOnly">AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN', 'SUPER_ADMIN'))</if>
+    </sql>
+    <select id="findPage" resultMap="entityMap">
+        SELECT <include refid="columns"/> FROM identity_user u <include refid="filters"/>
+        ORDER BY u.created_at DESC, u.id DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM identity_user u <include refid="filters"/>
+    </select>
+    <select id="statistics" resultType="map">
+        SELECT count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN',
+             'SUPER_ADMIN'))) AS users,
+
+            count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT (NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN',
+             'SUPER_ADMIN')))) AS administrators,
+
+            count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT u.is_enabled) AS disabled,
+            count(*) FILTER (WHERE u.deleted_at IS NOT NULL) AS deleted
+        FROM identity_user u
+        <if test="regularOnly">WHERE NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN', 'SUPER_ADMIN'))</if>
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO identity_user (username, password_hash, nickname, time_zone, must_change_password, created_by, updated_by)
+        VALUES (#{username}, #{passwordHash}, #{nickname}, #{timeZone}, #{mustChangePassword}, #{createdBy}, #{updatedBy})
+    </insert>
+    <update id="updateProfile">
+        UPDATE identity_user SET username = #{username}, nickname = #{nickname}, version = version + 1,
+            updated_at = now(), updated_by = #{updatedBy}
+        WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
+    </update>
+    <update id="updatePassword">
+        UPDATE identity_user SET password_hash = #{passwordHash}, must_change_password = #{mustChangePassword},
+            auth_version = auth_version + 1, version = version + 1, updated_at = now(), updated_by = #{updatedBy}
+        WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
+    </update>
+    <update id="updateStatus">
+        UPDATE identity_user SET is_enabled = #{enabled}, deleted_at = #{deletedAt}, auth_version = auth_version + 1,
+            version = version + 1, updated_at = now(), updated_by = #{updatedBy}
+        WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
+    </update>
+    <update id="updateTimeZone">
+        UPDATE identity_user SET time_zone = #{timeZone}, pending_time_zone = #{pendingTimeZone},
+            time_zone_effective_at = #{timeZoneEffectiveAt}, version = version + 1,
+            updated_at = now(), updated_by = #{updatedBy}
+        WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
+    </update>
+    <update id="invalidateSessions">
+        UPDATE identity_user SET auth_version=auth_version+1,version=version+1,updated_at=now(),updated_by=#{actorId}
+        WHERE id=#{id} AND version=#{version} AND deleted_at IS NULL
+    </update>
+</mapper>
