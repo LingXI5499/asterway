@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.execution.mapper.ExecutionSessionMapper">
+    <sql id="entityColumns">
+        e.id,e.user_id,e.task_id,e.status,e.started_at,e.finished_at,e.last_heartbeat_at,
+        e.controller_session_id,e.finish_reason,e.version,e.created_at,e.updated_at
+    </sql>
+
+    <!-- 历史父链不加 deleted_at/archived_at 过滤，所有关联仍限定同一 owner。 -->
+    <sql id="historyFrom">
+        FROM execution_session e
+        JOIN task t ON t.id=e.task_id AND t.user_id=e.user_id
+        JOIN stage st ON st.id=t.stage_id AND st.user_id=e.user_id
+        JOIN goal g ON g.id=st.goal_id AND g.user_id=e.user_id
+    </sql>
+
+    <select id="lockUser" resultType="long">
+        SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE
+    </select>
+    <select id="tryLockUser" resultType="long">
+        SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE SKIP LOCKED
+    </select>
+    <select id="account" resultType="com.asterway.common.security.ExecutionAccountData">
+        SELECT id AS user_id,(is_enabled AND deleted_at IS NULL) AS enabled,auth_version,
+               time_zone,pending_time_zone,time_zone_effective_at
+        FROM identity_user WHERE id=#{userId}
+    </select>
+    <select id="eligibleTask" resultType="com.asterway.execution.vo.ExecutionTaskVO">
+        SELECT t.id AS task_id,t.version AS task_version,t.status AS task_status,
+               a.id AS assignment_id,w.week_start_date,d.plan_date,g.id AS goal_id,st.id AS stage_id
+        FROM task t
+        JOIN stage st ON st.id=t.stage_id AND st.user_id=t.user_id
+        JOIN goal g ON g.id=st.goal_id AND g.user_id=t.user_id
+        JOIN task_assignment a ON a.task_id=t.id AND a.user_id=t.user_id AND a.ended_at IS NULL
+        JOIN weekly_plan w ON w.id=a.weekly_plan_id AND w.user_id=t.user_id
+        LEFT JOIN daily_plan d ON d.id=a.daily_plan_id
+        WHERE t.id=#{taskId} AND t.user_id=#{userId} AND t.deleted_at IS NULL AND t.status&lt;&gt;'COMPLETED'
+          AND st.deleted_at IS NULL AND st.status&lt;&gt;'COMPLETED'
+          AND g.deleted_at IS NULL AND g.archived_at IS NULL AND g.status&lt;&gt;'COMPLETED'
+          AND (t.start_date IS NULL OR t.start_date&lt;=#{today})
+          AND (g.start_date IS NULL OR g.start_date&lt;=#{today})
+          AND w.deleted_at IS NULL
+          AND w.week_start_date=#{today}::date-(EXTRACT(ISODOW FROM #{today}::date)::integer-1)
+          AND (a.daily_plan_id IS NULL OR (d.id IS NOT NULL AND d.user_id=t.user_id
+              AND d.weekly_plan_id=w.id AND d.deleted_at IS NULL AND d.plan_date=#{today}))
+    </select>
+    <select id="scopeExists" resultType="long">
+        <choose>
+            <when test="scope == 'TASK'">SELECT id FROM task WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="scope == 'STAGE'">SELECT id FROM stage WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="scope == 'GOAL'">SELECT id FROM goal WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="scope == 'WEEK'">SELECT id FROM weekly_plan WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="scope == 'DAY'">SELECT id FROM daily_plan WHERE user_id=#{userId} AND id=#{id}</when>
+            <otherwise>SELECT NULL::bigint</otherwise>
+        </choose>
+    </select>
+    <select id="find" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
+        SELECT <include refid="entityColumns"/> FROM execution_session e
+        WHERE e.user_id=#{userId} AND e.id=#{id}
+    </select>
+    <select id="running" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
+        SELECT <include refid="entityColumns"/> FROM execution_session e
+        WHERE e.user_id=#{userId} AND e.status='RUNNING'
+    </select>
+    <select id="unfinishedTask" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
+        SELECT <include refid="entityColumns"/> FROM execution_session e
+        WHERE e.user_id=#{userId} AND e.task_id=#{taskId} AND e.status IN ('RUNNING','PAUSED')
+    </select>
+    <select id="unfinished" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
+        SELECT <include refid="entityColumns"/> <include refid="historyFrom"/>
+        WHERE e.user_id=#{userId} AND e.status IN ('RUNNING','PAUSED')
+        <choose>
+            <when test="scope == 'TASK'">AND e.task_id=#{id}</when>
+            <when test="scope == 'GOAL'">AND g.id=#{id}</when>
+            <otherwise>AND false</otherwise>
+        </choose>
+        ORDER BY e.id LIMIT #{limit}
+    </select>
+    <select id="runningInScope" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 <include refid="historyFrom"/>
+            LEFT JOIN execution_segment os ON os.execution_id=e.id AND os.ended_at IS NULL
+            LEFT JOIN task_assignment a ON a.id=os.assignment_id AND a.user_id=e.user_id
+            WHERE e.user_id=#{userId} AND e.status='RUNNING'
+            <choose>
+                <when test="scope == 'TASK'">AND e.task_id=#{id}</when>
+                <when test="scope == 'STAGE'">AND st.id=#{id}</when>
+                <when test="scope == 'GOAL'">AND g.id=#{id}</when>
+                <when test="scope == 'WEEK'">AND a.weekly_plan_id=#{id}</when>
+                <when test="scope == 'DAY'">AND a.daily_plan_id=#{id}</when>
+                <otherwise>AND false</otherwise>
+            </choose>
+        )
+    </select>
+    <select id="dueUsers" resultType="long">
+        SELECT e.user_id FROM execution_session e
+        JOIN execution_segment s ON s.execution_id=e.id AND s.ended_at IS NULL
+        WHERE e.status='RUNNING' AND LEAST(s.eligible_until,
+              e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds))&lt;=#{now}
+        ORDER BY LEAST(s.eligible_until,e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds)),e.id
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO execution_session(user_id,task_id,status,started_at,last_heartbeat_at,
+            controller_session_id,version,created_at,updated_at)
+        VALUES(#{userId},#{taskId},#{status},#{startedAt},#{lastHeartbeatAt},
+            #{controllerSessionId},0,#{createdAt},#{updatedAt})
+    </insert>
+    <update id="changeState">
+        UPDATE execution_session SET status=#{row.status},finished_at=#{row.finishedAt},
+            last_heartbeat_at=#{row.lastHeartbeatAt},controller_session_id=#{row.controllerSessionId},
+            finish_reason=#{row.finishReason},version=version+1,updated_at=#{now}
+        WHERE user_id=#{row.userId} AND id=#{row.id} AND version=#{expected}
+    </update>
+    <update id="heartbeat">
+        UPDATE execution_session e SET last_heartbeat_at=GREATEST(e.last_heartbeat_at,#{now}),updated_at=#{now}
+        WHERE e.id=#{id} AND e.user_id=#{userId} AND e.status='RUNNING' AND e.controller_session_id=#{sessionId}
+          AND EXISTS (SELECT 1 FROM execution_segment s WHERE s.execution_id=e.id AND s.id=#{segmentId}
+              AND s.ended_at IS NULL AND s.started_at&lt;=#{now} AND s.eligible_until&gt;#{now}
+              AND e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds)&gt;#{now})
+    </update>
+    <update id="startTask">
+        UPDATE task SET status='IN_PROGRESS',completed_at=NULL,version=version+1,updated_at=#{now}
+        WHERE id=#{taskId} AND user_id=#{userId} AND version=#{version}
+          AND deleted_at IS NULL AND status&lt;&gt;'COMPLETED'
+    </update>
+
+    <sql id="effectiveEnd">
+        COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,
+            e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds),s.eligible_until)))
+    </sql>
+    <sql id="resourceFilters">
+        e.user_id=#{ctx.userId}
+        <if test="q.taskId != null">AND e.task_id=#{q.taskId}</if>
+        <if test="q.stageId != null">AND st.id=#{q.stageId}</if>
+        <if test="q.goalId != null">AND g.id=#{q.goalId}</if>
+        <if test="q.status != null">AND e.status=#{q.status}</if>
+    </sql>
+    <sql id="dateFilter">
+        <if test="ctx.rangeStart != null">
+            AND EXISTS (SELECT 1 FROM execution_segment s WHERE s.execution_id=e.id
+                AND s.started_at&lt;#{ctx.rangeEnd} AND <include refid="effectiveEnd"/>&gt;#{ctx.rangeStart})
+        </if>
+    </sql>
+    <sql id="viewColumns">
+        e.id::text AS id,e.task_id::text AS task_id,t.name AS task_name,e.status,e.started_at,e.finished_at,
+        e.finish_reason,e.version,t.version AS task_version,
+        floor(COALESCE(duration.total_seconds,0))::bigint AS actual_seconds,
+        CASE WHEN #{ctx.rangeStart}::timestamptz IS NULL THEN NULL::bigint
+             ELSE floor(COALESCE(duration.range_seconds,0))::bigint END AS range_actual_seconds,
+        e.last_heartbeat_at,os.id::text AS active_segment_id,os.started_at AS active_segment_started_at,
+        #{ctx.now}::timestamptz AS server_now,
+        e.last_heartbeat_at+make_interval(secs =&gt; os.heartbeat_timeout_seconds) AS heartbeat_deadline,
+        os.eligible_until,
+        COALESCE(e.status='RUNNING' AND e.controller_session_id=#{ctx.sessionId} AND os.id IS NOT NULL
+            AND LEAST(os.eligible_until,e.last_heartbeat_at+make_interval(secs =&gt; os.heartbeat_timeout_seconds))&gt;#{ctx.now},false) AS can_heartbeat,
+        #{ctx.heartbeatIntervalSeconds}::integer AS heartbeat_interval_seconds
+    </sql>
+    <sql id="viewJoins">
+        LEFT JOIN execution_segment os ON os.execution_id=e.id AND os.ended_at IS NULL
+        LEFT JOIN LATERAL (
+            SELECT SUM(EXTRACT(EPOCH FROM <include refid="effectiveEnd"/>-s.started_at)) AS total_seconds,
+                   SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(<include refid="effectiveEnd"/>,#{ctx.rangeEnd}::timestamptz)
+                       -GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0)) AS range_seconds
+            FROM execution_segment s WHERE s.execution_id=e.id
+        ) duration ON true
+    </sql>
+    <select id="view" resultType="com.asterway.execution.vo.ExecutionSessionVO">
+        SELECT <include refid="viewColumns"/> <include refid="historyFrom"/> <include refid="viewJoins"/>
+        WHERE e.user_id=#{ctx.userId} AND e.id=#{id}
+    </select>
+    <select id="page" resultType="com.asterway.execution.vo.ExecutionSessionVO">
+        SELECT <include refid="viewColumns"/> <include refid="historyFrom"/> <include refid="viewJoins"/>
+        WHERE <include refid="resourceFilters"/> <include refid="dateFilter"/>
+        ORDER BY e.started_at DESC,e.id DESC LIMIT #{q.size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) <include refid="historyFrom"/>
+        WHERE <include refid="resourceFilters"/> <include refid="dateFilter"/>
+    </select>
+    <select id="summary" resultType="com.asterway.execution.vo.ExecutionSummaryVO">
+        WITH scoped_session AS (
+            SELECT e.id,e.status,e.last_heartbeat_at <include refid="historyFrom"/>
+            WHERE <include refid="resourceFilters"/>
+        ), effective_segment AS (
+            SELECT e.id AS execution_id,s.started_at,<include refid="effectiveEnd"/> AS effective_end
+            FROM scoped_session e JOIN execution_segment s ON s.execution_id=e.id
+        ), per_session AS (
+            SELECT e.id,e.status,
+                COALESCE(SUM(EXTRACT(EPOCH FROM s.effective_end-s.started_at)),0) AS total_seconds,
+                COALESCE(SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(s.effective_end,#{ctx.rangeEnd}::timestamptz)
+                    -GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0))
+                    FILTER (WHERE s.execution_id IS NOT NULL),0) AS range_seconds,
+                COALESCE(bool_or(s.started_at&lt;#{ctx.rangeEnd} AND s.effective_end&gt;#{ctx.rangeStart}),false) AS in_range,
+                MAX(s.started_at) AS latest_execution_at
+            FROM scoped_session e LEFT JOIN effective_segment s ON s.execution_id=e.id GROUP BY e.id,e.status
+        )
+        SELECT COALESCE(floor(SUM(total_seconds)),0)::bigint AS total_actual_seconds,
+               COALESCE(floor(SUM(range_seconds)),0)::bigint AS range_actual_seconds,
+               count(*) AS total_sessions,count(*) FILTER (WHERE in_range) AS range_sessions,
+               count(*) FILTER (WHERE status='FINISHED') AS finished_sessions,
+               count(*) FILTER (WHERE status='RUNNING') AS running_sessions,
+               count(*) FILTER (WHERE status='PAUSED') AS paused_sessions,
+               MAX(latest_execution_at) AS latest_execution_at
+        FROM per_session
+    </select>
+</mapper>

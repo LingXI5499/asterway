@@ -61,8 +61,15 @@ export async function api(path, options = {}) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: options.signal,
   });
   const result = await response.json().catch(() => ({}));
+  if (
+    requestEpoch !== epoch ||
+    (token && sessionId(token) !== sessionId(session.token))
+  ) {
+    throw new ApiError("登录状态已变化，请重新登录", 401, "SESSION_CHANGED");
+  }
   const renewed = response.headers.get("X-Session-Token");
   const until = Number(response.headers.get("X-Session-Expires-At"));
   // 并发请求只接受当前会话的续签，退出后的响应不会恢复会话。
@@ -102,6 +109,8 @@ export async function loadCurrent() {
   return data;
 }
 export const hasPermission = (code) => session.permissions.includes(code);
+// 仅用于清理不同登录会话的前端状态，不作为认证或授权依据。
+export const authSessionKey = () => sessionId(session.token) || "";
 export async function allPermissions() {
   const result = [];
   for (let page = 1; ; page++) {

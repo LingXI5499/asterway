@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.notification.mapper.NotificationMessageMapper">
+    <sql id="viewColumns">
+        n.id::text,n.goal_id::text,n.condition_round,n.message_type,n.title,n.content,n.read_at,n.handle_status,n.handled_at,
+        n.version,n.created_at,n.updated_at,g.version AS goal_version,
+        COALESCE(n.handle_status='PENDING' AND g.completion_condition_met AND g.completion_round=n.condition_round
+            AND g.status&lt;&gt;'COMPLETED' AND g.archived_at IS NULL AND g.deleted_at IS NULL,false) AS can_handle
+    </sql>
+    <sql id="viewFrom">FROM notification_message n LEFT JOIN goal g ON g.id=n.goal_id AND g.user_id=n.user_id</sql>
+    <sql id="filter">
+        WHERE n.user_id=#{userId}
+        <if test="q.unread == true">AND n.read_at IS NULL AND n.handle_status&lt;&gt;'INVALIDATED'</if>
+        <if test="q.unread == false">AND n.read_at IS NOT NULL</if>
+        <if test="q.handleStatus != null and q.handleStatus != ''">AND n.handle_status=#{q.handleStatus}</if>
+    </sql>
+    <select id="find" resultType="com.asterway.notification.entity.NotificationMessageEntity">
+        SELECT n.id,n.user_id,n.goal_id,n.condition_round,n.message_type,n.title,n.content,n.read_at,n.handle_status,n.handled_at,n.version,n.created_at,n.updated_at FROM notification_message n WHERE n.user_id=#{userId} AND n.id=#{id}
+    </select>
+    <select id="view" resultType="com.asterway.notification.vo.NotificationMessageVO">
+        SELECT <include refid="viewColumns"/> <include refid="viewFrom"/> WHERE n.user_id=#{userId} AND n.id=#{id}
+    </select>
+    <select id="page" resultType="com.asterway.notification.vo.NotificationMessageVO">
+        SELECT <include refid="viewColumns"/> <include refid="viewFrom"/> <include refid="filter"/>
+        ORDER BY n.created_at DESC,n.id DESC LIMIT #{q.size} OFFSET #{q.offset}
+    </select>
+    <select id="count" resultType="long">SELECT count(*) FROM notification_message n <include refid="filter"/></select>
+    <select id="unread" resultType="long">
+        SELECT count(*) FROM notification_message WHERE user_id=#{userId} AND read_at IS NULL AND handle_status&lt;&gt;'INVALIDATED'
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification_message(user_id,goal_id,condition_round,message_type,title,content,created_at,updated_at)
+        VALUES(#{userId},#{goalId},#{conditionRound},'GOAL_COMPLETION_CONFIRM',#{title},#{content},#{createdAt},#{updatedAt})
+        ON CONFLICT(user_id,goal_id,condition_round) DO NOTHING
+    </insert>
+    <update id="markRead">
+        UPDATE notification_message SET read_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND read_at IS NULL
+    </update>
+    <update id="markAllRead">
+        UPDATE notification_message SET read_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND read_at IS NULL AND handle_status&lt;&gt;'INVALIDATED'
+    </update>
+    <update id="handle">
+        UPDATE notification_message SET handle_status=#{status},handled_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND handle_status='PENDING'
+    </update>
+    <select id="condition" resultType="com.asterway.notification.vo.GoalConditionVO">
+        SELECT g.id AS goal_id,g.name,g.status,g.archived_at,g.deleted_at,g.completion_condition_met,g.completion_round,g.version,
+            (g.deleted_at IS NULL AND g.archived_at IS NULL AND g.status&lt;&gt;'COMPLETED'
+            AND COALESCE(u.is_enabled,false) AND u.deleted_at IS NULL
+            AND EXISTS(SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id
+                WHERE ur.user_id=u.id AND r.code='USER' AND r.is_enabled AND r.deleted_at IS NULL)
+            AND NOT EXISTS(SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id
+                WHERE ur.user_id=u.id AND r.code IN('ADMIN','SUPER_ADMIN') AND r.is_enabled AND r.deleted_at IS NULL)
+            AND EXISTS(SELECT 1 FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=g.user_id
+                WHERE s.goal_id=g.id AND s.user_id=g.user_id AND s.deleted_at IS NULL AND t.deleted_at IS NULL)
+            AND NOT EXISTS(SELECT 1 FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=g.user_id
+                WHERE s.goal_id=g.id AND s.user_id=g.user_id AND s.deleted_at IS NULL AND t.deleted_at IS NULL AND t.status&lt;&gt;'COMPLETED')) AS qualifies
+        FROM goal g LEFT JOIN identity_user u ON u.id=g.user_id WHERE g.user_id=#{userId} AND g.id=#{goalId}
+    </select>
+    <update id="updateCondition">
+        UPDATE goal SET completion_condition_met=#{met},completion_round=#{round},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND id=#{goalId} AND version=#{version}
+    </update>
+    <update id="invalidateGoal">
+        UPDATE notification_message SET handle_status='INVALIDATED',handled_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND goal_id=#{goalId} AND handle_status='PENDING' AND condition_round&lt;&gt;#{keepRound}
+    </update>
+    <update id="clearUserConditions">
+        UPDATE goal SET completion_condition_met=false,version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND completion_condition_met
+    </update>
+    <update id="invalidateUser">
+        UPDATE notification_message SET handle_status='INVALIDATED',handled_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND handle_status='PENDING'
+    </update>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.execution.mapper.ExecutionSegmentMapper">
+    <select id="open" resultType="com.asterway.execution.entity.ExecutionSegmentEntity">
+        SELECT s.id,s.execution_id,s.assignment_id,s.segment_no,s.started_at,s.ended_at,s.end_reason,
+               s.eligible_until,s.time_zone,s.heartbeat_timeout_seconds,s.created_at,s.updated_at
+        FROM execution_segment s JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        WHERE s.execution_id=#{executionId} AND s.ended_at IS NULL
+    </select>
+    <select id="nextNumber" resultType="int">
+        SELECT COALESCE(MAX(s.segment_no),0)+1 FROM execution_segment s
+        JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        WHERE s.execution_id=#{executionId}
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO execution_segment(execution_id,assignment_id,segment_no,started_at,eligible_until,
+            time_zone,heartbeat_timeout_seconds,created_at,updated_at)
+        VALUES(#{executionId},#{assignmentId},#{segmentNo},#{startedAt},#{eligibleUntil},
+            #{timeZone},#{heartbeatTimeoutSeconds},#{createdAt},#{updatedAt})
+    </insert>
+    <update id="close">
+        UPDATE execution_segment s SET ended_at=#{endedAt},end_reason=#{reason},updated_at=#{now}
+        FROM execution_session e WHERE e.id=s.execution_id AND e.user_id=#{userId}
+          AND s.id=#{id} AND s.ended_at IS NULL
+    </update>
+    <update id="shorten">
+        UPDATE execution_segment s SET eligible_until=#{deadline},updated_at=#{now}
+        FROM execution_session e WHERE e.id=s.execution_id AND e.user_id=#{userId}
+          AND s.execution_id=#{executionId} AND s.ended_at IS NULL AND s.eligible_until&gt;#{deadline}
+    </update>
+    <sql id="effectiveEnd">
+        COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,
+            e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds),s.eligible_until)))
+    </sql>
+    <select id="page" resultType="com.asterway.execution.vo.ExecutionSegmentVO">
+        SELECT s.id::text AS id,s.segment_no,s.assignment_id::text AS assignment_id,s.started_at,s.ended_at,
+               s.end_reason,<include refid="effectiveEnd"/> AS effective_ended_at,
+               floor(EXTRACT(EPOCH FROM <include refid="effectiveEnd"/>-s.started_at))::bigint AS actual_seconds,
+               s.time_zone
+        FROM execution_segment s JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{ctx.userId}
+        WHERE s.execution_id=#{executionId} ORDER BY s.segment_no LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM execution_segment s
+        JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        WHERE s.execution_id=#{executionId}
+    </select>
+</mapper>

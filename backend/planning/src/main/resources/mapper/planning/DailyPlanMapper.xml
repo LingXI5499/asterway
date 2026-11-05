@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.planning.mapper.DailyPlanMapper">
+    <resultMap id="entity" type="com.asterway.planning.entity.DailyPlanEntity">
+        <result column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="weekly_plan_id" property="weeklyPlanId"/>
+        <result column="plan_date" property="planDate"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+    <sql id="columns">r.id,
+            r.user_id,
+            r.weekly_plan_id,
+            r.plan_date,
+            r.version,
+            r.created_at,
+            r.updated_at,
+            r.deleted_at</sql>
+    <sql id="filters">WHERE r.user_id=#{userId}
+          AND r.deleted_at IS NULL
+        <if test="q.weeklyPlanId != null">AND r.weekly_plan_id=#{q.weeklyPlanId}</if>
+    </sql>
+    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+        FROM daily_plan r
+        JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          AND w.user_id=r.user_id
+          AND w.deleted_at IS NULL
+        WHERE r.user_id=#{userId}
+          AND r.id=#{id}
+          AND r.deleted_at IS NULL</select>
+    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
+        FROM daily_plan r
+        JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          AND w.user_id=r.user_id
+          AND w.deleted_at IS NULL <include refid="filters"/>
+        ORDER BY r.id DESC
+        LIMIT #{q.size}
+        OFFSET #{q.offset}</select>
+    <select id="count" resultType="long">SELECT count(*)
+        FROM daily_plan r
+        JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          AND w.user_id=r.user_id
+          AND w.deleted_at IS NULL <include refid="filters"/></select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO daily_plan (user_id,
+            weekly_plan_id,
+            plan_date)
+        VALUES (#{userId},
+            #{weeklyPlanId},
+            #{planDate})</insert>
+    <update id="update">UPDATE daily_plan
+        SET weekly_plan_id=#{weeklyPlanId},
+            plan_date=#{planDate},
+            version=version+1,
+            updated_at=CURRENT_TIMESTAMP
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND version=#{version}
+          AND deleted_at IS NULL</update>
+    <update id="softDelete">UPDATE daily_plan
+        SET deleted_at=CURRENT_TIMESTAMP,version=version+1,updated_at=CURRENT_TIMESTAMP
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND version=#{version}
+          AND deleted_at IS NULL</update>
+    <select id="byDate" resultMap="entity">SELECT <include refid="columns"/>
+        FROM daily_plan r
+        JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          AND w.user_id=r.user_id
+          AND w.deleted_at IS NULL
+        WHERE r.user_id=#{userId}
+          AND r.plan_date=#{date}
+          AND r.deleted_at IS NULL</select>
+</mapper>

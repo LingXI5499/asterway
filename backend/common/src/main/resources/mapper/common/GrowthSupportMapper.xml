@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.common.mapper.GrowthSupportMapper">
+    <select id="lockAnyUser" resultType="long">
+        SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE
+    </select>
+    <select id="calendarAccount" resultType="com.asterway.common.security.ExecutionAccountData">
+        SELECT id AS user_id,(is_enabled AND deleted_at IS NULL) AS enabled,auth_version,
+            time_zone,pending_time_zone,time_zone_effective_at
+        FROM identity_user WHERE id=#{userId}
+    </select>
+    <select id="lockUser" resultType="long">
+        SELECT id
+        FROM identity_user
+        WHERE id=#{userId}
+          AND is_enabled
+          AND deleted_at IS NULL FOR UPDATE
+    </select>
+    <select id="timeZone" resultType="string">
+        SELECT CASE WHEN pending_time_zone IS NOT NULL
+          AND time_zone_effective_at &lt;= CURRENT_TIMESTAMP THEN pending_time_zone ELSE time_zone END
+        FROM identity_user
+        WHERE id=#{userId}
+          AND is_enabled
+          AND deleted_at IS NULL
+    </select>
+    <select id="goal" resultType="com.asterway.common.security.GrowthScopeData">
+        SELECT id,version,id AS goal_id,status,archived_at
+        FROM goal
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND deleted_at IS NULL
+    </select>
+    <select id="stage" resultType="com.asterway.common.security.GrowthScopeData">
+        SELECT s.id,s.version,s.goal_id,s.status,g.archived_at
+        FROM stage s
+        JOIN goal g ON g.id=s.goal_id
+          AND g.user_id=s.user_id
+          AND g.deleted_at IS NULL
+        WHERE s.id=#{id}
+          AND s.user_id=#{userId}
+          AND s.deleted_at IS NULL
+    </select>
+    <select id="task" resultType="com.asterway.common.security.GrowthScopeData">
+        SELECT t.id,t.version,t.stage_id,s.goal_id,t.status,g.archived_at,g.name AS goal_name,s.name AS stage_name,a.weekly_plan_id,a.daily_plan_id,
+        CASE WHEN a.id IS NULL THEN 'POOL' WHEN a.daily_plan_id IS NULL THEN 'WEEK' ELSE 'DAY' END AS assignment_status
+        FROM task t
+        JOIN stage s ON s.id=t.stage_id
+          AND s.user_id=t.user_id
+          AND s.deleted_at IS NULL
+        JOIN goal g ON g.id=s.goal_id
+          AND g.user_id=t.user_id
+          AND g.deleted_at IS NULL
+        LEFT JOIN task_assignment a ON a.task_id=t.id
+          AND a.user_id=t.user_id
+          AND a.ended_at IS NULL
+        WHERE t.id=#{id}
+          AND t.user_id=#{userId}
+          AND t.deleted_at IS NULL
+    </select>
+    <select id="week" resultType="com.asterway.common.security.GrowthScopeData">
+        SELECT id,version,week_start_date
+        FROM weekly_plan
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND deleted_at IS NULL
+    </select>
+    <select id="day" resultType="com.asterway.common.security.GrowthScopeData">
+        SELECT d.id,d.version,d.weekly_plan_id,d.plan_date,w.week_start_date
+        FROM daily_plan d
+        JOIN weekly_plan w ON w.id=d.weekly_plan_id
+          AND w.user_id=d.user_id
+          AND w.deleted_at IS NULL
+        WHERE d.id=#{id}
+          AND d.user_id=#{userId}
+          AND d.deleted_at IS NULL
+    </select>
+    <select id="stages" resultType="long">
+        SELECT count(*)
+        FROM stage
+        WHERE goal_id=#{id}
+          AND user_id=#{userId}
+          AND deleted_at IS NULL
+    </select>
+    <select id="tasks" resultType="long">
+        SELECT count(*)
+        FROM task
+        WHERE stage_id=#{id}
+          AND user_id=#{userId}
+          AND deleted_at IS NULL
+    </select>
+    <update id="endTask">
+        UPDATE task_assignment
+        SET ended_at=clock_timestamp(),end_reason='TASK_DELETED',version=version+1,updated_at=clock_timestamp()
+        WHERE user_id=#{userId}
+          AND task_id=#{id}
+          AND ended_at IS NULL
+    </update>
+    <update id="endGoal">
+        UPDATE task_assignment a
+        SET ended_at=clock_timestamp(),end_reason='GOAL_ARCHIVED',version=a.version+1,updated_at=clock_timestamp()
+        FROM task t
+        JOIN stage s ON s.id=t.stage_id
+          AND s.user_id=t.user_id
+        WHERE a.task_id=t.id
+          AND a.user_id=#{userId}
+          AND t.user_id=#{userId}
+          AND s.goal_id=#{id}
+
+          AND a.ended_at IS NULL
+    </update>
+    <select id="stageOverview" resultType="com.asterway.common.result.GrowthOverviewVO">
+        SELECT s.id,s.name,s.status,(SELECT ROUND(100.0*COALESCE(SUM(t.weight::numeric) FILTER(WHERE t.status='COMPLETED'),0)/NULLIF(SUM(t.weight::numeric),0),2)
+        FROM task t
+        WHERE t.stage_id=s.id
+          AND t.user_id=s.user_id
+          AND t.deleted_at IS NULL) AS progress
+        FROM stage s
+        WHERE s.user_id=#{userId}
+          AND s.goal_id=#{id}
+          AND s.deleted_at IS NULL
+        ORDER BY s.sort_order,s.id
+        LIMIT 100
+    </select>
+    <select id="taskOverview" resultType="com.asterway.common.result.GrowthOverviewVO">
+        SELECT id,name,status,NULL::numeric AS progress
+        FROM task
+        WHERE user_id=#{userId}
+          AND stage_id=#{id}
+          AND deleted_at IS NULL
+        ORDER BY sort_order,id
+        LIMIT 100
+    </select>
+</mapper>

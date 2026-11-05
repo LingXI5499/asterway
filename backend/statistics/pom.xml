@@ -8,7 +8,7 @@
     </parent>
     <artifactId>statistics</artifactId>
     <name>asterway-statistics</name>
-    <description>历史统计业务空框架。</description>
+    <description>真实执行、打卡和状态历史的多维只读统计。</description>
     <dependencies>
         <dependency>
             <groupId>com.asterway</groupId>

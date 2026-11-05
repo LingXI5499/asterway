@@ -68,7 +68,7 @@ def backend_structure():
         ['Maven Reactor 项目',len(children)+1,'backend 父工程 1 项 + 子工程 10 项；validate 会显示 [1/11]～[11/11]']])
     t+='\n工程数量根据当前 `backend/pom.xml` 的 `<modules>` 和各子 POM 生成。业务模块采用多对一映射；不需要为每个 MOD 新建一个 Maven 工程，也不能把 DEV 实施批次误当成模块数。\n\n'
     t+=mdtable(['业务模块','需求组/数量','Maven 业务工程','app 接入位置（规划）','业务设计'],[
-        [MID[g]+' '+name,f'FR-{g} / '+str(sum(f['group']==g for f in FR)),f'`backend/{eng}/`',f'`app/web/{eng}/`；跨模块用例在 `app/application/`',link_module(g)]
+        [MID[g]+' '+name,f'FR-{g} / '+str(sum(f['group']==g for f in FR)),f'`backend/{eng}/`',f'`app/web/{eng}/`；业务归所属模块，跨模块通过公开 API 调用',link_module(g)]
         for g,name,eng,*_ in MODULES])
     t+='\n### 5.2 现有 Maven 工程目录与依赖\n\n下列目录与 POM 已存在；各业务模块目前只有包说明，不能把规划的 Service、Mapper、Controller 或 XML 当作已经实现。\n\n```text\nbackend/                         # 聚合父工程，不生成可执行 JAR\n  pom.xml                        # 聚合 10 个子工程，统一版本\n  .mvn/wrapper/                  # 只有发行版本属性，尚无完整启动脚本\n'
     names={m[2]:'、'.join(x[1] for x in MODULES if x[2]==m[2]) for m in MODULES}
@@ -79,8 +79,8 @@ def backend_structure():
         [f'`backend/{name}/`','、'.join('`'+d+'`' for d in deps[name]) or '无内部模块依赖',
          '唯一可执行 JAR；依赖所有业务工程并负责装配' if name=='app' else '普通 JAR；不反向依赖 app，不启用可执行重打包']
         for name in children])
-    t+='\n`<modules>` 表示聚合，`<dependencies>` 表示代码依赖；两者不能互相替代。app 直接依赖 common 和全部 8 个业务工程；各业务工程只依赖 common；common 不依赖业务或 app。业务间调用由 app 协调，禁止兄弟工程互相依赖。\n\n'
-    t+='Java 17、Boot 3.5.16、MyBatis Starter 3.0.5 已在 POM 声明。只有 app 启用 Spring Boot 重打包。业务 SQL 的目标位置是各工程 `src/main/resources/mapper/<工程>/`；app 配置使用 `classpath*:mapper/**/*.xml`，迁移集中在 `app/src/main/resources/db/migration/`。业务 XML 尚未编写；工作树已有最小账户表 V001，用户说明已执行，真实历史未核实，不能重用或改写该版本。完整分层职责见 [A09 分层实施细则](附录/A09-分层实施细则.md)。\n\n'
+    t+='\n`<modules>` 表示聚合，`<dependencies>` 表示代码依赖；两者不能互相替代。app 直接依赖 common 和全部 8 个业务工程；identity 通过公开 API 依赖 administration、execution 和 growth，其余当前业务工程依赖 common；依赖保持无环，common 不依赖业务或 app。\n\n'
+    t+='Java 17、Boot 3.5.16、MyBatis Starter 3.0.5 已在 POM 声明。只有 app 启用 Spring Boot 重打包。业务 SQL 的目标位置是各工程 `src/main/resources/mapper/<工程>/`；app 配置使用 `classpath*:mapper/**/*.xml`，迁移集中在 `common/src/main/resources/db/migration/`。业务 XML 尚未编写；工作树已有最小账户表 V001，用户说明已执行，真实历史未核实，不能重用或改写该版本。完整分层职责见 [A09 分层实施细则](附录/A09-分层实施细则.md)。\n\n'
     t+='### 5.3 工程核验、构建与启动顺序\n\n依次实现安全过滤链和响应空值策略、统一错误和 traceId、DTO 校验、账户锁、幂等及 outbox、受控时钟、框架会话适配、独立安全账本和启动恢复，再实现首条业务接口。\n\n'
     return t
 
@@ -93,18 +93,18 @@ def architecture_overview():
 | 放在哪里 | 写什么 | 以创建目标为例 |
 |---|---|---|
 | app/web/growth | Controller、request 请求 DTO、response 响应 VO | 接收前端 JSON，校验允许字段，返回安全结果 |
-| app/application/goal | 需要锁、幂等、事务或跨模块协调的应用用例 | 组织本次创建，调用目标公开能力 |
+| growth/service/impl | 目标业务 ServiceImpl 的锁、幂等、事务和状态逻辑 | 目标模块实现本次创建，通过公开 API 查询其他模块事实 |
 | growth/api、api/model | 模块间 Java 调用接口和输入/结果 | GoalApi 声明可调用的目标业务方法 |
 | growth/service | 目标、阶段、任务的业务规则 | GoalService 实现资格和状态校验 |
 | growth/mapper、resources/mapper/growth | Mapper 接口与 XML SQL | 绑定参数，查询或保存目标 |
 | growth/model | 内部存储/查询模型 | 接收表行，不直接作为 HTTP 返回 |
-| common | 通用错误、游标、上下文与机制端口 | 不放 Controller、领域规则和具体 Web 响应 |
+| common | 通用错误、游标、上下文与机制端口 | 不放领域业务规则；统一返回、全局异常与配置归 common |
 
-请求 JSON → app 请求 DTO → Controller → 应用用例（需要时）→ 业务 Api/Service → Mapper/XML → 业务结果 → app 响应 VO → ApiResponse.data → 响应 JSON。公开 Api 由具体 Service 实现，不为单实现机械加 ServiceImpl。单模块只读可直接调用公开能力，涉及到期补偿时仍先执行受控补偿。
+请求 JSON → app 请求 DTO → Controller → 模块公开 API → Service 接口/ServiceImpl → Mapper/XML → 业务结果 → app 响应 VO → ApiResponse.data → 响应 JSON。公开 API 由 Service 接口继承，全部 Service 强制配对 ServiceImpl。单模块只读可直接调用公开能力，涉及到期补偿时仍先执行受控补偿。
 
 ### 3.4 app、common 与业务工程的明确边界
 
-采用 app 完整组装方案：所有 HTTP Controller、请求 DTO、响应 VO、统一响应和异常、安全/会话适配、跨模块用例、启动恢复、调度和集中迁移均归 app。Goal/Task/Habit 状态规则归各自业务工程，app 不直接取得业务 Mapper 写表。common 的公共锁、幂等和事件只保留中立契约/端口，具体持久实现落 app/infrastructure；这属于本版待审细化，不表示已经有实现需要搬迁。
+采用 app 完整组装方案：所有 HTTP Controller、请求 DTO、响应 VO、统一响应和异常、安全/会话适配、跨模块用例、启动恢复、调度和集中迁移均归 app。Goal/Task/Habit 状态规则归各自业务工程，app 不直接取得业务 Mapper 写表。common 放全局配置和公共机制，账户幂等、安全与审计实现归 identity；这属于本版待审细化，不表示已经有实现需要搬迁。
 
 只保留两类明确的跨域只读表投影：insights 的看板/历史聚合、administration 的授权账户摘要。它们不取得其他工程写权，也不形成兄弟工程 Java 依赖；账户写入仍归 identity。详细包树、MVC/Security 异常链和具体文件落点见 05 与 A09；每个模块第四部分同步同一套命名。
 

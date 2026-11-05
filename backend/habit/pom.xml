@@ -8,7 +8,7 @@
     </parent>
     <artifactId>habit</artifactId>
     <name>asterway-habit</name>
-    <description>习惯业务空框架。</description>
+    <description>独立习惯、个人分类、完整规则修订和今日打卡。</description>
     <dependencies>
         <dependency>
             <groupId>com.asterway</groupId>

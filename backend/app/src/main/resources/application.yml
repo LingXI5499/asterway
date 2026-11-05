@@ -1,35 +1,35 @@
-# 仅供本机 WSL2 开发；以下口令是本地专用开发口令，不用于远程或生产环境。
+# 公开配置模板：连接信息和密钥留空，实际运行配置仅保存在未跟踪的私密目录。
 server:
-  # 8088 已被本机其他项目占用，本项目使用独立开发端口。
   port: 8089
-
 spring:
   application:
     name: asterway-app
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/asterway_dev
-    username: asterway_dev
-    password: asterway_dev_local
+    url: ''
+    username: ''
+    password: ''
   data:
     redis:
-      host: 127.0.0.1
+      host: ''
       port: 6379
       database: 0
       timeout: 3s
+      password: ''
   autoconfigure:
-    # 使用账户模块的 JWT 登录，不创建框架默认的内存用户。
     exclude: org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   sql:
     init:
       mode: never
-
 mybatis:
   mapper-locations: classpath*:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
-
 asterway:
+  execution:
+    heartbeat-interval-seconds: 20
+    heartbeat-timeout-seconds: 90
+    scan-delay-ms: 15000
+    scan-batch-size: 100
   security:
     session-idle: 7d
-    # 仅用于本机开发的签名材料，不作为部署密钥。
-    jwt-secret: asterway-local-development-signing-material-change-before-deployment
+    jwt-secret: ''

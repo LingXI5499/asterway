@@ -8,7 +8,7 @@
     </parent>
     <artifactId>dashboard</artifactId>
     <name>asterway-dashboard</name>
-    <description>看板业务空框架。</description>
+    <description>今日计划、习惯与执行事实的只读看板。</description>
     <dependencies>
         <dependency>
             <groupId>com.asterway</groupId>

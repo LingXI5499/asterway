@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { defaultPath } from "../router";
 import { ElMessage } from "element-plus";
 import CaptchaPuzzle from "../components/CaptchaPuzzle.vue";
 import { api, setToken, loadCurrent, clearSession } from "../api/http";
@@ -55,9 +56,7 @@ async function submit() {
       setToken(result.token);
       const current = await loadCurrent();
       router.push(
-        current.user.mustChangePassword
-          ? "/change-password"
-          : "/account/profile",
+        current.user.mustChangePassword ? "/change-password" : defaultPath(),
       );
     }
   } catch (e) {

@@ -1,0 +1,52 @@
+{
+  "type": "V1_PUBLICATION_PREFLIGHT",
+  "status": "PASSED",
+  "checkedAt": "2026-11-05T09:58:30+08:00",
+  "repository": "LingXI5499/asterway",
+  "targetBranches": [
+    "feature/LingXI-develop",
+    "main"
+  ],
+  "tag": "V1",
+  "remoteDeploymentCancelledByUser": true,
+  "remoteDatabaseInitializationRun": false,
+  "backendBuild": {
+    "java": 17,
+    "command": "mvn --no-transfer-progress -DskipTests clean package",
+    "reactorProjectsPassed": 13,
+    "status": "PASSED"
+  },
+  "frontendBuild": {
+    "status": "PASSED_IDENTICAL_SOURCES",
+    "verifiedSourceFiles": 66,
+    "reference": "docs/remaining/frontend-build-results.json"
+  },
+  "privateConfigurationStartup": {
+    "status": "PASSED",
+    "backendPort": 8089,
+    "frontendPort": 5175,
+    "databaseAndRedisStartupCheck": "PASSED",
+    "publicProxyResponse": "OK"
+  },
+  "publicYaml": {
+    "included": true,
+    "blankSensitiveFields": 6,
+    "packagedTemplateChecked": true
+  },
+  "connectionHelpers": {
+    "embeddedConnectionDetailsRemoved": true,
+    "pythonSyntax": "PASSED",
+    "shellSyntax": "PASSED",
+    "remoteQueriesExecuted": false
+  },
+  "strictUnitSystemIntegrationTestsRun": false,
+  "fullBusinessAcceptance": "NOT_VERIFIED",
+  "publicationMethod": "Independent index; one release commit retaining both branch histories",
+  "originalStagingPreserved": true,
+  "existingStashPreserved": true,
+  "privateMaterialExcluded": true,
+  "authorAccount": "LingXI5499",
+  "authorEmailType": "GitHub account noreply",
+  "backendJarSha256": "65dd21791e356c93a34c325bb12c9ea24475252c07d6f256ac849589bca580c2",
+  "backendBuildLogSha256": "80f3f5f066b4374cf111c7f44f38418404a89870c1c036178070ee03ed7fd0c9"
+}

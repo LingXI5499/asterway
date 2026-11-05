@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.habit.mapper.HabitCategoryMapper">
+    <sql id="filter">
+        WHERE user_id=#{userId} AND deleted_at IS NULL
+        <if test="q.keyword != null and q.keyword != ''">AND name ILIKE '%' || #{q.keyword} || '%'</if>
+    </sql>
+    <select id="find" resultType="com.asterway.habit.entity.HabitCategoryEntity">
+        SELECT id,user_id,name,sort_order,version,created_at,updated_at,deleted_at FROM habit_category WHERE user_id=#{userId} AND id=#{id}
+    </select>
+    <select id="page" resultType="com.asterway.habit.entity.HabitCategoryEntity">
+        SELECT id,user_id,name,sort_order,version,created_at,updated_at,deleted_at FROM habit_category <include refid="filter"/>
+        ORDER BY sort_order,id LIMIT #{q.size} OFFSET #{q.offset}
+    </select>
+    <select id="count" resultType="long">SELECT count(*) FROM habit_category <include refid="filter"/></select>
+    <select id="nameExists" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM habit_category WHERE user_id=#{userId} AND deleted_at IS NULL
+            AND lower(name COLLATE "C")=lower(#{name} COLLATE "C")
+            <if test="exceptId != null">AND id&lt;&gt;#{exceptId}</if>)
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO habit_category(user_id,name,sort_order,created_at,updated_at)
+        VALUES(#{userId},#{name},#{sortOrder},#{createdAt},#{updatedAt})
+    </insert>
+    <update id="update">
+        UPDATE habit_category SET name=#{name},sort_order=#{sortOrder},version=version+1,updated_at=#{updatedAt}
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
+    </update>
+    <update id="softDelete">
+        UPDATE habit_category SET deleted_at=#{now},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
+    </update>
+</mapper>

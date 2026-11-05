@@ -1,5 +1,6 @@
 package com.asterway.common.utils;
 
+import com.asterway.common.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -31,6 +32,29 @@ public final class TransactionUtils {
             @Override
             public void afterCommit() {
                 safeAction.run();
+            }
+        });
+    }
+
+    /** 单端撤销没有 auth_version 兜底，Redis 失败时必须向调用方报告，不能静默宣称已退出。 */
+    public static void afterCommitRequired(Runnable action) {
+        Runnable requiredAction = () -> {
+            try {
+                action.run();
+            } catch (RuntimeException error) {
+                LOGGER.warn("登录会话撤销未完成，异常类型：{}", error.getClass().getSimpleName());
+                throw new BusinessException(
+                        503, "SESSION_REVOCATION_UNAVAILABLE", "登录会话撤销暂不可用，请稍后重试");
+            }
+        };
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            requiredAction.run();
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                requiredAction.run();
             }
         });
     }

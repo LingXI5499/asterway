@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.habit.mapper.HabitRevisionMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO habit_revision(user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at)
+        VALUES(#{userId},#{habitId},#{revisionNo},#{actionType},#{name},#{description},#{completionCriteria},#{categoryId},#{cycleType},#{weekdayMask},#{startDate},#{expectedTime},#{statusSnapshot},#{deletedSnapshot},#{effectiveDate},#{changedAt},#{timeZone},#{createdAt})
+    </insert>
+    <select id="current" resultType="com.asterway.habit.entity.HabitRevisionEntity">
+        SELECT id,user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at FROM habit_revision
+        WHERE user_id=#{userId} AND habit_id=#{habitId} AND revision_no=#{revisionNo}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM habit_revision WHERE user_id=#{userId} AND habit_id=#{habitId}
+    </select>
+    <select id="page" resultType="com.asterway.habit.entity.HabitRevisionEntity">
+        SELECT id,user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at FROM habit_revision
+        WHERE user_id=#{userId} AND habit_id=#{habitId}
+        ORDER BY revision_no DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+</mapper>

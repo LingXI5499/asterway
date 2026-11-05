@@ -4,6 +4,9 @@ import com.asterway.common.dto.PageQueryDTO;
 import com.asterway.common.exception.BusinessException;
 import com.asterway.common.result.CaptchaResultVO;
 import com.asterway.common.result.PageResultVO;
+import com.asterway.common.security.ExecutionLifecycleProvider;
+import com.asterway.common.security.GoalNotificationProvider;
+import com.asterway.common.security.HabitLifecycleProvider;
 import com.asterway.common.security.LoginSessionData;
 import com.asterway.common.security.RedisAttemptStore;
 import com.asterway.common.security.RedisCaptchaStore;
@@ -44,6 +47,11 @@ import com.asterway.identity.vo.LoginResultVO;
 import com.asterway.identity.vo.TimeZoneVO;
 import com.asterway.identity.vo.UserStatisticsVO;
 import com.asterway.identity.vo.UserVO;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -56,13 +64,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /** 账户主链；注册认证、本人资料、后台管理及用户关联在同一 Service 内完成。 */
 @Service
 public class UserServiceImpl implements UserService {
+
+    private final ExecutionLifecycleProvider execution;
+    private final HabitLifecycleProvider habits;
+    private final GoalNotificationProvider goalNotices;
 
     private final UserMapper mapper;
 
@@ -103,7 +112,10 @@ public class UserServiceImpl implements UserService {
             RedisSessionStore sessions,
             RedisCaptchaStore captchas,
             RedisAttemptStore attempts,
-            JwtTokenUtils tokens) {
+            JwtTokenUtils tokens,
+            ExecutionLifecycleProvider execution,
+            HabitLifecycleProvider habits,
+            GoalNotificationProvider goalNotices) {
         this.mapper = mapper;
         this.roles = roles;
         this.userRoles = userRoles;
@@ -118,6 +130,9 @@ public class UserServiceImpl implements UserService {
         this.captchas = captchas;
         this.attempts = attempts;
         this.tokens = tokens;
+        this.execution = execution;
+        this.habits = habits;
+        this.goalNotices = goalNotices;
     }
 
     private final String dummyPasswordHash;
@@ -129,9 +144,20 @@ public class UserServiceImpl implements UserService {
             return null;
         }
         boolean enabled = Boolean.TRUE.equals(row.getEnabled()) && row.getDeletedAt() == null;
-        return new SecurityAccountData(row.getId(), row.getUsername(), row.getPasswordHash(),
-                enabled, Boolean.TRUE.equals(row.getMustChangePassword()), row.getAuthVersion(),
-                new HashSet<>(roles.findCodesByUserId(userId)), new HashSet<>(permissions.findCodesByUserId(userId)));
+        Set<String> roleCodes = new HashSet<>(roles.findCodesByUserId(userId));
+        Set<String> effectivePermissions = new HashSet<>(permissions.findCodesByUserId(userId));
+        if (com.asterway.common.utils.GrowthAccessUtils.manager(roleCodes)) {
+            effectivePermissions.removeIf(com.asterway.common.utils.GrowthAccessUtils::permission);
+        }
+        return new SecurityAccountData(
+                row.getId(),
+                row.getUsername(),
+                row.getPasswordHash(),
+                enabled,
+                Boolean.TRUE.equals(row.getMustChangePassword()),
+                row.getAuthVersion(),
+                roleCodes,
+                effectivePermissions);
     }
 
     @Override
@@ -143,7 +169,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public CaptchaTicketVO verifyCaptcha(CaptchaVerifyDTO dto) {
         attempts.limit("captcha-verify", RequestUtils.ipAddress(), 60, 60);
-        return new CaptchaTicketVO(captchas.verify(dto.challengeId(), dto.clientNonce(), dto.offset()), 60);
+        return new CaptchaTicketVO(
+                captchas.verify(dto.challengeId(), dto.clientNonce(), dto.offset()), 60);
     }
 
     @Override
@@ -162,7 +189,12 @@ public class UserServiceImpl implements UserService {
         UserEntity row = newUser(dto.username(), nickname, hash, zone, false, null);
         mapper.insert(row);
         userRoles.insert(row.getId(), userRole().getId(), null);
-        logs.append("USER_REGISTERED", "USER", row.getId().toString(), row.getId(), Map.of("username", dto.username()));
+        logs.append(
+                "USER_REGISTERED",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
+                Map.of("username", dto.username()));
         return toVO(mapper.findById(row.getId()));
     }
 
@@ -179,14 +211,24 @@ public class UserServiceImpl implements UserService {
             throw error;
         }
         UserEntity found = mapper.findByUsername(dto.username());
-        boolean matches = passwordEncoder.matches(dto.password(), found == null ? dummyPasswordHash : found.getPasswordHash());
+        boolean matches =
+                passwordEncoder.matches(
+                        dto.password(),
+                        found == null ? dummyPasswordHash : found.getPasswordHash());
         if (!matches || found == null) {
             attempts.failedCredentials(dto.username());
-            loginLogs.append(found == null ? null : found.getId(), dto.username(), false, "INVALID_CREDENTIALS", null);
+            loginLogs.append(
+                    found == null ? null : found.getId(),
+                    dto.username(),
+                    false,
+                    "INVALID_CREDENTIALS",
+                    null);
             throw new BusinessException(401, "INVALID_CREDENTIALS", "用户名或密码错误");
         }
         UserEntity row = mapper.lockById(found.getId());
-        if (row == null || row.getDeletedAt() != null || !Boolean.TRUE.equals(row.getEnabled())
+        if (row == null
+                || row.getDeletedAt() != null
+                || !Boolean.TRUE.equals(row.getEnabled())
                 || !Objects.equals(row.getPasswordHash(), found.getPasswordHash())) {
             loginLogs.append(found.getId(), dto.username(), false, "ACCOUNT_UNAVAILABLE", null);
             throw new BusinessException(401, "INVALID_CREDENTIALS", "用户名或密码错误");
@@ -197,7 +239,8 @@ public class UserServiceImpl implements UserService {
             String token = tokens.create(session);
             loginLogs.append(row.getId(), dto.username(), true, "SUCCESS", session.id());
             attempts.clearFailures(dto.username());
-            return new LoginResultVO(token, session.id(), Instant.ofEpochMilli(session.expiresAt()), toVO(row));
+            return new LoginResultVO(
+                    token, session.id(), Instant.ofEpochMilli(session.expiresAt()), toVO(row));
         } catch (RuntimeException error) {
             try {
                 sessions.revoke(session.id());
@@ -214,7 +257,8 @@ public class UserServiceImpl implements UserService {
         var actor = SecurityUtils.requirePermission("identity:profile:read");
         UserEntity row = lockOwn();
         applyDueTimeZone(row);
-        return new CurrentUserVO(toVO(row), actor.roles(), actor.permissions(), menus.currentTree());
+        return new CurrentUserVO(
+                toVO(row), actor.roles(), actor.permissions(), menus.currentTree());
     }
 
     @Override
@@ -241,8 +285,14 @@ public class UserServiceImpl implements UserService {
         row.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
         row.setMustChangePassword(false);
         row.setUpdatedBy(actor.userId());
+        execution.pauseLogin(row.getId(), null);
         changed(mapper.updatePassword(row));
-        logs.append("identity:password:update", "USER", row.getId().toString(), row.getId(), Map.of("passwordChanged", true));
+        logs.append(
+                "identity:password:update",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
+                Map.of("passwordChanged", true));
         TransactionUtils.afterCommit(() -> sessions.revokeUser(row.getId()));
     }
 
@@ -263,7 +313,8 @@ public class UserServiceImpl implements UserService {
         UserEntity row = lockOwn();
         applyDueTimeZone(row);
         AccountValidationUtils.version(dto.version(), row.getVersion());
-        if (zone.equals(row.getPendingTimeZone()) || zone.equals(row.getTimeZone()) && row.getPendingTimeZone() == null) {
+        if (zone.equals(row.getPendingTimeZone())
+                || zone.equals(row.getTimeZone()) && row.getPendingTimeZone() == null) {
             return timeZoneVO(row);
         }
         if (zone.equals(row.getTimeZone())) {
@@ -272,11 +323,18 @@ public class UserServiceImpl implements UserService {
         } else {
             row.setPendingTimeZone(zone);
             ZoneId currentZone = ZoneId.of(row.getTimeZone());
-            row.setTimeZoneEffectiveAt(LocalDate.now(currentZone).plusDays(1).atStartOfDay(currentZone).toInstant());
+            row.setTimeZoneEffectiveAt(
+                    LocalDate.now(currentZone).plusDays(1).atStartOfDay(currentZone).toInstant());
         }
         row.setUpdatedBy(actor.userId());
         changed(mapper.updateTimeZone(row));
-        logs.append("identity:timezone:update", "USER", row.getId().toString(), row.getId(), Map.of("timeZone", zone));
+        execution.shortenBoundary(row.getId(), row.getTimeZoneEffectiveAt());
+        logs.append(
+                "identity:timezone:update",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
+                Map.of("timeZone", zone));
         return timeZoneVO(mapper.findById(row.getId()));
     }
 
@@ -284,10 +342,16 @@ public class UserServiceImpl implements UserService {
     public PageResultVO<String> timeZones(String keyword, PageQueryDTO query) {
         int offset = query.offset();
         String filter = keyword == null ? "" : keyword.toLowerCase(Locale.ROOT);
-        List<String> available = ZoneId.getAvailableZoneIds().stream()
-                .filter(zone -> zone.toLowerCase(Locale.ROOT).contains(filter)).sorted().toList();
-        return new PageResultVO<>(available.stream().skip(offset).limit(query.getSize()).toList(),
-                available.size(), query.getPage(), query.getSize());
+        List<String> available =
+                ZoneId.getAvailableZoneIds().stream()
+                        .filter(zone -> zone.toLowerCase(Locale.ROOT).contains(filter))
+                        .sorted()
+                        .toList();
+        return new PageResultVO<>(
+                available.stream().skip(offset).limit(query.getSize()).toList(),
+                available.size(),
+                query.getPage(),
+                query.getSize());
     }
 
     @Override
@@ -296,18 +360,34 @@ public class UserServiceImpl implements UserService {
         int offset = query.offset();
         String keyword = literalKeyword(query.getKeyword());
         boolean regularOnly = !actor.superAdmin();
-        List<UserVO> rows = mapper.findPage(keyword, query.getEnabled(), query.getRole(), regularOnly, offset, query.getSize())
-                .stream().map(this::toVO).toList();
-        return new PageResultVO<>(rows, mapper.count(keyword, query.getEnabled(), query.getRole(), regularOnly),
-                query.getPage(), query.getSize());
+        List<UserVO> rows =
+                mapper
+                        .findPage(
+                                keyword,
+                                query.getEnabled(),
+                                query.getRole(),
+                                regularOnly,
+                                offset,
+                                query.getSize())
+                        .stream()
+                        .map(this::toVO)
+                        .toList();
+        return new PageResultVO<>(
+                rows,
+                mapper.count(keyword, query.getEnabled(), query.getRole(), regularOnly),
+                query.getPage(),
+                query.getSize());
     }
 
     @Override
     public UserStatisticsVO statistics() {
         var actor = SecurityUtils.requirePermission("identity:user:count");
         Map<String, Object> values = mapper.statistics(!actor.superAdmin());
-        return new UserStatisticsVO(number(values, "users"), number(values, "administrators"),
-                number(values, "disabled"), number(values, "deleted"));
+        return new UserStatisticsVO(
+                number(values, "users"),
+                number(values, "administrators"),
+                number(values, "disabled"),
+                number(values, "deleted"));
     }
 
     @Override
@@ -329,7 +409,12 @@ public class UserServiceImpl implements UserService {
         UserEntity row = newUser(dto.username(), nickname, hash, zone, true, actor.userId());
         mapper.insert(row);
         userRoles.insert(row.getId(), userRole().getId(), actor.userId());
-        logs.append("identity:user:create", "USER", row.getId().toString(), row.getId(), Map.of("username", dto.username()));
+        logs.append(
+                "identity:user:create",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
+                Map.of("username", dto.username()));
         return toVO(mapper.findById(row.getId()));
     }
 
@@ -352,8 +437,12 @@ public class UserServiceImpl implements UserService {
         row.setEnabled(false);
         row.setDeletedAt(Instant.now());
         row.setUpdatedBy(actor.userId());
+        habits.suspendPersonal(id);
+        goalNotices.suspendNotifications(id);
+        execution.pauseLogin(id, null);
         changed(mapper.updateStatus(row));
-        logs.append("identity:user:delete", "USER", Long.toString(id), id, Map.of("enabled", false));
+        logs.append(
+                "identity:user:delete", "USER", Long.toString(id), id, Map.of("enabled", false));
         TransactionUtils.afterCommit(() -> sessions.revokeUser(id));
     }
 
@@ -372,8 +461,18 @@ public class UserServiceImpl implements UserService {
         }
         row.setEnabled(dto.enabled());
         row.setUpdatedBy(actor.userId());
+        if (!dto.enabled()) {
+            habits.suspendPersonal(id);
+            goalNotices.suspendNotifications(id);
+        }
+        execution.pauseLogin(id, null);
         changed(mapper.updateStatus(row));
-        logs.append("identity:user:status", "USER", Long.toString(id), id, Map.of("enabled", dto.enabled()));
+        logs.append(
+                "identity:user:status",
+                "USER",
+                Long.toString(id),
+                id,
+                Map.of("enabled", dto.enabled()));
         TransactionUtils.afterCommit(() -> sessions.revokeUser(id));
         return toVO(mapper.findById(id));
     }
@@ -393,8 +492,14 @@ public class UserServiceImpl implements UserService {
         row.setPasswordHash(hash);
         row.setMustChangePassword(true);
         row.setUpdatedBy(actor.userId());
+        execution.pauseLogin(id, null);
         changed(mapper.updatePassword(row));
-        logs.append("identity:user:reset_password", "USER", Long.toString(id), id, Map.of("passwordChanged", true));
+        logs.append(
+                "identity:user:reset_password",
+                "USER",
+                Long.toString(id),
+                id,
+                Map.of("passwordChanged", true));
         TransactionUtils.afterCommit(() -> sessions.revokeUser(id));
     }
 
@@ -418,7 +523,8 @@ public class UserServiceImpl implements UserService {
         }
         Set<Long> allowed = new HashSet<>();
         for (RoleEntity role : roles.findAll()) {
-            if (Set.of("USER", "ADMIN").contains(role.getCode()) && Boolean.TRUE.equals(role.getEnabled())) {
+            if (Set.of("USER", "ADMIN").contains(role.getCode())
+                    && Boolean.TRUE.equals(role.getEnabled())) {
                 allowed.add(role.getId());
             }
         }
@@ -431,7 +537,18 @@ public class UserServiceImpl implements UserService {
         for (Long roleId : dto.roleIds()) {
             userRoles.insert(id, roleId, actor.userId());
         }
-        logs.append("identity:user:assign_role", "USER", Long.toString(id), id, Map.of("roleIds", dto.roleIds()));
+        if (com.asterway.common.utils.GrowthAccessUtils.manager(
+                new HashSet<>(roles.findAssignedCodes(id)))) {
+            habits.suspendPersonal(id);
+            goalNotices.suspendNotifications(id);
+        }
+        execution.pauseLogin(id, null);
+        logs.append(
+                "identity:user:assign_role",
+                "USER",
+                Long.toString(id),
+                id,
+                Map.of("roleIds", dto.roleIds()));
         return toVO(mapper.findById(id));
     }
 
@@ -446,25 +563,34 @@ public class UserServiceImpl implements UserService {
         var actor = SecurityUtils.requirePermission("identity:session:list");
         int offset = query.offset();
         List<DeviceVO> rows = devices(sessions.list(null), !actor.superAdmin());
-        return new PageResultVO<>(rows.stream().skip(offset).limit(query.getSize()).toList(),
-                rows.size(), query.getPage(), query.getSize());
+        return new PageResultVO<>(
+                rows.stream().skip(offset).limit(query.getSize()).toList(),
+                rows.size(),
+                query.getPage(),
+                query.getSize());
     }
 
     @Override
+    @Transactional
     public void revokeMySession(String id) {
         var actor = SecurityUtils.requirePermission("identity:device:revoke");
+        lockOwn();
         var session = sessions.get(id);
         if (session == null || !session.userId().equals(Long.toString(actor.userId()))) {
             throw BusinessException.notFound();
         }
-        sessions.revoke(id);
+        execution.pauseLogin(actor.userId(), id);
+        TransactionUtils.afterCommitRequired(() -> sessions.revoke(id));
         logs.append("identity:device:revoke", "SESSION", id, actor.userId(), Map.of());
     }
 
     @Override
+    @Transactional
     public void logout() {
         var actor = SecurityUtils.current();
-        sessions.revoke(actor.sessionId());
+        lockOwn();
+        execution.pauseLogin(actor.userId(), actor.sessionId());
+        TransactionUtils.afterCommitRequired(() -> sessions.revoke(actor.sessionId()));
         logs.append("USER_LOGOUT", "SESSION", actor.sessionId(), actor.userId(), Map.of());
     }
 
@@ -473,8 +599,14 @@ public class UserServiceImpl implements UserService {
     public void logoutAll() {
         var actor = SecurityUtils.requirePermission("identity:device:revoke");
         UserEntity row = lockOwn();
+        execution.pauseLogin(row.getId(), null);
         changed(mapper.invalidateSessions(row.getId(), row.getVersion(), actor.userId()));
-        logs.append("identity:device:revoke", "USER", row.getId().toString(), row.getId(), Map.of("version", row.getVersion()));
+        logs.append(
+                "identity:device:revoke",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
+                Map.of("version", row.getVersion()));
         TransactionUtils.afterCommit(() -> sessions.revokeUser(actor.userId()));
     }
 
@@ -488,8 +620,14 @@ public class UserServiceImpl implements UserService {
         }
         roles.lockSecurityGate();
         UserEntity row = managed(Long.parseLong(session.userId()), true);
-        sessions.revoke(id);
-        logs.append("identity:session:revoke", "SESSION", id, row.getId(), Map.of("version", row.getVersion()));
+        execution.pauseLogin(row.getId(), id);
+        TransactionUtils.afterCommitRequired(() -> sessions.revoke(id));
+        logs.append(
+                "identity:session:revoke",
+                "SESSION",
+                id,
+                row.getId(),
+                Map.of("version", row.getVersion()));
     }
 
     private UserEntity managed(long id, boolean lock) {
@@ -497,8 +635,9 @@ public class UserServiceImpl implements UserService {
         if (row == null || row.getDeletedAt() != null) {
             throw BusinessException.notFound();
         }
-        if (!SecurityUtils.current().superAdmin() && roles.findAssignedCodes(id).stream()
-                .anyMatch(code -> code.equals("ADMIN") || code.equals("SUPER_ADMIN"))) {
+        if (!SecurityUtils.current().superAdmin()
+                && roles.findAssignedCodes(id).stream()
+                        .anyMatch(code -> code.equals("ADMIN") || code.equals("SUPER_ADMIN"))) {
             throw BusinessException.notFound();
         }
         return row;
@@ -506,7 +645,9 @@ public class UserServiceImpl implements UserService {
 
     private UserEntity lockOwn() {
         UserEntity row = mapper.lockById(SecurityUtils.current().userId());
-        if (row == null || row.getDeletedAt() != null || !Boolean.TRUE.equals(row.getEnabled())
+        if (row == null
+                || row.getDeletedAt() != null
+                || !Boolean.TRUE.equals(row.getEnabled())
                 || row.getAuthVersion() != SecurityUtils.current().authVersion()) {
             throw BusinessException.unauthorized();
         }
@@ -518,7 +659,8 @@ public class UserServiceImpl implements UserService {
             throw BusinessException.conflict("不能禁用或删除当前登录账户");
         }
         if (roles.findAssignedCodes(row.getId()).contains("SUPER_ADMIN")
-                && Boolean.TRUE.equals(row.getEnabled()) && roles.countEnabledSuperAdmins() <= 1) {
+                && Boolean.TRUE.equals(row.getEnabled())
+                && roles.countEnabledSuperAdmins() <= 1) {
             throw BusinessException.conflict("必须保留至少一个可用超级管理员");
         }
     }
@@ -537,13 +679,21 @@ public class UserServiceImpl implements UserService {
         }
         row.setUpdatedBy(actorId);
         changed(mapper.updateProfile(row));
-        logs.append("identity:profile:update", "USER", row.getId().toString(), row.getId(),
+        logs.append(
+                "identity:profile:update",
+                "USER",
+                row.getId().toString(),
+                row.getId(),
                 Map.of("username", row.getUsername(), "nickname", row.getNickname()));
         return toVO(mapper.findById(row.getId()));
     }
 
     private void applyDueTimeZone(UserEntity row) {
-        if (row.getPendingTimeZone() != null && !row.getTimeZoneEffectiveAt().isAfter(Instant.now())) {
+        if (row.getPendingTimeZone() != null
+                && !row.getTimeZoneEffectiveAt().isAfter(Instant.now())) {
+            execution.shortenBoundary(row.getId(), row.getTimeZoneEffectiveAt());
+            habits.sealBeforeZoneSwitch(
+                    row.getId(), row.getTimeZoneEffectiveAt(), row.getTimeZone());
             row.setTimeZone(row.getPendingTimeZone());
             row.setPendingTimeZone(null);
             row.setTimeZoneEffectiveAt(null);
@@ -554,12 +704,22 @@ public class UserServiceImpl implements UserService {
     }
 
     private RoleEntity userRole() {
-        return roles.findAll().stream().filter(role -> role.getCode().equals("USER") && Boolean.TRUE.equals(role.getEnabled()))
-                .findFirst().orElseThrow(() -> new BusinessException(503, "ROLE_MISSING", "基础角色未初始化"));
+        return roles.findAll().stream()
+                .filter(
+                        role ->
+                                role.getCode().equals("USER")
+                                        && Boolean.TRUE.equals(role.getEnabled()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(503, "ROLE_MISSING", "基础角色未初始化"));
     }
 
-    private UserEntity newUser(String username, String nickname, String hash, String zone,
-            boolean mustChange, Long creator) {
+    private UserEntity newUser(
+            String username,
+            String nickname,
+            String hash,
+            String zone,
+            boolean mustChange,
+            Long creator) {
         UserEntity row = new UserEntity();
         row.setUsername(username);
         row.setNickname(nickname);
@@ -578,36 +738,55 @@ public class UserServiceImpl implements UserService {
         for (var session : active) {
             long userId = Long.parseLong(session.userId());
             UserEntity row = cache.computeIfAbsent(userId, mapper::findById);
-            if (row == null || row.getDeletedAt() != null || !Boolean.TRUE.equals(row.getEnabled())
+            if (row == null
+                    || row.getDeletedAt() != null
+                    || !Boolean.TRUE.equals(row.getEnabled())
                     || row.getAuthVersion() != session.authVersion()) {
                 continue;
             }
-            if (regularOnly && roles.findAssignedCodes(userId).stream()
-                    .anyMatch(code -> code.equals("ADMIN") || code.equals("SUPER_ADMIN"))) {
+            if (regularOnly
+                    && roles.findAssignedCodes(userId).stream()
+                            .anyMatch(code -> code.equals("ADMIN") || code.equals("SUPER_ADMIN"))) {
                 continue;
             }
-            result.add(new DeviceVO(session.id(), session.userId(), row.getUsername(), session.deviceLabel(),
-                    session.ipAddress(), session.userAgent(), Instant.ofEpochMilli(session.createdAt()),
-                    Instant.ofEpochMilli(session.lastActiveAt()), Instant.ofEpochMilli(session.expiresAt()),
-                    actor.sessionId().equals(session.id())));
+            result.add(
+                    new DeviceVO(
+                            session.id(),
+                            session.userId(),
+                            row.getUsername(),
+                            session.deviceLabel(),
+                            session.ipAddress(),
+                            session.userAgent(),
+                            Instant.ofEpochMilli(session.createdAt()),
+                            Instant.ofEpochMilli(session.lastActiveAt()),
+                            Instant.ofEpochMilli(session.expiresAt()),
+                            actor.sessionId().equals(session.id())));
         }
         return result;
     }
 
     private UserVO toVO(UserEntity row) {
-        return new UserVO(row.getId().toString(), row.getUsername(), row.getNickname(), Boolean.TRUE.equals(row.getEnabled()),
-                Boolean.TRUE.equals(row.getMustChangePassword()), row.getVersion(), row.getTimeZone(), row.getPendingTimeZone(),
-                row.getTimeZoneEffectiveAt(), row.getCreatedAt(), roles.findAssignedCodes(row.getId()),
+        return new UserVO(
+                row.getId().toString(),
+                row.getUsername(),
+                row.getNickname(),
+                Boolean.TRUE.equals(row.getEnabled()),
+                Boolean.TRUE.equals(row.getMustChangePassword()),
+                row.getVersion(),
+                row.getTimeZone(),
+                row.getPendingTimeZone(),
+                row.getTimeZoneEffectiveAt(),
+                row.getCreatedAt(),
+                roles.findAssignedCodes(row.getId()),
                 userRoles.findIds(row.getId()).stream().map(Object::toString).toList());
     }
 
     private TimeZoneVO timeZoneVO(UserEntity row) {
         return new TimeZoneVO(
-            row.getTimeZone(),
-            row.getPendingTimeZone(),
-            row.getTimeZoneEffectiveAt(),
-            row.getVersion()
-    );
+                row.getTimeZone(),
+                row.getPendingTimeZone(),
+                row.getTimeZoneEffectiveAt(),
+                row.getVersion());
     }
 
     private void changed(int affected) {
@@ -621,7 +800,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private String literalKeyword(String value) {
-        return value == null ? null : value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return value == null
+                ? null
+                : value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
-
 }

@@ -399,4 +399,528 @@ COMMENT ON COLUMN identity_setting.created_at IS '创建时刻';
 COMMENT ON COLUMN identity_setting.updated_at IS '最近修改时刻；由应用写入，无自动更新时间触发器';
 COMMENT ON COLUMN identity_setting.updated_by IS '最近修改者账户标识；初始化时可空；无物理外键';
 
+-- BEGIN GROWTH AUTHORIZATION
+-- 核心成长权限初始化，可从现有库手工独立提取执行，不重建 Identity 表。
+-- 仅给 USER；管理身份即使同时持有 USER，也不能使用成长业务。
+SELECT id FROM identity_role WHERE code='SUPER_ADMIN' FOR UPDATE;
+DO $$ BEGIN
+    IF (SELECT count(*) FROM identity_role WHERE code IN ('USER','ADMIN','SUPER_ADMIN') AND is_builtin AND is_enabled AND deleted_at IS NULL) <> 3 THEN
+        RAISE EXCEPTION 'The three active built-in roles are required';
+    END IF;
+END $$;
+INSERT INTO identity_permission(code,name,description,is_builtin,is_enabled) VALUES
+ ('goal:goal:list','目标列表','当前用户本人的成长业务',true,true),
+ ('goal:goal:read','目标详情','当前用户本人的成长业务',true,true),
+ ('goal:goal:create','目标创建','当前用户本人的成长业务',true,true),
+ ('goal:goal:update','目标修改','当前用户本人的成长业务',true,true),
+ ('goal:goal:status','目标状态修改','当前用户本人的成长业务',true,true),
+ ('goal:goal:delete','目标删除','当前用户本人的成长业务',true,true),
+ ('goal:goal:archive','目标归档','当前用户本人的成长业务',true,true),
+ ('goal:goal:restore','目标恢复','当前用户本人的成长业务',true,true),
+ ('stage:stage:list','阶段列表','当前用户本人的成长业务',true,true),
+ ('stage:stage:read','阶段详情','当前用户本人的成长业务',true,true),
+ ('stage:stage:create','阶段创建','当前用户本人的成长业务',true,true),
+ ('stage:stage:update','阶段修改','当前用户本人的成长业务',true,true),
+ ('stage:stage:status','阶段状态修改','当前用户本人的成长业务',true,true),
+ ('stage:stage:delete','阶段删除','当前用户本人的成长业务',true,true),
+ ('stage:stage:sort','阶段排序','当前用户本人的成长业务',true,true),
+ ('task:task:list','任务列表','当前用户本人的成长业务',true,true),
+ ('task:task:read','任务详情','当前用户本人的成长业务',true,true),
+ ('task:task:create','任务创建','当前用户本人的成长业务',true,true),
+ ('task:task:update','任务修改','当前用户本人的成长业务',true,true),
+ ('task:task:status','任务状态修改','当前用户本人的成长业务',true,true),
+ ('task:task:delete','任务删除','当前用户本人的成长业务',true,true),
+ ('task:task:sort','任务排序','当前用户本人的成长业务',true,true),
+ ('planning:weekly:list','周计划列表','当前用户本人的成长业务',true,true),
+ ('planning:weekly:read','周计划详情','当前用户本人的成长业务',true,true),
+ ('planning:weekly:manage','周计划管理','当前用户本人的成长业务',true,true),
+ ('planning:daily:list','日计划列表','当前用户本人的成长业务',true,true),
+ ('planning:daily:read','日计划详情','当前用户本人的成长业务',true,true),
+ ('planning:daily:manage','日计划管理','当前用户本人的成长业务',true,true),
+ ('planning:assignment:read','任务安排详情','当前用户本人的成长业务',true,true),
+ ('planning:assignment:manage','任务安排管理','当前用户本人的成长业务',true,true),
+ ('planning:assignment:remove','任务安排移出计划','当前用户本人的成长业务',true,true),
+ ('planning:pending:list','待处理任务列表','当前用户本人的成长业务',true,true)
+ON CONFLICT (code) DO NOTHING;
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM identity_permission WHERE code IN ('goal:goal:list','goal:goal:read','goal:goal:create','goal:goal:update','goal:goal:status','goal:goal:delete','goal:goal:archive','goal:goal:restore','stage:stage:list','stage:stage:read','stage:stage:create','stage:stage:update','stage:stage:status','stage:stage:delete','stage:stage:sort','task:task:list','task:task:read','task:task:create','task:task:update','task:task:status','task:task:delete','task:task:sort','planning:weekly:list','planning:weekly:read','planning:weekly:manage','planning:daily:list','planning:daily:read','planning:daily:manage','planning:assignment:read','planning:assignment:manage','planning:assignment:remove','planning:pending:list') AND (NOT is_builtin OR deleted_at IS NOT NULL)) THEN
+        RAISE EXCEPTION 'Growth permission code conflicts with an existing custom or deleted permission';
+    END IF;
+END $$;
+WITH inserted AS (
+ INSERT INTO identity_role_permission(role_id,permission_id)
+ SELECT r.id,p.id FROM identity_role r CROSS JOIN identity_permission p
+ WHERE r.code = 'USER' AND p.code IN ('goal:goal:list','goal:goal:read','goal:goal:create','goal:goal:update','goal:goal:status','goal:goal:delete','goal:goal:archive','goal:goal:restore','stage:stage:list','stage:stage:read','stage:stage:create','stage:stage:update','stage:stage:status','stage:stage:delete','stage:stage:sort','task:task:list','task:task:read','task:task:create','task:task:update','task:task:status','task:task:delete','task:task:sort','planning:weekly:list','planning:weekly:read','planning:weekly:manage','planning:daily:list','planning:daily:read','planning:daily:manage','planning:assignment:read','planning:assignment:manage','planning:assignment:remove','planning:pending:list')
+ ON CONFLICT DO NOTHING RETURNING role_id
+)
+UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM inserted);
+-- 注册普通用户的成长菜单；页面显示由本标记块末尾的显式启用语句维护。
+INSERT INTO identity_menu(code,name,menu_type,route_path,sort_order,is_visible,is_builtin,is_enabled)
+VALUES ('growth_root','成长规划','DIRECTORY','/growth',20,false,true,true) ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goals',m.id,'目标','PAGE','/growth/goals','growth/goals',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='goal:goal:list'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stages',m.id,'阶段','PAGE','/growth/stages','growth/stages',p.id,20,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='stage:stage:list'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_tasks',m.id,'任务','PAGE','/growth/tasks','growth/tasks',p.id,30,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='task:task:list'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_weekly',m.id,'周计划','PAGE','/planning/weekly-plans','planning/weekly',p.id,40,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='planning:weekly:read'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_daily',m.id,'日计划','PAGE','/planning/daily-plans','planning/daily',p.id,50,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='planning:daily:read'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_pending',m.id,'待处理任务','PAGE','/planning/pending-tasks','planning/pending',p.id,60,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_root' AND p.code='planning:pending:list'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_create',m.id,'目标创建','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:create'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_update',m.id,'目标修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:update'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_status',m.id,'目标状态修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:status'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_delete',m.id,'目标删除','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:delete'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_archive',m.id,'目标归档','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:archive'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_goal_goal_restore',m.id,'目标恢复','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_goals' AND p.code='goal:goal:restore'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stage_stage_create',m.id,'阶段创建','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_stages' AND p.code='stage:stage:create'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stage_stage_update',m.id,'阶段修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_stages' AND p.code='stage:stage:update'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stage_stage_status',m.id,'阶段状态修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_stages' AND p.code='stage:stage:status'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stage_stage_delete',m.id,'阶段删除','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_stages' AND p.code='stage:stage:delete'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_stage_stage_sort',m.id,'阶段排序','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_stages' AND p.code='stage:stage:sort'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_task_task_create',m.id,'任务创建','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_tasks' AND p.code='task:task:create'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_task_task_update',m.id,'任务修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_tasks' AND p.code='task:task:update'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_task_task_status',m.id,'任务状态修改','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_tasks' AND p.code='task:task:status'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_task_task_delete',m.id,'任务删除','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_tasks' AND p.code='task:task:delete'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_task_task_sort',m.id,'任务排序','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_tasks' AND p.code='task:task:sort'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_planning_weekly_manage',m.id,'周计划管理','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_weekly' AND p.code='planning:weekly:manage'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_planning_daily_manage',m.id,'日计划管理','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_daily' AND p.code='planning:daily:manage'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_planning_assignment_manage',m.id,'任务安排管理','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_weekly' AND p.code='planning:assignment:manage'
+ ON CONFLICT(code) DO NOTHING;
+INSERT INTO identity_menu(code,parent_id,name,menu_type,permission_id,sort_order,is_visible,is_builtin,is_enabled)
+ SELECT 'growth_planning_assignment_remove',m.id,'任务安排移出计划','BUTTON',p.id,10,false,true,true
+ FROM identity_menu m CROSS JOIN identity_permission p WHERE m.code='growth_weekly' AND p.code='planning:assignment:remove'
+ ON CONFLICT(code) DO NOTHING;
+DO $$ BEGIN
+    IF (SELECT count(*) FROM identity_menu WHERE code IN ('growth_root','growth_goals','growth_stages','growth_tasks','growth_weekly','growth_daily','growth_pending','growth_goal_goal_create','growth_goal_goal_update','growth_goal_goal_status','growth_goal_goal_delete','growth_goal_goal_archive','growth_goal_goal_restore','growth_stage_stage_create','growth_stage_stage_update','growth_stage_stage_status','growth_stage_stage_delete','growth_stage_stage_sort','growth_task_task_create','growth_task_task_update','growth_task_task_status','growth_task_task_delete','growth_task_task_sort','growth_planning_weekly_manage','growth_planning_daily_manage','growth_planning_assignment_manage','growth_planning_assignment_remove') AND is_builtin AND deleted_at IS NULL) <> 27 THEN
+        RAISE EXCEPTION 'Growth menu code conflicts with an existing custom or deleted menu';
+    END IF;
+END $$;
+WITH inserted AS (
+ INSERT INTO identity_role_menu(role_id,menu_id)
+ SELECT r.id,m.id FROM identity_role r CROSS JOIN identity_menu m
+ WHERE r.code = 'USER' AND m.code IN ('growth_root','growth_goals','growth_stages','growth_tasks','growth_weekly','growth_daily','growth_pending','growth_goal_goal_create','growth_goal_goal_update','growth_goal_goal_status','growth_goal_goal_delete','growth_goal_goal_archive','growth_goal_goal_restore','growth_stage_stage_create','growth_stage_stage_update','growth_stage_stage_status','growth_stage_stage_delete','growth_stage_stage_sort','growth_task_task_create','growth_task_task_update','growth_task_task_status','growth_task_task_delete','growth_task_task_sort','growth_planning_weekly_manage','growth_planning_daily_manage','growth_planning_assignment_manage','growth_planning_assignment_remove')
+ ON CONFLICT DO NOTHING RETURNING role_id
+)
+UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM inserted);
+
+WITH removed AS (
+ DELETE FROM identity_role_permission rp USING identity_role r,identity_permission p
+ WHERE rp.role_id=r.id AND rp.permission_id=p.id AND r.code IN ('ADMIN','SUPER_ADMIN')
+ AND p.code ~ '^(goal|stage|task|planning):' RETURNING rp.role_id
+) UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM removed);
+WITH removed AS (
+ DELETE FROM identity_role_menu rm USING identity_role r,identity_menu m
+ WHERE rm.role_id=r.id AND rm.menu_id=m.id AND r.code IN ('ADMIN','SUPER_ADMIN')
+ AND (m.code LIKE 'growth_%' OR m.component_key LIKE 'growth/%' OR m.component_key LIKE 'planning/%' OR m.permission_id IN (SELECT id FROM identity_permission WHERE code ~ '^(goal|stage|task|planning):')) RETURNING rm.role_id
+) UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM removed);
+-- 周/日主页面展示当前计划，入口依赖 read，历史列表另依赖 list。
+UPDATE identity_menu m SET permission_id=p.id,version=m.version+1,updated_at=CURRENT_TIMESTAMP
+FROM identity_permission p
+WHERE ((m.code='growth_weekly' AND p.code='planning:weekly:read') OR (m.code='growth_daily' AND p.code='planning:daily:read'))
+AND m.is_builtin AND m.deleted_at IS NULL AND m.permission_id IS DISTINCT FROM p.id;
+-- 成长页面已完成；普通用户入口启用，按钮节点仍隐藏。
+UPDATE identity_menu SET is_visible=true,version=version+1,updated_at=CURRENT_TIMESTAMP
+WHERE code IN ('growth_root','growth_goals','growth_stages','growth_tasks','growth_weekly','growth_daily','growth_pending')
+AND is_builtin AND deleted_at IS NULL AND NOT is_visible;
+-- END GROWTH AUTHORIZATION
+
+-- BEGIN EXECUTION AUTHORIZATION
+-- 可在已有库中只选取本标记块，放入手工事务执行，不重跑前面的建表语句。
+-- 默认只登记禁用权限和隐藏禁用菜单，不修改目标旧规则，不启用尚未实现的接口。
+-- 后端验收后，在同一事务 SET LOCAL asterway.execution_backend_ready = 'true'；
+-- 前端验收后，再同时 SET LOCAL asterway.execution_frontend_ready = 'true'。
+-- 这两个标记仅供本段手工 SQL 使用，不是应用环境变量或系统配置项。
+DO $execution_authorization$
+DECLARE
+    backend_ready boolean := COALESCE(NULLIF(current_setting('asterway.execution_backend_ready', true), ''), 'false')::boolean;
+    frontend_ready boolean := COALESCE(NULLIF(current_setting('asterway.execution_frontend_ready', true), ''), 'false')::boolean;
+    execution_codes text[] := ARRAY[
+        'execution:session:list', 'execution:session:read', 'execution:session:start',
+        'execution:session:pause', 'execution:session:resume', 'execution:session:finish',
+        'execution:session:heartbeat'
+    ];
+    menu_codes text[] := ARRAY[
+        'growth_executions', 'growth_execution_read', 'growth_execution_start',
+        'growth_execution_pause', 'growth_execution_resume', 'growth_execution_finish'
+    ];
+    root_id bigint;
+    page_id bigint;
+BEGIN
+    IF frontend_ready AND NOT backend_ready THEN
+        RAISE EXCEPTION 'Execution frontend requires the approved backend';
+    END IF;
+    IF backend_ready AND (to_regclass('execution_session') IS NULL OR to_regclass('execution_segment') IS NULL) THEN
+        RAISE EXCEPTION 'Execution tables must be initialized before backend authorization';
+    END IF;
+    SELECT id INTO root_id FROM identity_menu
+    WHERE code = 'growth_root' AND menu_type = 'DIRECTORY' AND is_builtin AND deleted_at IS NULL;
+    IF root_id IS NULL OR NOT EXISTS (
+        SELECT 1 FROM identity_role WHERE code = 'USER' AND is_builtin AND deleted_at IS NULL
+    ) THEN
+        RAISE EXCEPTION 'Built-in USER role and growth directory are required';
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM identity_permission WHERE code = ANY(execution_codes)
+          AND (NOT is_builtin OR deleted_at IS NOT NULL)
+    ) OR EXISTS (
+        SELECT 1 FROM identity_menu WHERE code = ANY(menu_codes)
+          AND (NOT is_builtin OR deleted_at IS NOT NULL)
+    ) THEN
+        RAISE EXCEPTION 'Execution code conflicts with an existing custom or deleted object';
+    END IF;
+
+    INSERT INTO identity_permission(code, name, description, is_builtin, is_enabled)
+    SELECT v.code, v.name, '普通用户本人的任务执行；管理身份不开放个人核心业务', true, false
+    FROM (VALUES
+        ('execution:session:list', '执行记录列表'),
+        ('execution:session:read', '执行详情与耗时汇总'),
+        ('execution:session:start', '开始任务执行'),
+        ('execution:session:pause', '暂停任务执行'),
+        ('execution:session:resume', '恢复任务执行'),
+        ('execution:session:finish', '结束任务执行'),
+        ('execution:session:heartbeat', '执行心跳')
+    ) AS v(code, name)
+    ON CONFLICT(code) DO NOTHING;
+
+    INSERT INTO identity_menu(
+        code, parent_id, name, menu_type, route_path, component_key, permission_id,
+        sort_order, is_visible, is_builtin, is_enabled
+    )
+    SELECT 'growth_executions', root_id, '执行计时', 'PAGE', '/execution', 'execution/index', p.id,
+           70, false, true, false
+    FROM identity_permission p WHERE p.code = 'execution:session:list'
+    ON CONFLICT(code) DO NOTHING;
+    SELECT id INTO page_id FROM identity_menu WHERE code = 'growth_executions';
+
+    INSERT INTO identity_menu(
+        code, parent_id, name, menu_type, permission_id, sort_order, is_visible, is_builtin, is_enabled
+    )
+    SELECT v.code, page_id, v.name, 'BUTTON', p.id, v.sort_order, false, true, false
+    FROM (VALUES
+        ('growth_execution_read', '查看执行详情', 'execution:session:read', 10),
+        ('growth_execution_start', '开始执行', 'execution:session:start', 20),
+        ('growth_execution_pause', '暂停执行', 'execution:session:pause', 30),
+        ('growth_execution_resume', '继续执行', 'execution:session:resume', 40),
+        ('growth_execution_finish', '结束执行', 'execution:session:finish', 50)
+    ) AS v(code, name, permission_code, sort_order)
+    JOIN identity_permission p ON p.code = v.permission_code
+    ON CONFLICT(code) DO NOTHING;
+
+    IF EXISTS (
+        SELECT 1 FROM identity_menu m LEFT JOIN identity_permission p ON p.id = m.permission_id
+        WHERE m.code = ANY(menu_codes) AND (p.id IS NULL OR
+            (m.code = 'growth_executions' AND (m.menu_type <> 'PAGE' OR m.parent_id IS DISTINCT FROM root_id
+                OR m.route_path IS DISTINCT FROM '/execution'
+                OR m.component_key IS DISTINCT FROM 'execution/index'
+                OR p.code IS DISTINCT FROM 'execution:session:list'))
+            OR (m.code <> 'growth_executions' AND (m.menu_type <> 'BUTTON' OR m.parent_id IS DISTINCT FROM page_id
+                OR p.code IS DISTINCT FROM ('execution:session:' || substring(m.code FROM length('growth_execution_') + 1))))
+        )
+    ) OR (SELECT count(*) FROM identity_menu WHERE code = ANY(menu_codes)) <> 6 THEN
+        RAISE EXCEPTION 'Existing execution menu does not match the reserved contract';
+    END IF;
+
+    WITH inserted AS (
+        INSERT INTO identity_role_permission(role_id, permission_id)
+        SELECT r.id, p.id FROM identity_role r CROSS JOIN identity_permission p
+        WHERE r.code = 'USER' AND p.code = ANY(execution_codes)
+        ON CONFLICT DO NOTHING RETURNING role_id
+    )
+    UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (SELECT role_id FROM inserted);
+    WITH inserted AS (
+        INSERT INTO identity_role_menu(role_id, menu_id)
+        SELECT r.id, m.id FROM identity_role r CROSS JOIN identity_menu m
+        WHERE r.code = 'USER' AND m.code = ANY(menu_codes)
+        ON CONFLICT DO NOTHING RETURNING role_id
+    )
+    UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (SELECT role_id FROM inserted);
+
+    -- 管理身份不能通过角色关系获得个人执行权限；后端仍须先做身份限制再做超级管理员放行。
+    WITH removed AS (
+        DELETE FROM identity_role_permission rp USING identity_role r, identity_permission p
+        WHERE rp.role_id = r.id AND rp.permission_id = p.id AND r.code IN ('ADMIN', 'SUPER_ADMIN')
+          AND p.code LIKE 'execution:%' RETURNING rp.role_id
+    )
+    UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (SELECT role_id FROM removed);
+    WITH removed AS (
+        DELETE FROM identity_role_menu rm USING identity_role r, identity_menu m
+        WHERE rm.role_id = r.id AND rm.menu_id = m.id AND r.code IN ('ADMIN', 'SUPER_ADMIN')
+          AND (m.code = ANY(menu_codes) OR m.component_key LIKE 'execution/%') RETURNING rm.role_id
+    )
+    UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (SELECT role_id FROM removed);
+
+    IF backend_ready THEN
+        WITH changed AS (
+            UPDATE identity_permission SET is_enabled = true, version = version + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE code = ANY(execution_codes) AND NOT is_enabled RETURNING id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rp.role_id FROM identity_role_permission rp JOIN changed c ON c.id = rp.permission_id);
+        WITH changed AS (
+            UPDATE identity_menu SET is_enabled = true,
+                is_visible = (code = 'growth_executions' AND frontend_ready),
+                version = version + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE code = ANY(menu_codes) AND (NOT is_enabled
+                OR is_visible IS DISTINCT FROM (code = 'growth_executions' AND frontend_ready))
+            RETURNING id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rm.role_id FROM identity_role_menu rm JOIN changed c ON c.id = rm.menu_id);
+
+        -- 与目标只归档的新后端同批启用；只停用旧动作和移除授权，保留字典及历史审计。
+        IF EXISTS (SELECT 1 FROM identity_permission WHERE code = 'goal:goal:delete' AND NOT is_builtin)
+           OR EXISTS (SELECT 1 FROM identity_menu WHERE code = 'growth_goal_goal_delete' AND NOT is_builtin) THEN
+            RAISE EXCEPTION 'Legacy goal delete code belongs to a custom object';
+        END IF;
+        WITH changed AS (
+            UPDATE identity_permission SET is_enabled = false, version = version + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE code = 'goal:goal:delete' AND is_builtin AND is_enabled RETURNING id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rp.role_id FROM identity_role_permission rp JOIN changed c ON c.id = rp.permission_id);
+        WITH changed AS (
+            UPDATE identity_menu SET is_enabled = false, is_visible = false,
+                version = version + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE code = 'growth_goal_goal_delete' AND is_builtin AND (is_enabled OR is_visible) RETURNING id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rm.role_id FROM identity_role_menu rm JOIN changed c ON c.id = rm.menu_id);
+        WITH removed AS (
+            DELETE FROM identity_role_permission rp USING identity_permission p
+            WHERE rp.permission_id = p.id AND p.code = 'goal:goal:delete' AND p.is_builtin RETURNING rp.role_id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT role_id FROM removed);
+        WITH removed AS (
+            DELETE FROM identity_role_menu rm USING identity_menu m
+            WHERE rm.menu_id = m.id AND m.code = 'growth_goal_goal_delete' AND m.is_builtin RETURNING rm.role_id
+        )
+        UPDATE identity_role SET version = version + 1, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (SELECT role_id FROM removed);
+    END IF;
+END
+$execution_authorization$;
+-- END EXECUTION AUTHORIZATION
+
+-- BEGIN REMAINING AUTHORIZATION
+-- 新库默认只登记禁用权限和隐藏禁用菜单；已有库可单独选取本标记块在维护事务内执行。
+-- 后端验收后 SET LOCAL asterway.remaining_backend_ready = 'true';
+-- 前端将来验收后再同时 SET LOCAL asterway.remaining_frontend_ready = 'true'。
+-- 这些为手工 SQL 的事务级开关，不是应用环境变量，不写入 application.yml。
+DO $remaining_authorization$
+DECLARE
+    backend_ready boolean := COALESCE(NULLIF(current_setting('asterway.remaining_backend_ready', true), ''), 'false')::boolean;
+    frontend_ready boolean := COALESCE(NULLIF(current_setting('asterway.remaining_frontend_ready', true), ''), 'false')::boolean;
+    root_id bigint;
+    parent_menu_id bigint;
+    reserved_permission_id bigint;
+    permission_codes text[] := ARRAY[]::text[];
+    menu_codes text[] := ARRAY[]::text[];
+    item record;
+BEGIN
+    IF frontend_ready AND NOT backend_ready THEN
+        RAISE EXCEPTION 'Remaining frontend requires the approved backend';
+    END IF;
+    IF backend_ready AND EXISTS (
+        SELECT 1 FROM unnest(ARRAY['habit_category','habit','habit_revision','habit_checkin','notification_message',
+            'goal_state_history','stage_state_history','task_state_history']) AS required(table_name)
+        WHERE to_regclass(required.table_name) IS NULL
+    ) THEN
+        RAISE EXCEPTION 'Remaining tables must be initialized before backend authorization';
+    END IF;
+    SELECT id INTO root_id FROM identity_menu
+    WHERE code='growth_root' AND menu_type='DIRECTORY' AND is_builtin AND deleted_at IS NULL;
+    IF root_id IS NULL OR NOT EXISTS (
+        SELECT 1 FROM identity_role WHERE code='USER' AND is_builtin AND deleted_at IS NULL
+    ) THEN
+        RAISE EXCEPTION 'Built-in USER role and growth directory are required';
+    END IF;
+
+    -- 页面先登记，后续按钮才能引用稳定的父菜单；每条权限对应一个预留菜单节点。
+    FOR item IN SELECT * FROM (VALUES
+            ('habit:category:list', '习惯分类列表', 'growth_habit_categories', '习惯分类', 'PAGE', NULL::text, '/habits/categories', 'habit/categories', 85),
+            ('habit:habit:list', '习惯列表与今日习惯', 'growth_habits', '习惯管理', 'PAGE', NULL::text, '/habits', 'habit/index', 80),
+            ('notification:message:list', '站内消息列表与未读数', 'growth_notifications', '站内消息', 'PAGE', NULL::text, '/notifications', 'notification/index', 90),
+            ('dashboard:board:read', '今日看板', 'growth_dashboard', '今日看板', 'PAGE', NULL::text, '/dashboard', 'dashboard/index', 5),
+            ('statistics:report:read', '历史统计', 'growth_statistics', '历史统计', 'PAGE', NULL::text, '/statistics', 'statistics/index', 100),
+            ('habit:category:create', '创建习惯分类', 'growth_habit_category_create', '创建分类', 'BUTTON', 'growth_habit_categories', NULL::text, NULL::text, 10),
+            ('habit:category:update', '修改习惯分类', 'growth_habit_category_update', '修改分类', 'BUTTON', 'growth_habit_categories', NULL::text, NULL::text, 20),
+            ('habit:category:delete', '删除习惯分类', 'growth_habit_category_delete', '删除分类', 'BUTTON', 'growth_habit_categories', NULL::text, NULL::text, 30),
+            ('habit:habit:read', '查看习惯', 'growth_habit_read', '查看习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 10),
+            ('habit:habit:create', '创建习惯', 'growth_habit_create', '创建习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 20),
+            ('habit:habit:update', '修改习惯', 'growth_habit_update', '修改习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 30),
+            ('habit:habit:pause', '暂停习惯', 'growth_habit_pause', '暂停习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 40),
+            ('habit:habit:resume', '恢复习惯', 'growth_habit_resume', '恢复习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 50),
+            ('habit:habit:end', '结束归档习惯', 'growth_habit_end', '结束归档', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 60),
+            ('habit:habit:reopen', '重新开启习惯', 'growth_habit_reopen', '重新开启', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 70),
+            ('habit:habit:delete', '删除习惯', 'growth_habit_delete', '删除习惯', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 80),
+            ('habit:habit:history', '查看规则和生命周期历史', 'growth_habit_history', '规则与生命周期', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 90),
+            ('habit:checkin:create', '今日打卡', 'growth_habit_checkin_create', '今日打卡', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 100),
+            ('habit:checkin:cancel', '撤销今日打卡', 'growth_habit_checkin_cancel', '撤销今日打卡', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 110),
+            ('habit:checkin:read', '打卡历史', 'growth_habit_checkin_read', '打卡历史', 'BUTTON', 'growth_habits', NULL::text, NULL::text, 120),
+            ('notification:message:read', '消息详情', 'growth_notification_read', '消息详情', 'BUTTON', 'growth_notifications', NULL::text, NULL::text, 10),
+            ('notification:message:mark_read', '标记已读', 'growth_notification_mark_read', '标记已读', 'BUTTON', 'growth_notifications', NULL::text, NULL::text, 20),
+            ('notification:message:handle', '处理达标提醒', 'growth_notification_handle', '处理提醒', 'BUTTON', 'growth_notifications', NULL::text, NULL::text, 30)
+    ) AS v(permission_code,permission_name,menu_code,menu_name,menu_type,parent_code,route_path,component_key,sort_order)
+    LOOP
+        IF EXISTS (SELECT 1 FROM identity_permission WHERE code=item.permission_code
+                AND (NOT is_builtin OR deleted_at IS NOT NULL))
+           OR EXISTS (SELECT 1 FROM identity_menu WHERE code=item.menu_code
+                AND (NOT is_builtin OR deleted_at IS NOT NULL)) THEN
+            RAISE EXCEPTION 'Remaining code conflicts with a custom or deleted object: %', item.permission_code;
+        END IF;
+        permission_codes := array_append(permission_codes,item.permission_code);
+        menu_codes := array_append(menu_codes,item.menu_code);
+        INSERT INTO identity_permission(code,name,description,is_builtin,is_enabled)
+        VALUES(item.permission_code,item.permission_name,'仅普通用户本人的核心业务；管理身份优先且不开放',true,false)
+        ON CONFLICT(code) DO NOTHING;
+        SELECT id INTO reserved_permission_id FROM identity_permission WHERE code=item.permission_code;
+        IF item.parent_code IS NULL THEN
+            parent_menu_id := root_id;
+        ELSE
+            SELECT id INTO parent_menu_id FROM identity_menu WHERE code=item.parent_code AND deleted_at IS NULL;
+        END IF;
+        IF parent_menu_id IS NULL THEN
+            RAISE EXCEPTION 'Missing remaining parent menu: %',item.parent_code;
+        END IF;
+        INSERT INTO identity_menu(code,parent_id,name,menu_type,route_path,component_key,permission_id,
+            sort_order,is_visible,is_builtin,is_enabled)
+        VALUES(item.menu_code,parent_menu_id,item.menu_name,item.menu_type,item.route_path,item.component_key,
+            reserved_permission_id,item.sort_order,false,true,false)
+        ON CONFLICT(code) DO NOTHING;
+        IF EXISTS (SELECT 1 FROM identity_menu m WHERE m.code=item.menu_code AND (
+            m.parent_id IS DISTINCT FROM parent_menu_id OR m.menu_type IS DISTINCT FROM item.menu_type
+            OR m.route_path IS DISTINCT FROM item.route_path OR m.component_key IS DISTINCT FROM item.component_key
+            OR m.permission_id IS DISTINCT FROM reserved_permission_id
+        )) THEN
+            RAISE EXCEPTION 'Existing remaining menu does not match the reserved contract: %',item.menu_code;
+        END IF;
+    END LOOP;
+
+    WITH inserted AS (
+        INSERT INTO identity_role_permission(role_id,permission_id)
+        SELECT r.id,p.id FROM identity_role r CROSS JOIN identity_permission p
+        WHERE r.code='USER' AND p.code=ANY(permission_codes)
+        ON CONFLICT DO NOTHING RETURNING role_id
+    )
+    UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM inserted);
+    WITH inserted AS (
+        INSERT INTO identity_role_menu(role_id,menu_id)
+        SELECT r.id,m.id FROM identity_role r CROSS JOIN identity_menu m
+        WHERE r.code='USER' AND m.code=ANY(menu_codes)
+        ON CONFLICT DO NOTHING RETURNING role_id
+    )
+    UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM inserted);
+
+    WITH removed AS (
+        DELETE FROM identity_role_permission rp USING identity_role r,identity_permission p
+        WHERE rp.role_id=r.id AND rp.permission_id=p.id AND r.code IN ('ADMIN','SUPER_ADMIN')
+            AND split_part(p.code,':',1) IN ('habit','notification','dashboard','statistics')
+        RETURNING rp.role_id
+    )
+    UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM removed);
+    WITH removed AS (
+        DELETE FROM identity_role_menu rm USING identity_role r,identity_menu m
+        WHERE rm.role_id=r.id AND rm.menu_id=m.id AND r.code IN ('ADMIN','SUPER_ADMIN')
+            AND m.code=ANY(menu_codes) RETURNING rm.role_id
+    )
+    UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id IN (SELECT role_id FROM removed);
+
+    IF backend_ready THEN
+        WITH changed AS (
+            UPDATE identity_permission SET is_enabled=true,version=version+1,updated_at=CURRENT_TIMESTAMP
+            WHERE code=ANY(permission_codes) AND NOT is_enabled RETURNING id
+        )
+        UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rp.role_id FROM identity_role_permission rp JOIN changed c ON c.id=rp.permission_id);
+        WITH changed AS (
+            UPDATE identity_menu SET is_enabled=true,
+                is_visible=(menu_type='PAGE' AND (frontend_ready OR is_visible)),
+                version=version+1,updated_at=CURRENT_TIMESTAMP
+            WHERE code=ANY(menu_codes) AND (NOT is_enabled
+                OR is_visible IS DISTINCT FROM (menu_type='PAGE' AND (frontend_ready OR is_visible)))
+            RETURNING id
+        )
+        UPDATE identity_role SET version=version+1,updated_at=CURRENT_TIMESTAMP
+        WHERE id IN (SELECT rm.role_id FROM identity_role_menu rm JOIN changed c ON c.id=rm.menu_id);
+    END IF;
+END
+$remaining_authorization$;
+-- END REMAINING AUTHORIZATION
+
 COMMIT;

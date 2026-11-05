@@ -8,7 +8,7 @@
     </parent>
     <artifactId>notification</artifactId>
     <name>asterway-notification</name>
-    <description>站内消息通知业务空框架。</description>
+    <description>目标达标站内提醒、已读和确认完成事务。</description>
     <dependencies>
         <dependency>
             <groupId>com.asterway</groupId>

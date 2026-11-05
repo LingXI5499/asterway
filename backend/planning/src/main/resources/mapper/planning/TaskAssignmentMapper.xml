@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.planning.mapper.TaskAssignmentMapper">
+    <resultMap id="entity" type="com.asterway.planning.entity.TaskAssignmentEntity">
+        <result column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="task_id" property="taskId"/>
+        <result column="weekly_plan_id" property="weeklyPlanId"/>
+        <result column="daily_plan_id" property="dailyPlanId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="assigned_at" property="assignedAt"/>
+        <result column="ended_at" property="endedAt"/>
+        <result column="end_reason" property="endReason"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+    <sql id="columns">r.id,
+            r.user_id,
+            r.task_id,
+            r.weekly_plan_id,
+            r.daily_plan_id,
+            r.sort_order,
+            r.assigned_at,
+            r.ended_at,
+            r.end_reason,
+            r.version,
+            r.created_at,
+            r.updated_at</sql>
+    <sql id="filters">WHERE r.user_id=#{userId}
+        <if test="q.taskId != null">AND r.task_id=#{q.taskId}</if><if test="q.weeklyPlanId != null">AND r.weekly_plan_id=#{q.weeklyPlanId}</if><if test="q.dailyPlanId != null">AND r.daily_plan_id=#{q.dailyPlanId}</if><if test="q.currentOnly">AND r.ended_at IS NULL</if>
+    </sql>
+    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+        FROM task_assignment r
+        WHERE r.user_id=#{userId}
+          AND r.id=#{id}</select>
+    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
+        FROM task_assignment r <include refid="filters"/>
+        ORDER BY <choose><when test="q.currentOnly">r.sort_order,r.id</when><otherwise>r.assigned_at DESC,r.id DESC</otherwise></choose>
+        LIMIT #{q.size}
+        OFFSET #{q.offset}</select>
+    <select id="count" resultType="long">SELECT count(*)
+        FROM task_assignment r <include refid="filters"/></select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO task_assignment (user_id,
+            task_id,
+            weekly_plan_id,
+            daily_plan_id,
+            sort_order,
+            assigned_at,
+            ended_at,
+            end_reason)
+        VALUES (#{userId},
+            #{taskId},
+            #{weeklyPlanId},
+            #{dailyPlanId},
+            #{sortOrder},
+            #{assignedAt},
+            #{endedAt},
+            #{endReason})</insert>
+    <update id="update">UPDATE task_assignment
+        SET ended_at=#{endedAt},
+            end_reason=#{endReason},
+            sort_order=#{sortOrder},
+            version=version+1,
+            updated_at=CURRENT_TIMESTAMP
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND version=#{version}
+          AND ended_at IS NULL</update>
+    <select id="current" resultMap="entity">SELECT <include refid="columns"/>
+        FROM task_assignment r
+        WHERE r.user_id=#{userId}
+          AND r.task_id=#{taskId}
+          AND r.ended_at IS NULL</select>
+</mapper>

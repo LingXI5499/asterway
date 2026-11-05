@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.habit.mapper.HabitMapper">
+    <sql id="filter">
+        WHERE h.user_id=#{userId} AND h.deleted_at IS NULL
+        <if test="q.keyword != null and q.keyword != ''">AND r.name ILIKE '%' || #{q.keyword} || '%'</if>
+        <if test="q.categoryId != null">AND r.category_id=#{q.categoryId}</if>
+        <choose>
+            <when test="q.status != null and q.status != ''">AND h.status=#{q.status}</when>
+            <when test="q.archived == true">AND h.status='ENDED'</when>
+            <otherwise>AND h.status&lt;&gt;'ENDED'</otherwise>
+        </choose>
+    </sql>
+    <select id="find" resultType="com.asterway.habit.entity.HabitEntity">
+        SELECT id,user_id,status,current_revision_no,ended_at,history_locked_through,version,created_at,updated_at,deleted_at FROM habit WHERE user_id=#{userId} AND id=#{id}
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO habit(user_id,status,current_revision_no,version,created_at,updated_at)
+        VALUES(#{userId},#{status},#{currentRevisionNo},0,#{createdAt},#{updatedAt})
+    </insert>
+    <update id="update">
+        UPDATE habit SET status=#{status},current_revision_no=#{currentRevisionNo},ended_at=#{endedAt},
+            deleted_at=#{deletedAt},version=version+1,updated_at=#{updatedAt}
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
+    </update>
+    <select id="view" resultType="com.asterway.habit.vo.HabitVO">
+        SELECT h.id::text,h.status,h.current_revision_no AS revision_no,h.ended_at,h.history_locked_through,
+            h.version,h.created_at,h.updated_at,r.id::text AS revision_id,r.name,r.description,r.completion_criteria,
+            r.category_id::text,c.name AS category_name,(c.deleted_at IS NOT NULL) AS category_deleted,
+            r.cycle_type,r.weekday_mask,r.start_date,r.expected_time,(ci.id IS NOT NULL) AS checked_today FROM habit h JOIN habit_revision r ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        LEFT JOIN habit_category c ON c.id=r.category_id AND c.user_id=h.user_id
+        LEFT JOIN habit_checkin ci ON ci.user_id=h.user_id AND ci.habit_id=h.id AND ci.business_date=#{today} AND ci.cancelled_at IS NULL WHERE h.user_id=#{userId} AND h.id=#{id} AND h.deleted_at IS NULL
+    </select>
+    <select id="page" resultType="com.asterway.habit.vo.HabitVO">
+        SELECT h.id::text,h.status,h.current_revision_no AS revision_no,h.ended_at,h.history_locked_through,
+            h.version,h.created_at,h.updated_at,r.id::text AS revision_id,r.name,r.description,r.completion_criteria,
+            r.category_id::text,c.name AS category_name,(c.deleted_at IS NOT NULL) AS category_deleted,
+            r.cycle_type,r.weekday_mask,r.start_date,r.expected_time,(ci.id IS NOT NULL) AS checked_today FROM habit h JOIN habit_revision r ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        LEFT JOIN habit_category c ON c.id=r.category_id AND c.user_id=h.user_id
+        LEFT JOIN habit_checkin ci ON ci.user_id=h.user_id AND ci.habit_id=h.id AND ci.business_date=#{today} AND ci.cancelled_at IS NULL <include refid="filter"/>
+        ORDER BY h.created_at DESC,h.id DESC LIMIT #{q.size} OFFSET #{q.offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM habit h JOIN habit_revision r
+            ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        <include refid="filter"/>
+    </select>
+    <sql id="todayFacts"><![CDATA[
+
+WITH days AS (
+    SELECT (#{today}::date + n)::date AS business_date
+    FROM generate_series(0, #{today}::date - #{today}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,h.history_locked_through,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+)
+    ]]></sql>
+    <select id="today" resultType="com.asterway.habit.vo.HabitTodayVO">
+        <include refid="todayFacts"/>
+        SELECT habit_id::text,revision_id::text,category_id::text,name,expected_time,status,checkin_id::text,done_count,due_count,
+            (checkin_id IS NOT NULL AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through&lt;#{today})) AS can_cancel,
+            (checkin_id IS NULL AND status='ACTIVE' AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through&lt;#{today})) AS can_checkin
+        FROM habit_days ORDER BY expected_time NULLS LAST,habit_id LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="todayCount" resultType="long"><include refid="todayFacts"/> SELECT count(*) FROM habit_days</select>
+    <select id="activeBatch" resultType="com.asterway.habit.entity.HabitEntity">
+        SELECT id,user_id,status,current_revision_no,ended_at,history_locked_through,version,created_at,updated_at,deleted_at FROM habit WHERE user_id=#{userId} AND deleted_at IS NULL
+            AND status='ACTIVE' AND id&gt;#{afterId} ORDER BY id LIMIT 100
+    </select>
+    <update id="sealHistory">
+        UPDATE habit SET history_locked_through=#{through},version=version+1,updated_at=#{now}
+        WHERE user_id=#{userId} AND (history_locked_through IS NULL OR history_locked_through&lt;#{through})
+    </update>
+</mapper>

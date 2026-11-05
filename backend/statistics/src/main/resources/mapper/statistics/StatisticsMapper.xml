@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.statistics.mapper.StatisticsMapper">
+    <select id="firstDate" resultType="java.time.LocalDate"><![CDATA[
+SELECT min(d) FROM (
+    SELECT (created_at AT TIME ZONE #{zone})::date AS d FROM goal WHERE user_id=#{userId}
+    UNION ALL SELECT (created_at AT TIME ZONE #{zone})::date FROM stage WHERE user_id=#{userId}
+    UNION ALL SELECT (created_at AT TIME ZONE #{zone})::date FROM task WHERE user_id=#{userId}
+    UNION ALL SELECT effective_date FROM habit_revision WHERE user_id=#{userId}
+    UNION ALL SELECT (sg.started_at AT TIME ZONE #{zone})::date FROM execution_session es
+        JOIN execution_segment sg ON sg.execution_id=es.id WHERE es.user_id=#{userId}
+) first_dates
+    ]]></select>
+    <select id="scope" resultType="com.asterway.common.security.GrowthScopeData">
+        <choose>
+            <when test="type == 'GOAL'">SELECT id,id AS goal_id FROM goal WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="type == 'STAGE'">SELECT id,goal_id,id AS stage_id FROM stage WHERE user_id=#{userId} AND id=#{id}</when>
+            <when test="type == 'TASK'">
+                SELECT t.id,t.stage_id,s.goal_id FROM task t JOIN stage s ON s.id=t.stage_id AND s.user_id=t.user_id
+                WHERE t.user_id=#{userId} AND t.id=#{id}
+            </when>
+            <otherwise>SELECT NULL::bigint AS id WHERE false</otherwise>
+        </choose>
+    </select>
+    <select id="execution" resultType="com.asterway.statistics.vo.StatisticsExecutionVO"><![CDATA[
+WITH segments AS (
+    SELECT es.id AS execution_id,es.status,sg.started_at,
+        LEAST(#{ctx.now},COALESCE(sg.ended_at,LEAST(#{ctx.now},es.last_heartbeat_at
+            +make_interval(secs=>sg.heartbeat_timeout_seconds),sg.eligible_until))) AS ends_at
+    FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+    JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id
+    JOIN stage st ON st.id=t.stage_id AND st.user_id=es.user_id WHERE es.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR st.goal_id=#{ctx.goalId})
+        AND (#{ctx.stageId}::bigint IS NULL OR st.id=#{ctx.stageId})
+        AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+), lengths AS (
+    SELECT *,GREATEST(0,EXTRACT(EPOCH FROM ends_at-started_at)*1000) AS total_ms,
+        GREATEST(0,EXTRACT(EPOCH FROM LEAST(ends_at,#{ctx.toInstant})-GREATEST(started_at,#{ctx.fromInstant}))*1000) AS range_ms
+    FROM segments
+)
+SELECT floor(COALESCE(sum(total_ms),0)/1000)::bigint AS total_actual_seconds,
+    floor(COALESCE(sum(range_ms),0)/1000)::bigint AS range_actual_seconds,
+    COALESCE(sum(total_ms),0)::bigint AS total_actual_milliseconds,
+    COALESCE(sum(range_ms),0)::bigint AS range_actual_milliseconds,
+    count(DISTINCT execution_id) FILTER (WHERE total_ms>0) AS total_sessions,
+    count(DISTINCT execution_id) FILTER (WHERE range_ms>0) AS range_sessions,
+    count(DISTINCT execution_id) FILTER (WHERE total_ms>0 AND status='FINISHED') AS total_finished_sessions,
+    count(DISTINCT execution_id) FILTER (WHERE range_ms>0 AND status='FINISHED') AS range_finished_sessions,
+    max(started_at) FILTER (WHERE total_ms>0) AS last_execution_at
+FROM lengths
+    ]]></select>
+    <select id="executionDays" resultType="com.asterway.statistics.vo.StatisticsExecutionDayVO"><![CDATA[
+WITH days AS (
+    SELECT (#{ctx.dateFrom}+n)::date AS business_date,(#{ctx.dateFrom}+n)::timestamp AT TIME ZONE #{ctx.timeZone} AS starts_at,
+        (#{ctx.dateFrom}+n+1)::timestamp AT TIME ZONE #{ctx.timeZone} AS ends_at
+    FROM generate_series(0,#{ctx.dateTo}-#{ctx.dateFrom}) AS n
+), segments AS (
+    SELECT es.id AS execution_id,es.status,sg.started_at,
+        LEAST(#{ctx.now},COALESCE(sg.ended_at,LEAST(#{ctx.now},es.last_heartbeat_at
+            +make_interval(secs=>sg.heartbeat_timeout_seconds),sg.eligible_until))) AS ends_at
+    FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+    JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id
+    JOIN stage st ON st.id=t.stage_id AND st.user_id=es.user_id WHERE es.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR st.goal_id=#{ctx.goalId})
+        AND (#{ctx.stageId}::bigint IS NULL OR st.id=#{ctx.stageId})
+        AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+), clipped AS (
+    SELECT d.business_date,s.execution_id,s.status,
+        -- 空白日保留在结果中，但无执行段时必须为零；不能让 NULL 边界进入 LEAST/GREATEST。
+        CASE WHEN s.execution_id IS NULL THEN 0 ELSE
+            GREATEST(0,EXTRACT(EPOCH FROM (LEAST(d.ends_at,s.ends_at)-GREATEST(d.starts_at,s.started_at)))*1000)
+        END AS milliseconds
+    FROM days d LEFT JOIN segments s ON s.started_at<d.ends_at AND s.ends_at>d.starts_at
+)
+SELECT business_date,COALESCE(sum(milliseconds),0)::bigint AS actual_milliseconds,
+    floor(COALESCE(sum(milliseconds),0)/1000)::bigint AS actual_seconds,
+    count(DISTINCT execution_id) FILTER (WHERE milliseconds>0) AS sessions,
+    count(DISTINCT execution_id) FILTER (WHERE milliseconds>0 AND status='FINISHED') AS finished_sessions
+FROM clipped GROUP BY business_date ORDER BY business_date
+    ]]></select>
+    <select id="habitTotals" resultType="com.asterway.statistics.vo.StatisticsHabitTotalsVO"><![CDATA[
+
+WITH days AS (
+    SELECT (#{ctx.dateFrom}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.dateTo}::date - #{ctx.dateFrom}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+) SELECT COALESCE(sum(done_count),0)::bigint AS done_count,COALESCE(sum(due_count),0)::bigint AS due_count,
+        round(100.0*sum(done_count)/NULLIF(sum(due_count),0),2) AS completion_rate FROM habit_days
+    ]]></select>
+    <select id="habitDays" resultType="com.asterway.statistics.vo.StatisticsHabitDayVO"><![CDATA[
+
+WITH days AS (
+    SELECT (#{ctx.dateFrom}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.dateTo}::date - #{ctx.dateFrom}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+) SELECT business_date,COALESCE(sum(done_count),0)::bigint AS done_count,COALESCE(sum(due_count),0)::bigint AS due_count,
+        round(100.0*sum(done_count)/NULLIF(sum(due_count),0),2) AS completion_rate FROM habit_days GROUP BY business_date ORDER BY business_date
+    ]]></select>
+    <select id="habitGroups" resultType="com.asterway.statistics.vo.StatisticsHabitGroupVO"><![CDATA[
+
+WITH days AS (
+    SELECT (#{ctx.dateFrom}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.dateTo}::date - #{ctx.dateFrom}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+), groups AS (
+    SELECT CASE WHEN #{groupBy}='HABIT' THEN habit_id ELSE category_id END AS group_id,COALESCE(sum(done_count),0)::bigint AS done_count,COALESCE(sum(due_count),0)::bigint AS due_count,
+        round(100.0*sum(done_count)/NULLIF(sum(due_count),0),2) AS completion_rate
+    FROM habit_days GROUP BY 1
+)
+SELECT g.group_id::text AS id,
+    CASE WHEN #{groupBy}='HABIT' THEN hr.name ELSE COALESCE(c.name,'未分类') END AS name,
+    CASE WHEN #{groupBy}='HABIT' THEN h.deleted_at IS NOT NULL ELSE c.deleted_at IS NOT NULL END AS deleted,
+    g.done_count,g.due_count,g.completion_rate
+FROM groups g LEFT JOIN habit h ON #{groupBy}='HABIT' AND h.id=g.group_id AND h.user_id=#{ctx.userId}
+LEFT JOIN habit_revision hr ON hr.habit_id=h.id AND hr.user_id=h.user_id AND hr.revision_no=h.current_revision_no
+LEFT JOIN habit_category c ON #{groupBy}='CATEGORY' AND c.id=g.group_id AND c.user_id=#{ctx.userId}
+ORDER BY g.group_id NULLS FIRST LIMIT #{size} OFFSET #{offset}
+    ]]></select>
+    <select id="habitGroupCount" resultType="long"><![CDATA[
+
+WITH days AS (
+    SELECT (#{ctx.dateFrom}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.dateTo}::date - #{ctx.dateFrom}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+) SELECT count(*) FROM (
+    SELECT CASE WHEN #{groupBy}='HABIT' THEN habit_id ELSE category_id END FROM habit_days GROUP BY 1
+) grouped
+    ]]></select>
+    <select id="stateTotals" resultType="com.asterway.statistics.vo.StatisticsStateTotalsVO"><![CDATA[
+WITH events AS (SELECT 'GOAL' AS kind,h.goal_id AS object_id,h.event_type,h.after_status,h.occurred_at
+        FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
+    UNION ALL SELECT 'STAGE',h.stage_id,h.event_type,h.after_status,h.occurred_at FROM stage_state_history h
+        JOIN stage s ON s.id=h.stage_id AND s.user_id=h.user_id WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId})
+    UNION ALL SELECT 'TASK',h.task_id,h.event_type,h.after_status,h.occurred_at FROM task_state_history h
+        JOIN task t ON t.id=h.task_id AND t.user_id=h.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=h.user_id
+        WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})) SELECT count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='STATUS_CHANGED' AND e.after_status='COMPLETED') AS goal_completion_actions,
+    count(*) FILTER (WHERE e.kind='STAGE' AND e.event_type='STATUS_CHANGED' AND e.after_status='COMPLETED') AS stage_completion_actions,
+    count(*) FILTER (WHERE e.kind='TASK' AND e.event_type IN ('STATUS_CHANGED','COMPLETION_IMPORTED') AND e.after_status='COMPLETED') AS task_completion_actions,
+    count(DISTINCT e.object_id) FILTER (WHERE e.kind='TASK' AND e.event_type IN ('STATUS_CHANGED','COMPLETION_IMPORTED') AND e.after_status='COMPLETED') AS completed_distinct_tasks,
+    count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='ARCHIVED') AS goal_archive_actions,
+    count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='RESTORED') AS goal_restore_actions FROM events e
+    WHERE e.occurred_at>=#{ctx.fromInstant} AND e.occurred_at<#{ctx.toInstant}
+    ]]></select>
+    <select id="stateDays" resultType="com.asterway.statistics.vo.StatisticsStateDayVO"><![CDATA[
+WITH days AS (SELECT (#{ctx.dateFrom}::date+n)::date AS business_date
+        FROM generate_series(0,#{ctx.dateTo}::date-#{ctx.dateFrom}::date) n), events AS (SELECT 'GOAL' AS kind,h.goal_id AS object_id,h.event_type,h.after_status,h.occurred_at
+        FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
+    UNION ALL SELECT 'STAGE',h.stage_id,h.event_type,h.after_status,h.occurred_at FROM stage_state_history h
+        JOIN stage s ON s.id=h.stage_id AND s.user_id=h.user_id WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId})
+    UNION ALL SELECT 'TASK',h.task_id,h.event_type,h.after_status,h.occurred_at FROM task_state_history h
+        JOIN task t ON t.id=h.task_id AND t.user_id=h.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=h.user_id
+        WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId}))
+    SELECT d.business_date,count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='STATUS_CHANGED' AND e.after_status='COMPLETED') AS goal_completion_actions,
+    count(*) FILTER (WHERE e.kind='STAGE' AND e.event_type='STATUS_CHANGED' AND e.after_status='COMPLETED') AS stage_completion_actions,
+    count(*) FILTER (WHERE e.kind='TASK' AND e.event_type IN ('STATUS_CHANGED','COMPLETION_IMPORTED') AND e.after_status='COMPLETED') AS task_completion_actions,
+    count(DISTINCT e.object_id) FILTER (WHERE e.kind='TASK' AND e.event_type IN ('STATUS_CHANGED','COMPLETION_IMPORTED') AND e.after_status='COMPLETED') AS completed_distinct_tasks,
+    count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='ARCHIVED') AS goal_archive_actions,
+    count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='RESTORED') AS goal_restore_actions FROM days d LEFT JOIN events e
+        ON e.occurred_at>=#{ctx.fromInstant} AND e.occurred_at<#{ctx.toInstant}
+        AND (e.occurred_at AT TIME ZONE #{ctx.timeZone})::date=d.business_date
+    GROUP BY d.business_date ORDER BY d.business_date
+    ]]></select>
+    <select id="timeline" resultType="com.asterway.statistics.vo.StatisticsTimelineVO"><![CDATA[
+WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.event_type,h.occurred_at,h.name_snapshot AS label
+        FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
+    UNION ALL SELECT 'STAGE',h.id,h.stage_id,h.event_type,h.occurred_at,h.name_snapshot
+        FROM stage_state_history h JOIN stage s ON s.id=h.stage_id AND s.user_id=h.user_id
+        WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId})
+    UNION ALL SELECT 'TASK',h.id,h.task_id,h.event_type,h.occurred_at,h.name_snapshot
+        FROM task_state_history h JOIN task t ON t.id=h.task_id AND t.user_id=h.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=h.user_id WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'HABIT',c.id,c.habit_id,'CHECKIN',c.checked_at,r.name
+        FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        WHERE c.user_id=#{ctx.userId}
+    UNION ALL SELECT 'HABIT',c.id,c.habit_id,'CHECKIN_CANCELLED',c.cancelled_at,r.name
+        FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        WHERE c.user_id=#{ctx.userId} AND c.cancelled_at IS NOT NULL
+    UNION ALL SELECT 'EXECUTION',sg.id,es.task_id,'SEGMENT_STARTED',sg.started_at,NULL
+        FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+        JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=es.user_id
+        WHERE es.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'EXECUTION',sg.id,es.task_id,sg.end_reason,sg.ended_at,NULL
+        FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+        JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=es.user_id
+        WHERE es.user_id=#{ctx.userId} AND sg.ended_at IS NOT NULL AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'ASSIGNMENT',a.id,a.task_id,'ASSIGNED',a.assigned_at,NULL
+        FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id WHERE a.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'ASSIGNMENT',a.id,a.task_id,a.end_reason,a.ended_at,NULL
+        FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id
+        WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NOT NULL AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})) SELECT kind,fact_id::text,object_id::text,event_type,occurred_at,label
+    FROM events WHERE occurred_at>=#{ctx.fromInstant} AND occurred_at<#{ctx.toInstant}
+    ORDER BY occurred_at DESC,kind,fact_id::bigint DESC,event_type LIMIT #{size} OFFSET #{offset}
+    ]]></select>
+    <select id="timelineCount" resultType="long"><![CDATA[
+WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.event_type,h.occurred_at,h.name_snapshot AS label
+        FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
+    UNION ALL SELECT 'STAGE',h.id,h.stage_id,h.event_type,h.occurred_at,h.name_snapshot
+        FROM stage_state_history h JOIN stage s ON s.id=h.stage_id AND s.user_id=h.user_id
+        WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId})
+    UNION ALL SELECT 'TASK',h.id,h.task_id,h.event_type,h.occurred_at,h.name_snapshot
+        FROM task_state_history h JOIN task t ON t.id=h.task_id AND t.user_id=h.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=h.user_id WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'HABIT',c.id,c.habit_id,'CHECKIN',c.checked_at,r.name
+        FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        WHERE c.user_id=#{ctx.userId}
+    UNION ALL SELECT 'HABIT',c.id,c.habit_id,'CHECKIN_CANCELLED',c.cancelled_at,r.name
+        FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        WHERE c.user_id=#{ctx.userId} AND c.cancelled_at IS NOT NULL
+    UNION ALL SELECT 'EXECUTION',sg.id,es.task_id,'SEGMENT_STARTED',sg.started_at,NULL
+        FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+        JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=es.user_id
+        WHERE es.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'EXECUTION',sg.id,es.task_id,sg.end_reason,sg.ended_at,NULL
+        FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id
+        JOIN task t ON t.id=es.task_id AND t.user_id=es.user_id JOIN stage s ON s.id=t.stage_id AND s.user_id=es.user_id
+        WHERE es.user_id=#{ctx.userId} AND sg.ended_at IS NOT NULL AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'ASSIGNMENT',a.id,a.task_id,'ASSIGNED',a.assigned_at,NULL
+        FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id WHERE a.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})
+    UNION ALL SELECT 'ASSIGNMENT',a.id,a.task_id,a.end_reason,a.ended_at,NULL
+        FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id
+        JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id
+        WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NOT NULL AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})) SELECT count(*) FROM events
+    WHERE occurred_at>=#{ctx.fromInstant} AND occurred_at<#{ctx.toInstant}
+    ]]></select>
+    <select id="objects" resultType="com.asterway.statistics.vo.StatisticsObjectVO"><![CDATA[
+SELECT 'GOAL' AS kind,status,count(*) AS object_count FROM goal
+    WHERE user_id=#{ctx.userId} AND deleted_at IS NULL AND archived_at IS NULL AND (#{ctx.goalId}::bigint IS NULL OR id=#{ctx.goalId}) GROUP BY status
+UNION ALL SELECT 'STAGE',s.status,count(*) FROM stage s JOIN goal g ON g.id=s.goal_id AND g.user_id=s.user_id
+    WHERE s.user_id=#{ctx.userId} AND s.deleted_at IS NULL AND g.deleted_at IS NULL AND g.archived_at IS NULL AND (#{ctx.goalId}::bigint IS NULL OR g.id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) GROUP BY s.status
+UNION ALL SELECT 'TASK',t.status,count(*) FROM task t JOIN stage s ON s.id=t.stage_id AND s.user_id=t.user_id
+    JOIN goal g ON g.id=s.goal_id AND g.user_id=t.user_id
+    WHERE t.user_id=#{ctx.userId} AND t.deleted_at IS NULL AND s.deleted_at IS NULL AND g.deleted_at IS NULL AND g.archived_at IS NULL AND (#{ctx.goalId}::bigint IS NULL OR g.id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId})
+        AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId}) GROUP BY t.status
+ORDER BY kind,status
+    ]]></select>
+</mapper>

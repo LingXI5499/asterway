@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.goal.mapper.GoalStateHistoryMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO goal_state_history(user_id,goal_id,event_type,before_status,after_status,before_archived,after_archived,name_snapshot,entity_version,occurred_at,source_type)
+        VALUES(#{userId},#{goalId},#{eventType},#{beforeStatus},#{afterStatus},#{beforeArchived},#{afterArchived},#{nameSnapshot},#{entityVersion},#{occurredAt},#{sourceType})
+    </insert>
+    <!-- 历史读取不以当前删除、归档或父链状态裁剪。 -->
+    <select id="historicalSubject" resultType="long">
+        SELECT id FROM goal WHERE user_id=#{userId} AND id=#{id}
+    </select>
+    <select id="count" resultType="long">
+        SELECT count(*) FROM goal_state_history WHERE user_id=#{userId} AND goal_id=#{id}
+    </select>
+    <select id="page" resultType="com.asterway.goal.vo.GoalStateHistoryVO">
+        SELECT id::text,goal_id::text,event_type,before_status,after_status,before_archived,after_archived,
+            name_snapshot,entity_version,occurred_at,source_type,created_at
+        FROM goal_state_history WHERE user_id=#{userId} AND goal_id=#{id}
+        ORDER BY occurred_at DESC,id DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+</mapper>

@@ -270,6 +270,18 @@ const components = [
   "system/login_logs",
   "system/operation_logs",
   "system/account_settings",
+  "growth/goals",
+  "growth/stages",
+  "growth/tasks",
+  "planning/weekly",
+  "planning/daily",
+  "planning/pending",
+  "execution/index",
+  "habit/index",
+  "habit/categories",
+  "notification/index",
+  "dashboard/index",
+  "statistics/index",
 ];
 onMounted(load);
 </script>

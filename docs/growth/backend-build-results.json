@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-11-04T16:26:11.9179721+08:00",
+  "scope": "Core growth backend only",
+  "modules": [
+    "goal",
+    "stage",
+    "task",
+    "planning"
+  ],
+  "serviceChains": 6,
+  "httpMappings": 42,
+  "newPermissions": 32,
+  "newMenuNodes": 27,
+  "visibleNewMenuNodes": 0,
+  "mavenReactorProjects": 13,
+  "package": "SUCCESS",
+  "startup": "SUCCESS",
+  "port": 8089,
+  "databaseAndRedis": "READY",
+  "publicEndpointStatus": 200,
+  "frontendChanged": false,
+  "unitTestsRun": false,
+  "systemTestsRun": false,
+  "integrationTestsRun": false,
+  "businessAcceptanceRun": false
+}

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.planning.mapper.PlanningTaskMapper">
+    <sql id="source">
+        FROM task_assignment a
+        JOIN task t ON t.id=a.task_id
+          AND t.user_id=a.user_id
+          AND t.deleted_at IS NULL
+        JOIN stage s ON s.id=t.stage_id
+          AND s.user_id=a.user_id
+          AND s.deleted_at IS NULL
+        JOIN goal g ON g.id=s.goal_id
+          AND g.user_id=a.user_id
+          AND g.deleted_at IS NULL
+        JOIN weekly_plan w ON w.id=a.weekly_plan_id
+          AND w.user_id=a.user_id
+          AND w.deleted_at IS NULL
+        LEFT JOIN daily_plan d ON d.id=a.daily_plan_id
+          AND d.user_id=a.user_id
+          AND d.weekly_plan_id=w.id
+          AND d.deleted_at IS NULL
+        WHERE a.user_id=#{userId}
+          AND a.ended_at IS NULL
+          AND (a.daily_plan_id IS NULL OR d.id IS NOT NULL)
+        <if test="q.weeklyPlanId != null">AND a.weekly_plan_id=#{q.weeklyPlanId}</if>
+        <if test="q.dailyPlanId != null">AND a.daily_plan_id=#{q.dailyPlanId}</if>
+        <if test="q.goalId != null">AND g.id=#{q.goalId}</if><if test="q.stageId != null">AND s.id=#{q.stageId}</if>
+        <if test="q.keyword != null and q.keyword != ''">AND t.name ILIKE '%' || #{q.keyword} || '%'</if>
+        <if test="q.status != null and q.status != ''">AND t.status=#{q.status}</if>
+        <if test="q.dateFrom != null">AND COALESCE(d.plan_date,w.week_start_date) &gt;= #{q.dateFrom}</if>
+        <if test="q.dateTo != null">AND COALESCE(d.plan_date,w.week_start_date+6) &lt;= #{q.dateTo}</if>
+        <if test="pending">AND t.status&lt;&gt;'COMPLETED'
+          AND g.archived_at IS NULL
+          AND (d.plan_date &lt; #{q.today} OR w.week_start_date+6 &lt; #{q.today})</if>
+    </sql>
+    <select id="page" resultType="com.asterway.planning.vo.PlanningTaskVO">
+        SELECT a.id AS assignment_id,a.version AS assignment_version,t.id AS task_id,t.name AS task_name,t.status,t.priority,t.weight,
+            s.id AS stage_id,s.name AS stage_name,g.id AS goal_id,g.name AS goal_name,a.weekly_plan_id,a.daily_plan_id,
+            w.week_start_date,d.plan_date,a.sort_order,g.archived_at
+        <include refid="source"/>
+        ORDER BY COALESCE(d.plan_date,w.week_start_date+6),a.sort_order,a.id
+        LIMIT #{q.size}
+        OFFSET #{q.offset}
+    </select>
+    <select id="count" resultType="long">SELECT count(*) <include refid="source"/></select>
+</mapper>

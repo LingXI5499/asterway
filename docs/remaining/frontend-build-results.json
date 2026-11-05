@@ -1,0 +1,247 @@
+{
+  "status": "BUILD_STARTUP_AND_READONLY_DISPLAY_CHECKS_PASSED",
+  "verifiedAt": "2026-11-05T09:25:16.8592061+08:00",
+  "branch": "feature/LingXI-develop",
+  "implementationStatus": "IMPLEMENTED",
+  "originalPages": 24,
+  "newPages": 8,
+  "totalPages": 32,
+  "dialogScenarios": 7,
+  "pageInteractions": 64,
+  "existingPageInteractions": 5,
+  "globalTimerInteractions": 4,
+  "totalInteractions": 73,
+  "pages": [
+    {
+      "route": "/dashboard",
+      "interactions": 8,
+      "name": "今日看板"
+    },
+    {
+      "route": "/execution",
+      "interactions": 9,
+      "name": "执行工作台"
+    },
+    {
+      "route": "/execution/records",
+      "interactions": 7,
+      "name": "执行记录"
+    },
+    {
+      "route": "/habits",
+      "interactions": 14,
+      "name": "习惯管理"
+    },
+    {
+      "route": "/habits/categories",
+      "interactions": 5,
+      "name": "习惯分类"
+    },
+    {
+      "route": "/notifications",
+      "interactions": 8,
+      "name": "站内消息"
+    },
+    {
+      "route": "/statistics",
+      "interactions": 8,
+      "name": "历史统计"
+    },
+    {
+      "route": "/statistics/timeline",
+      "interactions": 5,
+      "name": "成长时间线"
+    }
+  ],
+  "availableBackendOperations": 52,
+  "uiHttpOperationsUsed": 51,
+  "compatibleOperationNotSeparatelyInvoked": "PATCH /asterway/habits/{id}: full editor uses PUT",
+  "frontendSources": {
+    "modified": 10,
+    "new": 28,
+    "originalSourceFilesRetained": true
+  },
+  "versions": {
+    "devDependencies": {
+      "@vitejs/plugin-vue": "^6.0.10",
+      "vite": "^8.3.4"
+    },
+    "dependencies": {
+      "echarts": "^6.1.0",
+      "element-plus": "2.14.7",
+      "vue": "^3.5.44",
+      "vue-router": "^5.4.0"
+    },
+    "npm": "11.12.1",
+    "manifestOrLockFileEdited": false,
+    "node": "v24.15.0"
+  },
+  "frontendBuild": {
+    "exitCode": 0,
+    "command": "npm run build",
+    "warnings": [
+      "Vite large JavaScript chunk notice; threshold unchanged"
+    ],
+    "status": "PASSED"
+  },
+  "backendCompatibilityBuild": {
+    "command": "mvn --no-transfer-progress -DskipTests clean package",
+    "earlierPackagingIssue": "Old local Java process held the JAR; verified and stopped before successful rebuild",
+    "java": 17,
+    "jarSha256": "41a2118f41517899e339f2de79dc78db2fbf3be3d51b0735c810978f1548e0e4",
+    "reactorProjects": 13,
+    "status": "PASSED",
+    "successfulProjects": 13
+  },
+  "runtime": {
+    "backendStartupLogged": true,
+    "frontendService": "Existing Vite development service retained",
+    "databaseAndRedisStartupCheckLogged": true,
+    "backendPort": 8089,
+    "frontendPort": 5175,
+    "dashboardTasksSectionSchema": true
+  },
+  "resources": [
+    {
+      "resource": "src/main.js",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/router/index.js",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/personal.css",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/dashboard/DashboardView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/execution/ExecutionView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/execution/ExecutionRecordsView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/habit/HabitsView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/habit/HabitCategoriesView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/notification/NotificationsView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/statistics/StatisticsView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    },
+    {
+      "resource": "src/views/statistics/TimelineView.vue",
+      "status": 200,
+      "contentType": "text/javascript"
+    }
+  ],
+  "menus": {
+    "goalDeleteEnabled": false,
+    "enabledPermissions": 30,
+    "businessDdlExecuted": false,
+    "enabledVisiblePages": 6,
+    "ordinaryRolePageGrants": 6,
+    "managementPersonalPermissionGrants": 0
+  },
+  "approvedSqlFilesUnchanged": true,
+  "businessDdlExecuted": false,
+  "readonlyBrowserInspection": {
+    "desktopLayoutObserved": true,
+    "newPagesOpened": 8,
+    "newAccountCreated": false,
+    "businessMutatingHttpRequestsRun": false,
+    "emptyExecutionDayRegression": "Five displayed dates now show 00:00:00 instead of 24:00:00",
+    "narrowLayoutObserved": true,
+    "renderConsoleErrorsObserved": 0,
+    "viewportRestored": true,
+    "completeBusinessFlowAcceptance": "NOT_VERIFIED",
+    "existingOrdinarySessionUsed": true
+  },
+  "strictUnitSystemIntegrationTestsCreatedOrRun": false,
+  "businessAcceptance": "NOT_VERIFIED",
+  "gitActions": {
+    "merge": false,
+    "stashModified": false,
+    "commit": false,
+    "branchSwitch": false,
+    "push": false
+  },
+  "inputSha256": {
+    "backend/AGENTS.md": "70483e6dac1ed1add4d93b9d63266bfe2bfb040ad6e02d70a875d75e01f39b4f",
+    "backend/dashboard/src/main/java/com/asterway/dashboard/controller/DashboardController.java": "3901405c2fa3d0e3e78924771f366f9a3688f95de320b6d03c4b33575f7b3ada",
+    "backend/dashboard/src/main/java/com/asterway/dashboard/dto/DashboardTaskQueryDTO.java": "dd38d018ef9c64c0b9d0b3937e414d95c6d95eb4200a22bd4cda0156b45df7a6",
+    "backend/dashboard/src/main/java/com/asterway/dashboard/mapper/DashboardMapper.java": "5b65f1c3f1efae6bb3ccec5ac37dd833203d23357318d08afa10d080015b0857",
+    "backend/dashboard/src/main/java/com/asterway/dashboard/service/DashboardService.java": "48900a478717e9dfd2d6eac5f568a58f325ee08e9c931b79a7d367a96afdc68d",
+    "backend/dashboard/src/main/java/com/asterway/dashboard/service/impl/DashboardServiceImpl.java": "0d13b933f4f11c39715af4abfed49811cdb86f6c6c6b502e7cd41fcceecbf57d",
+    "backend/dashboard/src/main/resources/mapper/dashboard/DashboardMapper.xml": "184b7599538458bfae00ddcfe9ca8534e2bdf5b35609a3fd46680b44131dbd2d",
+    "backend/identity/src/main/java/com/asterway/identity/service/impl/MenuServiceImpl.java": "8c64c7b0dcf5ff60b3b84362cd5de2a55b4bda0441882b2d0a10a5d17896d6ed",
+    "backend/statistics/src/main/resources/mapper/statistics/StatisticsMapper.xml": "ab4042fa80082f8086d1dff9fa1d5b742903d6c5991ab244940e9d03a86aa6ee",
+    "docs/remaining/后端实现与启动说明.md": "bd98aba8fb0c13d6d3c4c1e5b8db17c61326e3e6dd617b3abb2840fba7d45ebc",
+    "docs/remaining/后端业务与接口约定.md": "b4ecee38ca0a14053bbebaac1a4ba7c0b1679aa4a855d4c9b56348937a8ce09d",
+    "docs/remaining/前端实现与验收说明.md": "8755530d7aaa39d8bbd41b414b4bc7ec690e3433f1df387bad79d17609461f22",
+    "docs/remaining/前端页面与交互开发方案.md": "1e0be1f5e0ca9f2c4d9ff86135adb423da854a79a58bbfd16852fa0bbea2ea89",
+    "frontend/README.md": "ee4581015338b4712d2806d1ab5b03e8e6af449302c63326bc2d382906f2fcbd",
+    "frontend/src/api/growth.js": "b112a9e548f9d7426c80109251012f63d9d0f19f55e17dd22141df35db1b7573",
+    "frontend/src/api/habit-actions.js": "6e2d55f00ed6483a9eeb4bc42854af7ca1f974598cb3c9906ccfe07b0592d0e8",
+    "frontend/src/api/http.js": "522c7f7f7ac718c1b91874b8104af701a929b8bbc24d220049880cc606c175c5",
+    "frontend/src/api/personal.js": "36c442753944f4a904baac7dd77b222fb75130eeae92e736dd75c196e27b681e",
+    "frontend/src/components/growth/GrowthActions.vue": "b0a38956b95c15c8542e59cde54ae680fa43e668588168eee46f805e35331320",
+    "frontend/src/components/growth/GrowthTaskTable.vue": "54b0c059505165a7f37f0713927eaf6468a9a6ee1cd35ec5bdcd8649536d49c3",
+    "frontend/src/components/personal/ExecutionBar.vue": "a3bb217a60c1950c46e80f414931f7ca3cf9a1f6bab478d09e1938e89a5bc25c",
+    "frontend/src/components/personal/ExecutionDetails.vue": "7e9d751430121390291da8c55a926766a8c44de2aa526fd0c39ffb347fbf8c40",
+    "frontend/src/components/personal/ExecutionTable.vue": "04a05fa5f72feda714aad077ffcccde543aaee8b384c8940b70f0e821311e82e",
+    "frontend/src/components/personal/ExecutionTaskPicker.vue": "71fe8ebdcf7165f8233aacdeafcd9e71844bf4bff5e6dad885e5550c8706df05",
+    "frontend/src/components/personal/GrowthEvidence.vue": "61589823e4e5cadcdda65afac73261a66bb55174ef6ae60798e9bde607299078",
+    "frontend/src/components/personal/HabitEditor.vue": "8cee036ed82483d271be228b3d5eec025dbed32d8eb41d8e465b72bbb614d5f4",
+    "frontend/src/components/personal/HabitHistory.vue": "f1c2865ae39afd4b0f9fc8046d90be3299aabeb855e0b8a3dcb6cc29e96acf52",
+    "frontend/src/components/personal/LoadState.vue": "458bf40223defd9f7dbc1e96b71bd7da1b6b800c6fdede7930f72caa8424ede0",
+    "frontend/src/components/personal/NotificationDetails.vue": "e90b0ca88facb1e426344683eb31c9f68ce52b2721bc27d3e222d1286d2b4cc7",
+    "frontend/src/components/personal/PagedSelect.vue": "d019a0631ed7b30bdeeb731d464492f9b8d5c9b30688e714d3e345c65cbdff82",
+    "frontend/src/components/personal/PagePagination.vue": "12a61b0411617dde1993d291efcf341878ff6a5f33b1ca4e6d919b47d32a4bbe",
+    "frontend/src/components/personal/PeriodFilters.vue": "0fc2ae94eb4cb710bb4ef705a1bd1feb307e20b49bf0ca12925ce45df268aec1",
+    "frontend/src/components/personal/ReportChart.vue": "19b135d8fcc7ad6a6d20eac7c44290808155f0425edb1ffa77963240ec3f5adf",
+    "frontend/src/components/personal/ScopeFilters.vue": "46bf03484159c22b0636584404192dc1682d9e84908a293075dc2b631c9e9ae1",
+    "frontend/src/components/personal/StateHistory.vue": "c5f76b2d9f738bc94808a99e181e000f6e4106ec954479df87ef41f7ce7f2544",
+    "frontend/src/composables/usePaged.js": "b06a8752feacd929fb0a3ca170777ccde75201798cb88cebabf1b0edebf7f4c9",
+    "frontend/src/main.js": "00ffde41364a8d4c31af2195da16e1e3169259ab4b1279e8fdef6a5b53716e8c",
+    "frontend/src/personal.css": "1d0fe4b00896639bff30f5ad2e44acde75c5c4606359cf241da9ff53dc8f7fb0",
+    "frontend/src/router/index.js": "45dbba1cd9881606cb1b3b8177705e2db60bbeefc350b25575f78926538b60ef",
+    "frontend/src/stores/personal.js": "477563beaa8a8fe712dde5fabdf95919084ab75edbdd59d6f8abca69106722a7",
+    "frontend/src/views/dashboard/DashboardView.vue": "8100df3ba5cd87465336a6593622943a636dc605b35bf5b08c0e091e99701553",
+    "frontend/src/views/execution/ExecutionRecordsView.vue": "3332cd8f0fc4ce9493c3deca87bc8ce5852071d61bbf181a562e2162f397bd6d",
+    "frontend/src/views/execution/ExecutionView.vue": "b5d78448e5fece92a00028bb335c5a0d3626f151f91055cbd670361bf8b5de09",
+    "frontend/src/views/growth/GrowthDetailView.vue": "869471abd959c64bdd4bc5483c1c61b2d74efa745a488f1f0ac22d365391577d",
+    "frontend/src/views/growth/TaskDetailView.vue": "6ef64b360db8219ece72093aa26db7658039deb95548a29343d112716ec948ce",
+    "frontend/src/views/habit/HabitCategoriesView.vue": "7f9263cd06c5b04a4e94a3174d47edd410d2662d61d5454830aa0d7a2eef45f7",
+    "frontend/src/views/habit/HabitsView.vue": "4b0510bdde211dc61d0836f2216e553516043aa0712dda2b99ac1f7361a000db",
+    "frontend/src/views/ManagementView.vue": "7fc31c510620c4139c93d60e4df05e3ec9e2c0d99da24e563271887ace41c013",
+    "frontend/src/views/notification/NotificationsView.vue": "1867f9aed5a39c8cc8a9f32dbbf72ec7d948d8230c176af3b7a2231c300fd268",
+    "frontend/src/views/statistics/StatisticsView.vue": "fdff464cc34176b2cfc1bf4009127008cb762f7479fc7fb7c88c4efd43732ed3",
+    "frontend/src/views/statistics/TimelineView.vue": "512ce17b2e77ce14746d042714d64d5957ee572cb7516875d8957b2d18a9c0b1",
+    "frontend/src/views/WorkspaceView.vue": "86746aab6f2ee0c7efa5b840a565226f629b0ce68dcadcdf82c018eb9ddd90be",
+    "scripts/enable_remaining_frontend_local.ps1": "310e9107cc921cdb6b6a844bfe4b8531861643d89daa22e933b51003237ca019"
+  }
+}

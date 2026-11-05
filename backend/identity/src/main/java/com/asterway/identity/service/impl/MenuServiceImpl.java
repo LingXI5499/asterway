@@ -12,6 +12,10 @@ import com.asterway.identity.mapper.RoleMapper;
 import com.asterway.identity.service.MenuService;
 import com.asterway.identity.service.OperationLogService;
 import com.asterway.identity.vo.MenuVO;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /** 菜单管理与当前授权菜单共用同一链路，不由前端决定实际接口权限。 */
 @Service
@@ -46,9 +48,30 @@ public class MenuServiceImpl implements MenuService {
         this.logs = logs;
     }
 
-    private static final Set<String> COMPONENTS = Set.of("account/profile", "account/devices", "system/users",
-            "system/roles", "system/permissions", "system/menus", "system/sessions", "system/login_logs",
-            "system/operation_logs", "system/account_settings");
+    private static final Set<String> COMPONENTS =
+            Set.of(
+                    "account/profile",
+                    "account/devices",
+                    "system/users",
+                    "system/roles",
+                    "system/permissions",
+                    "system/menus",
+                    "system/sessions",
+                    "system/login_logs",
+                    "system/operation_logs",
+                    "system/account_settings",
+                    "growth/goals",
+                    "growth/stages",
+                    "growth/tasks",
+                    "planning/weekly",
+                    "planning/daily",
+                    "planning/pending",
+                    "execution/index",
+                    "habit/index",
+                    "habit/categories",
+                    "notification/index",
+                    "dashboard/index",
+                    "statistics/index");
 
     @Override
     public List<MenuVO> list() {
@@ -69,20 +92,45 @@ public class MenuServiceImpl implements MenuService {
             return List.of();
         }
         List<MenuEntity> all = mapper.findAll();
-        Set<Long> assigned = actor.superAdmin() ? all.stream().map(MenuEntity::getId).collect(Collectors.toSet())
-                : new HashSet<>(mapper.findGrantedIds(actor.userId()));
+        Set<Long> assigned =
+                actor.superAdmin()
+                        ? all.stream().map(MenuEntity::getId).collect(Collectors.toSet())
+                        : new HashSet<>(mapper.findGrantedIds(actor.userId()));
         Map<Long, String> permissionCodes = new HashMap<>();
         for (PermissionEntity permission : permissions.findAll()) {
             if (Boolean.TRUE.equals(permission.getEnabled())) {
                 permissionCodes.put(permission.getId(), permission.getCode());
             }
         }
-        List<MenuEntity> allowed = all.stream()
-                .filter(row -> assigned.contains(row.getId()) && Boolean.TRUE.equals(row.getEnabled())
-                        && Boolean.TRUE.equals(row.getVisible()))
-                .filter(row -> row.getPermissionId() == null || actor.superAdmin()
-                        || actor.permissions().contains(permissionCodes.get(row.getPermissionId())))
-                .toList();
+        List<MenuEntity> allowed =
+                all.stream()
+                        .filter(
+                                row ->
+                                        assigned.contains(row.getId())
+                                                && Boolean.TRUE.equals(row.getEnabled())
+                                                && Boolean.TRUE.equals(row.getVisible()))
+                        .filter(
+                                row ->
+                                        row.getPermissionId() == null
+                                                || actor.superAdmin()
+                                                || actor.permissions()
+                                                        .contains(
+                                                                permissionCodes.get(
+                                                                        row.getPermissionId())))
+                        .toList();
+        if (com.asterway.common.utils.GrowthAccessUtils.manager(actor.roles())) {
+            allowed =
+                    allowed.stream()
+                            .filter(
+                                    row ->
+                                            !com.asterway.common.utils.GrowthAccessUtils.menu(
+                                                            row.getCode(), row.getComponentKey())
+                                                    && !com.asterway.common.utils.GrowthAccessUtils
+                                                            .permission(
+                                                                    permissionCodes.get(
+                                                                            row.getPermissionId())))
+                            .toList();
+        }
         return buildTree(allowed);
     }
 
@@ -102,7 +150,8 @@ public class MenuServiceImpl implements MenuService {
         row.setCreatedBy(actor.userId());
         row.setUpdatedBy(actor.userId());
         mapper.insert(row);
-        logs.append("identity:menu:create", "MENU", row.getId().toString(), null, Map.of("version", 0));
+        logs.append(
+                "identity:menu:create", "MENU", row.getId().toString(), null, Map.of("version", 0));
         return toVO(required(row.getId()));
     }
 
@@ -121,7 +170,12 @@ public class MenuServiceImpl implements MenuService {
         if (mapper.update(row) != 1) {
             throw BusinessException.conflict("菜单已被修改，请刷新");
         }
-        logs.append("identity:menu:update", "MENU", Long.toString(id), null, Map.of("version", dto.version()));
+        logs.append(
+                "identity:menu:update",
+                "MENU",
+                Long.toString(id),
+                null,
+                Map.of("version", dto.version()));
         return toVO(required(id));
     }
 
@@ -139,7 +193,12 @@ public class MenuServiceImpl implements MenuService {
         if (mapper.softDelete(row) != 1) {
             throw BusinessException.conflict("菜单已被修改，请刷新");
         }
-        logs.append("identity:menu:delete", "MENU", Long.toString(id), null, Map.of("version", version));
+        logs.append(
+                "identity:menu:delete",
+                "MENU",
+                Long.toString(id),
+                null,
+                Map.of("version", version));
     }
 
     private MenuEntity required(long id) {
@@ -151,9 +210,14 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private void validateAndFill(MenuEntity row, MenuSaveDTO dto) {
-        if (dto.name() == null || dto.name().isBlank() || dto.code() == null
-                || !dto.code().matches("^[a-z][a-z0-9_]{1,63}$") || dto.sortOrder() == null
-                || dto.sortOrder() < 0 || dto.visible() == null || dto.enabled() == null) {
+        if (dto.name() == null
+                || dto.name().isBlank()
+                || dto.code() == null
+                || !dto.code().matches("^[a-z][a-z0-9_]{1,63}$")
+                || dto.sortOrder() == null
+                || dto.sortOrder() < 0
+                || dto.visible() == null
+                || dto.enabled() == null) {
             throw BusinessException.badRequest("菜单基本字段无效");
         }
         String type = dto.menuType();
@@ -161,17 +225,24 @@ public class MenuServiceImpl implements MenuService {
             throw BusinessException.badRequest("菜单类型无效");
         }
         if ("BUTTON".equals(type)) {
-            if (dto.routePath() != null || dto.componentKey() != null || dto.permissionId() == null || dto.parentId() == null) {
+            if (dto.routePath() != null
+                    || dto.componentKey() != null
+                    || dto.permissionId() == null
+                    || dto.parentId() == null) {
                 throw BusinessException.badRequest("按钮必须属于页面并关联权限，不设置路由和组件");
             }
         } else {
             if (dto.routePath() == null || !dto.routePath().matches("/[A-Za-z0-9/_-]*")) {
                 throw BusinessException.badRequest("菜单路径无效");
             }
-            if ("PAGE".equals(type) && (dto.componentKey() == null || !COMPONENTS.contains(dto.componentKey()) || dto.permissionId() == null)) {
+            if ("PAGE".equals(type)
+                    && (dto.componentKey() == null
+                            || !COMPONENTS.contains(dto.componentKey())
+                            || dto.permissionId() == null)) {
                 throw BusinessException.badRequest("页面必须关联权限并使用有效组件键");
             }
-            if ("DIRECTORY".equals(type) && (dto.componentKey() != null || dto.permissionId() != null)) {
+            if ("DIRECTORY".equals(type)
+                    && (dto.componentKey() != null || dto.permissionId() != null)) {
                 throw BusinessException.badRequest("目录不设置页面组件或动作权限");
             }
         }
@@ -186,8 +257,9 @@ public class MenuServiceImpl implements MenuService {
                 if (!row.getId().equals(child.getParentId())) {
                     continue;
                 }
-                boolean compatible = "DIRECTORY".equals(type) && !"BUTTON".equals(child.getMenuType())
-                        || "PAGE".equals(type) && "BUTTON".equals(child.getMenuType());
+                boolean compatible =
+                        "DIRECTORY".equals(type) && !"BUTTON".equals(child.getMenuType())
+                                || "PAGE".equals(type) && "BUTTON".equals(child.getMenuType());
                 if (!compatible) {
                     throw BusinessException.conflict("已有子节点与新菜单类型不兼容，请先调整子节点");
                 }
@@ -207,7 +279,9 @@ public class MenuServiceImpl implements MenuService {
             if (parent == null || "BUTTON".equals(parent.getMenuType())) {
                 throw BusinessException.badRequest("父菜单不存在或不能拥有子节点");
             }
-            if (immediate && !("BUTTON".equals(type) ? "PAGE" : "DIRECTORY").equals(parent.getMenuType())) {
+            if (immediate
+                    && !("BUTTON".equals(type) ? "PAGE" : "DIRECTORY")
+                            .equals(parent.getMenuType())) {
                 throw BusinessException.badRequest("父节点类型不匹配");
             }
             immediate = false;
@@ -270,11 +344,21 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private MenuVO toVO(MenuEntity row) {
-        return new MenuVO(row.getId().toString(), row.getCode(), row.getParentId() == null ? null : row.getParentId().toString(),
-                row.getName(), row.getMenuType(), row.getRoutePath(), row.getComponentKey(),
-                row.getPermissionId() == null ? null : row.getPermissionId().toString(), row.getIcon(), row.getSortOrder(),
-                Boolean.TRUE.equals(row.getVisible()), Boolean.TRUE.equals(row.getEnabled()), Boolean.TRUE.equals(row.getBuiltin()),
-                row.getVersion(), new ArrayList<>());
+        return new MenuVO(
+                row.getId().toString(),
+                row.getCode(),
+                row.getParentId() == null ? null : row.getParentId().toString(),
+                row.getName(),
+                row.getMenuType(),
+                row.getRoutePath(),
+                row.getComponentKey(),
+                row.getPermissionId() == null ? null : row.getPermissionId().toString(),
+                row.getIcon(),
+                row.getSortOrder(),
+                Boolean.TRUE.equals(row.getVisible()),
+                Boolean.TRUE.equals(row.getEnabled()),
+                Boolean.TRUE.equals(row.getBuiltin()),
+                row.getVersion(),
+                new ArrayList<>());
     }
-
 }

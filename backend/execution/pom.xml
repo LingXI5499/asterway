@@ -8,7 +8,7 @@
     </parent>
     <artifactId>execution</artifactId>
     <name>asterway-execution</name>
-    <description>执行计时业务空框架。</description>
+    <description>任务执行会话、连续时间段、心跳与实际投入汇总。</description>
     <dependencies>
         <dependency>
             <groupId>com.asterway</groupId>

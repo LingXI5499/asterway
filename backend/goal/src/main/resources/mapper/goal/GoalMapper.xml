@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.goal.mapper.GoalMapper">
+    <resultMap id="entity" type="com.asterway.goal.entity.GoalEntity">
+        <result column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="completion_criteria" property="completionCriteria"/>
+        <result column="start_date" property="startDate"/>
+        <result column="expected_end_date" property="expectedEndDate"/>
+        <result column="status" property="status"/>
+        <result column="archived_at" property="archivedAt"/>
+        <result column="completion_condition_met" property="completionConditionMet"/>
+        <result column="completion_round" property="completionRound"/>
+        <result column="version" property="version"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted_at" property="deletedAt"/>
+    </resultMap>
+    <sql id="columns">r.id,
+            r.user_id,
+            r.name,
+            r.description,
+            r.completion_criteria,
+            r.start_date,
+            r.expected_end_date,
+            r.status,
+            r.archived_at,
+            r.completion_condition_met,
+            r.completion_round,
+            r.version,
+            r.created_at,
+            r.updated_at,
+            r.deleted_at</sql>
+    <sql id="filters">WHERE r.user_id=#{userId}
+          AND r.deleted_at IS NULL
+        <if test="q.keyword != null and q.keyword != ''">AND r.name ILIKE '%' || #{q.keyword} || '%'</if>
+        <if test="q.status != null and q.status != ''">AND r.status=#{q.status}</if><if test="q.archived != null">AND (r.archived_at IS NOT NULL)=#{q.archived}</if>
+        <if test="q.startFrom != null">AND r.start_date &gt;= #{q.startFrom}</if>
+        <if test="q.startTo != null">AND r.start_date &lt;= #{q.startTo}</if>
+        <if test="q.timing == 'CURRENT'">AND r.status&lt;&gt;'COMPLETED'
+          AND (r.start_date IS NULL OR r.start_date &lt;= #{q.today})</if>
+        <if test="q.timing == 'FUTURE'">AND r.status&lt;&gt;'COMPLETED'
+          AND r.start_date &gt; #{q.today}</if>
+    </sql>
+    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+        FROM goal r
+        WHERE r.user_id=#{userId}
+          AND r.id=#{id}
+          AND r.deleted_at IS NULL</select>
+    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
+        FROM goal r <include refid="filters"/>
+        ORDER BY r.id DESC
+        LIMIT #{q.size}
+        OFFSET #{q.offset}</select>
+    <select id="count" resultType="long">SELECT count(*)
+        FROM goal r <include refid="filters"/></select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO goal (user_id,
+            name,
+            description,
+            completion_criteria,
+            start_date,
+            expected_end_date,
+            status,
+            archived_at)
+        VALUES (#{userId},
+            #{name},
+            #{description},
+            #{completionCriteria},
+            #{startDate},
+            #{expectedEndDate},
+            #{status},
+            #{archivedAt})</insert>
+    <update id="update">UPDATE goal
+        SET name=#{name},
+            description=#{description},
+            completion_criteria=#{completionCriteria},
+            start_date=#{startDate},
+            expected_end_date=#{expectedEndDate},
+            status=#{status},
+            archived_at=#{archivedAt},
+            completion_condition_met=#{completionConditionMet},
+            version=version+1,
+            updated_at=CURRENT_TIMESTAMP
+        WHERE id=#{id}
+          AND user_id=#{userId}
+          AND version=#{version}
+          AND deleted_at IS NULL</update>
+    <select id="progress" resultType="java.math.BigDecimal">SELECT ROUND(100.0 * COALESCE(SUM(t.weight::numeric) FILTER (WHERE t.status='COMPLETED'),0)/NULLIF(SUM(t.weight::numeric),0),2)
+        FROM goal g
+        LEFT JOIN stage s ON s.goal_id=g.id
+          AND s.user_id=g.user_id
+          AND s.deleted_at IS NULL
+        LEFT JOIN task t ON t.stage_id=s.id
+          AND t.user_id=g.user_id
+          AND t.deleted_at IS NULL
+        WHERE g.user_id=#{userId}
+          AND g.id=#{id}
+          AND g.deleted_at IS NULL</select>
+</mapper>

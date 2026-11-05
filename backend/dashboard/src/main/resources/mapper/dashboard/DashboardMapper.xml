@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.dashboard.mapper.DashboardMapper">
+    <select id="overview" resultType="com.asterway.dashboard.vo.DashboardMetricsVO"><![CDATA[
+WITH days AS (
+    SELECT (#{ctx.today}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.today}::date - #{ctx.today}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+), plan_counts AS (
+    SELECT count(*) FILTER (WHERE d.plan_date=#{ctx.today}) AS today_tasks,
+        count(*) FILTER (WHERE d.plan_date=#{ctx.today} AND t.status='COMPLETED') AS today_current_completed_tasks,
+        count(*) FILTER (WHERE a.daily_plan_id IS NULL) AS week_undated_tasks
+    FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id AND t.deleted_at IS NULL
+    JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id AND s.deleted_at IS NULL
+    JOIN goal g ON g.id=s.goal_id AND g.user_id=a.user_id AND g.deleted_at IS NULL AND g.archived_at IS NULL
+    JOIN weekly_plan w ON w.id=a.weekly_plan_id AND w.user_id=a.user_id AND w.deleted_at IS NULL
+    LEFT JOIN daily_plan d ON d.id=a.daily_plan_id AND d.user_id=a.user_id AND d.weekly_plan_id=w.id AND d.deleted_at IS NULL
+    WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NULL AND w.week_start_date=date_trunc('week',#{ctx.today}::timestamp)::date
+        AND (a.daily_plan_id IS NULL OR d.plan_date=#{ctx.today})
+), execution_today AS (
+    SELECT floor(COALESCE(sum(GREATEST(0,EXTRACT(EPOCH FROM (
+        LEAST(LEAST(#{ctx.now},COALESCE(sg.ended_at,LEAST(#{ctx.now},es.last_heartbeat_at+make_interval(secs=>sg.heartbeat_timeout_seconds),sg.eligible_until))),
+            (#{ctx.today}+1)::timestamp AT TIME ZONE #{ctx.timeZone})
+        -GREATEST(sg.started_at,#{ctx.today}::timestamp AT TIME ZONE #{ctx.timeZone})))*1000)),0)/1000)::bigint AS actual_seconds
+    FROM execution_session es JOIN execution_segment sg ON sg.execution_id=es.id WHERE es.user_id=#{ctx.userId}
+), habit_counts AS (
+    SELECT COALESCE(sum(done_count),0)::bigint AS habit_done,COALESCE(sum(due_count),0)::bigint AS habit_due FROM habit_days
+)
+SELECT p.*,e.actual_seconds,h.habit_done,h.habit_due,
+    round(100.0*h.habit_done/NULLIF(h.habit_due,0),2) AS habit_completion_rate,
+    (SELECT id::text FROM execution_session WHERE user_id=#{ctx.userId} AND status='RUNNING') AS running_execution_id,
+    (SELECT count(*) FROM notification_message WHERE user_id=#{ctx.userId} AND read_at IS NULL AND handle_status<>'INVALIDATED') AS unread_messages
+FROM plan_counts p CROSS JOIN execution_today e CROSS JOIN habit_counts h
+    ]]></select>
+    <select id="current" resultType="com.asterway.dashboard.vo.DashboardExecutionVO"><![CDATA[
+SELECT e.id::text,e.task_id::text,t.name AS task_name,e.version,s.id::text AS segment_id,
+    floor(COALESCE(lengths.milliseconds,0)/1000)::bigint AS actual_seconds,
+    (e.last_heartbeat_at+make_interval(secs=>s.heartbeat_timeout_seconds)) AS heartbeat_deadline,
+    s.eligible_until,(e.controller_session_id=#{ctx.sessionId} AND #{ctx.now}<LEAST(s.eligible_until,
+        e.last_heartbeat_at+make_interval(secs=>s.heartbeat_timeout_seconds))) AS can_heartbeat
+FROM execution_session e JOIN task t ON t.id=e.task_id AND t.user_id=e.user_id
+JOIN execution_segment s ON s.execution_id=e.id AND s.ended_at IS NULL
+LEFT JOIN LATERAL (
+    SELECT sum(GREATEST(0,EXTRACT(EPOCH FROM
+        (LEAST(#{ctx.now},COALESCE(x.ended_at,LEAST(#{ctx.now},e.last_heartbeat_at
+            +make_interval(secs=>x.heartbeat_timeout_seconds),x.eligible_until)))-x.started_at))*1000)) AS milliseconds
+    FROM execution_segment x WHERE x.execution_id=e.id
+) lengths ON true WHERE e.user_id=#{ctx.userId} AND e.status='RUNNING'
+    ]]></select>
+    <select id="tasks" resultType="com.asterway.dashboard.vo.DashboardTaskVO"><![CDATA[
+SELECT t.id::text AS task_id,t.name,t.status,t.version,g.id::text AS goal_id,s.id::text AS stage_id,
+    a.id::text AS assignment_id,d.plan_date,CASE WHEN d.id IS NULL THEN 'WEEK_UNDATED' ELSE 'TODAY' END AS section,
+    t.priority,t.due_date,a.sort_order
+FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id AND t.deleted_at IS NULL
+JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id AND s.deleted_at IS NULL
+JOIN goal g ON g.id=s.goal_id AND g.user_id=a.user_id AND g.deleted_at IS NULL AND g.archived_at IS NULL
+JOIN weekly_plan w ON w.id=a.weekly_plan_id AND w.user_id=a.user_id AND w.deleted_at IS NULL
+LEFT JOIN daily_plan d ON d.id=a.daily_plan_id AND d.user_id=a.user_id AND d.weekly_plan_id=w.id AND d.deleted_at IS NULL
+WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NULL AND w.week_start_date=date_trunc('week',#{ctx.today}::timestamp)::date
+    AND ((a.daily_plan_id IS NULL) OR d.plan_date=#{ctx.today})
+    AND (#{section}::varchar IS NULL
+        OR (#{section}='TODAY' AND d.plan_date=#{ctx.today})
+        OR (#{section}='WEEK_UNDATED' AND a.daily_plan_id IS NULL))
+ORDER BY section,a.sort_order,a.id
+LIMIT LEAST(100,GREATEST(1,#{size})) OFFSET GREATEST(0,#{offset})
+    ]]></select>
+    <select id="tasksCount" resultType="long"><![CDATA[
+SELECT count(*) FROM(SELECT t.id::text AS task_id,t.name,t.status,t.version,g.id::text AS goal_id,s.id::text AS stage_id,
+    a.id::text AS assignment_id,d.plan_date,CASE WHEN d.id IS NULL THEN 'WEEK_UNDATED' ELSE 'TODAY' END AS section,
+    t.priority,t.due_date,a.sort_order
+FROM task_assignment a JOIN task t ON t.id=a.task_id AND t.user_id=a.user_id AND t.deleted_at IS NULL
+JOIN stage s ON s.id=t.stage_id AND s.user_id=a.user_id AND s.deleted_at IS NULL
+JOIN goal g ON g.id=s.goal_id AND g.user_id=a.user_id AND g.deleted_at IS NULL AND g.archived_at IS NULL
+JOIN weekly_plan w ON w.id=a.weekly_plan_id AND w.user_id=a.user_id AND w.deleted_at IS NULL
+LEFT JOIN daily_plan d ON d.id=a.daily_plan_id AND d.user_id=a.user_id AND d.weekly_plan_id=w.id AND d.deleted_at IS NULL
+WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NULL AND w.week_start_date=date_trunc('week',#{ctx.today}::timestamp)::date
+    AND ((a.daily_plan_id IS NULL) OR d.plan_date=#{ctx.today})
+    AND (#{section}::varchar IS NULL
+        OR (#{section}='TODAY' AND d.plan_date=#{ctx.today})
+        OR (#{section}='WEEK_UNDATED' AND a.daily_plan_id IS NULL))) counted
+    ]]></select>
+    <select id="goals" resultType="com.asterway.dashboard.vo.DashboardGoalVO"><![CDATA[
+WITH task_totals AS (
+    SELECT s.goal_id,count(*) AS task_count,count(*) FILTER(WHERE t.status='COMPLETED') AS completed_tasks,
+        sum(t.weight::numeric) AS total_weight,COALESCE(sum(t.weight::numeric) FILTER(WHERE t.status='COMPLETED'),0) AS completed_weight
+    FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=s.user_id AND t.deleted_at IS NULL
+    WHERE s.user_id=#{ctx.userId} AND s.deleted_at IS NULL GROUP BY s.goal_id
+)
+SELECT g.id::text,g.name,g.status,g.version,g.completion_condition_met,
+    COALESCE(tt.task_count,0) AS task_count,COALESCE(tt.completed_tasks,0) AS completed_tasks,
+    round(100.0*tt.completed_weight/NULLIF(tt.total_weight,0),2) AS current_progress
+FROM goal g LEFT JOIN task_totals tt ON tt.goal_id=g.id WHERE g.user_id=#{ctx.userId} AND g.deleted_at IS NULL AND g.archived_at IS NULL
+ORDER BY g.created_at DESC,g.id DESC LIMIT LEAST(100,GREATEST(1,#{size})) OFFSET GREATEST(0,#{offset})
+    ]]></select>
+    <select id="goalsCount" resultType="long"><![CDATA[
+SELECT count(*) FROM(WITH task_totals AS (
+    SELECT s.goal_id,count(*) AS task_count,count(*) FILTER(WHERE t.status='COMPLETED') AS completed_tasks,
+        sum(t.weight::numeric) AS total_weight,COALESCE(sum(t.weight::numeric) FILTER(WHERE t.status='COMPLETED'),0) AS completed_weight
+    FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=s.user_id AND t.deleted_at IS NULL
+    WHERE s.user_id=#{ctx.userId} AND s.deleted_at IS NULL GROUP BY s.goal_id
+)
+SELECT g.id::text,g.name,g.status,g.version,g.completion_condition_met,
+    COALESCE(tt.task_count,0) AS task_count,COALESCE(tt.completed_tasks,0) AS completed_tasks,
+    round(100.0*tt.completed_weight/NULLIF(tt.total_weight,0),2) AS current_progress
+FROM goal g LEFT JOIN task_totals tt ON tt.goal_id=g.id WHERE g.user_id=#{ctx.userId} AND g.deleted_at IS NULL AND g.archived_at IS NULL) counted
+    ]]></select>
+    <select id="habits" resultType="com.asterway.dashboard.vo.DashboardHabitVO"><![CDATA[
+WITH days AS (
+    SELECT (#{ctx.today}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.today}::date - #{ctx.today}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,h.history_locked_through,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+)
+SELECT habit_id::text,revision_id::text,category_id::text,name,expected_time,status,deleted_at,checkin_id::text,
+    done_count,due_count,(checkin_id IS NOT NULL AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through<#{ctx.today})) AS can_cancel,
+    (checkin_id IS NULL AND status='ACTIVE' AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through<#{ctx.today})) AS can_checkin
+FROM habit_days ORDER BY expected_time NULLS LAST,habit_id
+LIMIT #{size} OFFSET #{offset}
+    ]]></select>
+    <select id="habitsCount" resultType="long"><![CDATA[
+SELECT count(*) FROM(WITH days AS (
+    SELECT (#{ctx.today}::date + n)::date AS business_date
+    FROM generate_series(0, #{ctx.today}::date - #{ctx.today}::date) AS n
+), habit_days AS (
+    SELECT d.business_date,h.id AS habit_id,h.status,h.deleted_at,h.history_locked_through,
+        CASE WHEN c.id IS NOT NULL THEN c.revision_id ELSE r.id END AS revision_id,
+        CASE WHEN c.id IS NOT NULL THEN c.category_id ELSE r.category_id END AS category_id,
+        CASE WHEN c.id IS NOT NULL THEN c.name ELSE r.name END AS name,
+        CASE WHEN c.id IS NOT NULL THEN c.expected_time ELSE r.expected_time END AS expected_time,
+        c.id AS checkin_id,
+        CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END AS done_count,
+        1 AS due_count
+    FROM habit h CROSS JOIN days d
+    LEFT JOIN LATERAL (
+        SELECT ci.id,ci.revision_id,cr.category_id,cr.name,cr.expected_time
+        FROM habit_checkin ci JOIN habit_revision cr
+            ON cr.id=ci.revision_id AND cr.habit_id=h.id AND cr.user_id=h.user_id
+        WHERE ci.habit_id=h.id AND ci.user_id=h.user_id
+            AND ci.business_date=d.business_date AND ci.cancelled_at IS NULL
+    ) c ON true
+    LEFT JOIN LATERAL (
+        SELECT hr.id,hr.category_id,hr.name,hr.expected_time,hr.status_snapshot,hr.deleted_snapshot,
+            hr.start_date,hr.weekday_mask
+        FROM habit_revision hr WHERE hr.habit_id=h.id AND hr.user_id=h.user_id
+            AND hr.effective_date<=d.business_date
+        ORDER BY hr.effective_date DESC,hr.revision_no DESC LIMIT 1
+    ) r ON true
+    WHERE h.user_id=#{ctx.userId} AND (
+        c.id IS NOT NULL OR (r.status_snapshot='ACTIVE' AND NOT r.deleted_snapshot
+            AND r.start_date<=d.business_date
+            AND (r.weekday_mask::integer & (1 << (EXTRACT(ISODOW FROM d.business_date)::integer-1)))<>0)
+    )
+)
+SELECT habit_id::text,revision_id::text,category_id::text,name,expected_time,status,deleted_at,checkin_id::text,
+    done_count,due_count,(checkin_id IS NOT NULL AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through<#{ctx.today})) AS can_cancel,
+    (checkin_id IS NULL AND status='ACTIVE' AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through<#{ctx.today})) AS can_checkin
+FROM habit_days) counted
+    ]]></select>
+</mapper>

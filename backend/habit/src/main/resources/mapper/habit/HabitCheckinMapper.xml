@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.habit.mapper.HabitCheckinMapper">
+    <select id="find" resultType="com.asterway.habit.entity.HabitCheckinEntity">
+        SELECT id,user_id,habit_id,revision_id,business_date,time_zone,checked_at,cancelled_at,version,created_at,updated_at FROM habit_checkin WHERE user_id=#{userId} AND id=#{id}
+    </select>
+    <select id="valid" resultType="com.asterway.habit.entity.HabitCheckinEntity">
+        SELECT id,user_id,habit_id,revision_id,business_date,time_zone,checked_at,cancelled_at,version,created_at,updated_at FROM habit_checkin
+        WHERE user_id=#{userId} AND habit_id=#{habitId} AND business_date=#{today} AND cancelled_at IS NULL
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO habit_checkin(user_id,habit_id,revision_id,business_date,time_zone,checked_at,created_at,updated_at)
+        VALUES(#{userId},#{habitId},#{revisionId},#{businessDate},#{timeZone},#{checkedAt},#{createdAt},#{updatedAt})
+    </insert>
+    <update id="cancel">
+        UPDATE habit_checkin SET cancelled_at=#{cancelledAt},updated_at=#{updatedAt},version=version+1
+        WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND cancelled_at IS NULL
+    </update>
+    <sql id="filter">
+        WHERE c.user_id=#{userId} AND c.habit_id=#{habitId}
+        <if test="q.dateFrom != null">AND c.business_date&gt;=#{q.dateFrom}</if>
+        <if test="q.dateTo != null">AND c.business_date&lt;=#{q.dateTo}</if>
+        <if test="q.cancelled != null">AND (c.cancelled_at IS NOT NULL)=#{q.cancelled}</if>
+    </sql>
+    <select id="view" resultType="com.asterway.habit.vo.HabitCheckinVO">
+        SELECT c.id::text,c.habit_id::text,c.revision_id::text,r.name AS name_snapshot,r.category_id::text AS category_id,
+            c.business_date,c.time_zone,c.checked_at,c.cancelled_at,c.version FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        WHERE c.user_id=#{userId} AND c.id=#{id}
+    </select>
+    <select id="page" resultType="com.asterway.habit.vo.HabitCheckinVO">
+        SELECT c.id::text,c.habit_id::text,c.revision_id::text,r.name AS name_snapshot,r.category_id::text AS category_id,
+            c.business_date,c.time_zone,c.checked_at,c.cancelled_at,c.version FROM habit_checkin c JOIN habit_revision r ON r.id=c.revision_id AND r.user_id=c.user_id AND r.habit_id=c.habit_id
+        <include refid="filter"/> ORDER BY c.checked_at DESC,c.id DESC LIMIT #{q.size} OFFSET #{q.offset}
+    </select>
+    <select id="count" resultType="long">SELECT count(*) FROM habit_checkin c <include refid="filter"/></select>
+</mapper>

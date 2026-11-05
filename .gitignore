@@ -1,2 +1,6 @@
 .asterway-private/
 *.local.log
+.workbuddy/
+工程证据/
+__pycache__/
+*.py[cod]

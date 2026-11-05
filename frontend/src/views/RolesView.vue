@@ -8,6 +8,11 @@ import {
   hasPermission as can,
 } from "../api/http";
 import { report } from "../api/ui";
+const growthItem = (item) =>
+  /^(goal|stage|task|planning):/.test(item.code || "") ||
+  item.code?.startsWith("growth_") ||
+  item.componentKey?.startsWith("growth/") ||
+  item.componentKey?.startsWith("planning/");
 const roles = ref([]),
   selected = ref(null),
   mode = ref(""),
@@ -47,6 +52,7 @@ async function open(row, action) {
 function mandatory(item) {
   return (
     item.builtin &&
+    !growthItem(item) &&
     (selected.value.code === "SUPER_ADMIN" ||
       (selected.value.code === "USER" &&
         (mode.value === "permissions"
@@ -55,6 +61,7 @@ function mandatory(item) {
   );
 }
 function selectable(item) {
+  if (growthItem(item)) return selected.value.code === "USER" && item.enabled;
   if (mandatory(item)) return false;
   if (!item.enabled) return false;
   if (mode.value !== "permissions" || selected.value.code === "SUPER_ADMIN")

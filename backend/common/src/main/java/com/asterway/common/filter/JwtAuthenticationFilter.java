@@ -8,11 +8,12 @@ import com.asterway.common.security.RedisSessionStore;
 import com.asterway.common.security.SecurityAccountData;
 import com.asterway.common.security.SecurityErrorHandler;
 import com.asterway.common.utils.JwtTokenUtils;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -23,6 +24,8 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
+import java.io.IOException;
+
 /** 请求认证与七天滑动续签；仅成功业务请求续期，设备列表轮询和退出不会保活。 */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -32,8 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AccountSecurityProvider accounts;
     private final SecurityErrorHandler errors;
 
-    public JwtAuthenticationFilter(JwtTokenUtils tokens, RedisSessionStore sessions,
-            AccountSecurityProvider accounts, SecurityErrorHandler errors) {
+    public JwtAuthenticationFilter(
+            JwtTokenUtils tokens,
+            RedisSessionStore sessions,
+            AccountSecurityProvider accounts,
+            SecurityErrorHandler errors) {
         this.tokens = tokens;
         this.sessions = sessions;
         this.accounts = accounts;
@@ -43,15 +49,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return !path.startsWith("/asterway/") || "OPTIONS".equals(request.getMethod())
-                || path.startsWith("/asterway/public/") || path.equals("/asterway/time-zones")
-                || path.equals("/asterway/captchas") || path.equals("/asterway/captcha-verifications")
+        return !path.startsWith("/asterway/")
+                || "OPTIONS".equals(request.getMethod())
+                || path.startsWith("/asterway/public/")
+                || path.equals("/asterway/time-zones")
+                || path.equals("/asterway/captchas")
+                || path.equals("/asterway/captcha-verifications")
                 || path.equals("/asterway/registrations")
                 || path.equals("/asterway/sessions") && "POST".equals(request.getMethod());
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         LoginSessionData session;
         SecurityAccountData account;
@@ -62,12 +72,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             var jwt = tokens.parse(header.substring(7));
             session = sessions.get(jwt.getClaimAsString("sid"));
-            if (session == null || session.expiresAt() <= System.currentTimeMillis()
+            if (session == null
+                    || session.expiresAt() <= System.currentTimeMillis()
                     || !session.userId().equals(jwt.getSubject())) {
                 throw BusinessException.unauthorized();
             }
             account = accounts.loadSecurityAccount(Long.parseLong(session.userId()));
-            if (account == null || !account.enabled() || account.authVersion() != session.authVersion()) {
+            if (account == null
+                    || !account.enabled()
+                    || account.authVersion() != session.authVersion()) {
                 throw BusinessException.unauthorized();
             }
             if (account.mustChangePassword() && !passwordChangeAllowed(request)) {
@@ -84,10 +97,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             errors.write(response, 503, "SERVICE_UNAVAILABLE", "认证服务暂不可用，请稍后重试");
             return;
         }
-        AccountPrincipal principal = new AccountPrincipal(account.userId(), account.username(),
-                account.mustChangePassword(), account.authVersion(), account.roles(), account.permissions(), session.id());
-        var authentication = new UsernamePasswordAuthenticationToken(principal, null,
-                account.permissions().stream().map(SimpleGrantedAuthority::new).toList());
+        AccountPrincipal principal =
+                new AccountPrincipal(
+                        account.userId(),
+                        account.username(),
+                        account.mustChangePassword(),
+                        account.authVersion(),
+                        account.roles(),
+                        account.permissions(),
+                        session.id());
+        var authentication =
+                new UsernamePasswordAuthenticationToken(
+                        principal,
+                        null,
+                        account.permissions().stream().map(SimpleGrantedAuthority::new).toList());
         var context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
@@ -100,7 +123,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     LoginSessionData renewed = sessions.touch(session);
                     if (renewed != null) {
                         cached.setHeader("X-Session-Token", tokens.create(renewed));
-                        cached.setHeader("X-Session-Expires-At", Long.toString(renewed.expiresAt()));
+                        cached.setHeader(
+                                "X-Session-Expires-At", Long.toString(renewed.expiresAt()));
                     }
                 } catch (RuntimeException error) {
                     // 此时业务可能已经提交，保持真实业务结果，不把保存成功伪装成未保存。
@@ -122,8 +146,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean renewable(HttpServletRequest request) {
         String path = request.getServletPath();
-        return !path.startsWith("/asterway/me/sessions") && !path.equals("/asterway/sessions")
+        return !path.startsWith("/asterway/me/sessions")
+                && !path.equals("/asterway/sessions")
                 && !(path.startsWith("/asterway/sessions/") && request.getMethod().equals("DELETE"))
+                && !(path.equals("/asterway/executions/current")
+                        && request.getMethod().equals("GET"))
+                && !(request.getMethod().equals("GET")
+                        && (path.equals("/asterway/dashboard/overview")
+                                || path.equals("/asterway/notifications/unread-count")))
+                && !(path.startsWith("/asterway/executions/")
+                        && path.endsWith("/heartbeat")
+                        && request.getMethod().equals("POST"))
                 && !path.equals("/asterway/me/password");
     }
 }

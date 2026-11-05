@@ -1,0 +1,33 @@
+{
+  "recordedAt": "2026-11-04T17:05:38.5177153+08:00",
+  "scope": "Core growth frontend and ordinary-user boundary",
+  "newPages": 9,
+  "plannedPageInteractions": 68,
+  "mainPageEntries": 6,
+  "detailPages": 3,
+  "frontendBuild": "SUCCESS",
+  "backendPackage": "SUCCESS",
+  "backendStartup": "SUCCESS",
+  "frontendStatus": 200,
+  "backendProxyStatus": 200,
+  "frontendPort": 5175,
+  "backendPort": 8089,
+  "growthDefaultRole": "USER",
+  "managementRolesExcluded": [
+    "ADMIN",
+    "SUPER_ADMIN"
+  ],
+  "directGrowthPermissions": {
+    "USER": 32,
+    "ADMIN": 0,
+    "SUPER_ADMIN": 0
+  },
+  "visibleGrowthMenuNodes": 7,
+  "businessFlowsVerified": false,
+  "unitTestsRun": false,
+  "systemTestsRun": false,
+  "integrationTestsRun": false,
+  "testAccountsCreated": false,
+  "committed": false,
+  "pushed": false
+}
