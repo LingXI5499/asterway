@@ -48,10 +48,12 @@ async function act(action) {
     if (action === "confirm")
       await confirmAction(
         "将该目标确认完成？会再次检查当前达标条件，已读状态和目标完成分别保存。",
+        "确认目标完成",
       );
     if (action === "continue")
       await confirmAction(
         "继续保持目标当前状态？本轮不再重复提醒，之后回落再达标会产生新提醒。",
+        "继续推进目标",
       );
     pending.value = action;
     error.value = "";

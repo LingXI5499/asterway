@@ -114,6 +114,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
+        if (request.getMethod().equals("POST")
+                && (request.getServletPath().equals("/asterway/agent/chat/stream")
+                        || isAgentConversationStream(request.getServletPath()))) {
+            // SSE 必须直接写出；JSON 响应缓存会吞掉分片并妨碍取消。
+            // 不按流式心跳续签，Python 仅在请求开始和完成时重新验证登录。
+            try {
+                chain.doFilter(request, response);
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+            return;
+        }
         // 缓存本模块的 JSON 响应，业务完成后、写出前才能安全增加续签响应头。
         ContentCachingResponseWrapper cached = new ContentCachingResponseWrapper(response);
         try {
@@ -137,8 +149,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean passwordChangeAllowed(HttpServletRequest request) {
-        String path = request.getServletPath();
+    /** 会话内 SSE 与单轮 SSE 一样必须绕过 JSON 响应缓存。 */
+    private boolean isAgentConversationStream(String path) {
+        return path.startsWith("/asterway/agent/conversations/") && path.endsWith("/messages/stream");
+    }
+
+    private boolean passwordChangeAllowed(HttpServletRequest request) {        String path = request.getServletPath();
         return path.equals("/asterway/me") && request.getMethod().equals("GET")
                 || path.equals("/asterway/me/password") && request.getMethod().equals("PUT")
                 || path.startsWith("/asterway/me/sessions") && request.getMethod().equals("DELETE");

@@ -51,42 +51,56 @@ export class ApiError extends Error {
     Object.assign(this, { status, code, traceId });
   }
 }
-export async function api(path, options = {}) {
-  const requestEpoch = epoch;
-  const token = session.token;
-  const response = await fetch("/asterway" + path, {
-    method: options.method || "GET",
-    headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
-  const result = await response.json().catch(() => ({}));
+// 普通 JSON 与 SSE 共用会话响应处理，旧请求不能恢复退出后的登录状态。
+export function captureSessionRequest() {
+  return { epoch, token: session.token, sid: sessionId(session.token) };
+}
+export function checkSessionRequest(context) {
   if (
-    requestEpoch !== epoch ||
-    (token && sessionId(token) !== sessionId(session.token))
+    context.epoch !== epoch ||
+    (context.token && context.sid !== sessionId(session.token))
   ) {
     throw new ApiError("登录状态已变化，请重新登录", 401, "SESSION_CHANGED");
   }
+}
+export function acceptSessionHeaders(context, response) {
+  checkSessionRequest(context);
   const renewed = response.headers.get("X-Session-Token");
   const until = Number(response.headers.get("X-Session-Expires-At"));
-  // 并发请求只接受当前会话的续签，退出后的响应不会恢复会话。
   if (
     renewed &&
-    requestEpoch === epoch &&
     session.token &&
+    context.sid === sessionId(renewed) &&
     until > renewedUntil
   ) {
     renewedUntil = until;
     setToken(renewed);
   }
+}
+export function rejectUnauthorized(context) {
+  checkSessionRequest(context);
+  if (context.token) {
+    clearSession();
+    window.dispatchEvent(new Event("asterway:unauthorized"));
+  }
+}
+export async function api(path, options = {}) {
+  const context = captureSessionRequest();
+  const token = context.token;
+  const response = await fetch("/asterway" + path, {
+    method: options.method || "GET",
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: options.rawBody ?? (options.body ? JSON.stringify(options.body) : undefined),
+    signal: options.signal,
+  });
+  const result = await response.json().catch(() => ({}));
+  acceptSessionHeaders(context, response);
   if (!response.ok || result.code !== "OK") {
-    if (response.status === 401 && token && requestEpoch === epoch) {
-      clearSession();
-      window.dispatchEvent(new Event("asterway:unauthorized"));
-    }
+    if (response.status === 401) rejectUnauthorized(context);
     throw new ApiError(
       result.message || `请求失败（${response.status}）`,
       response.status,

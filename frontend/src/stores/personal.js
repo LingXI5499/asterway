@@ -191,6 +191,7 @@ export async function controlExecution(action, row) {
   if (action === "finish")
     await confirmAction(
       "结束本次执行？暂停间隔不会计入耗时，结束后不能恢复此会话，任务仍需单独确认完成。",
+      "结束本次执行",
     );
   return command(
     action,

@@ -16,7 +16,6 @@ const personalPage = (path, title, component, permission, parent = null) => ({
     permission,
     growth: true,
     stableQuery: true,
-    description: "以真实记录管理自己的行动与成长",
     menuPath: parent?.path || path,
     parent,
   },
@@ -145,6 +144,17 @@ const routes = [
         "statistics:report:read",
         { name: "历史统计", path: "/statistics" },
       ),
+      {
+        ...personalPage("/agent", "成长助手", () => import("../views/agent/AgentChatView.vue"), "agent:chat:read"),
+        // 资料作为对话工作区的内嵌面板，切换时保留会话、输入和阅读位置。
+        children: [
+          personalPage("memories", "长期记忆", () => import("../views/agent/AgentMemoriesView.vue"), "agent:memory:read"),
+          personalPage("knowledge", "知识资料", () => import("../views/agent/AgentKnowledgeView.vue"), "agent:knowledge:read"),
+          personalPage("knowledge/:id", "文档详情", () => import("../views/agent/AgentKnowledgeDetailView.vue"), "agent:knowledge:read"),
+          personalPage("runs", "运行记录", () => import("../views/agent/AgentRunsView.vue"), "agent:run:read"),
+          personalPage("reviews", "成长复盘", () => import("../views/agent/AgentReviewsView.vue"), "agent:review:read"),
+        ],
+      },
       {
         ...page(
           "/growth/goals",
@@ -289,6 +299,11 @@ function syncMenuRoutes(nodes) {
           "notification/index": "/notifications",
           "dashboard/index": "/dashboard",
           "statistics/index": "/statistics",
+          "agent/index": "/agent",
+          "agent/memories": "/agent/memories",
+          "agent/knowledge": "/agent/knowledge",
+          "agent/runs": "/agent/runs",
+          "agent/reviews": "/agent/reviews",
         };
         const sourcePath =
           aliases[menu.componentKey] ||
@@ -353,6 +368,7 @@ window.addEventListener("asterway:unauthorized", () =>
   router.replace("/login"),
 );
 export function defaultPath() {
+  if (canGrow("agent:chat:read")) return "/agent";
   if (canGrow("dashboard:board:read")) return "/dashboard";
   if (!isManager() && canGrow("goal:goal:list")) return "/growth/goals";
   if (isManager())

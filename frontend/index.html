@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Asterway 个人成长工作台，清晰规划目标、安排任务，记录真实投入与每天的坚持。"
+    />
+    <script>
+      // 在首屏绘制前应用展示偏好，避免深色主题出现浅色闪屏。
+      (() => {
+        let mode = "system";
+        try {
+          mode = localStorage.getItem("asterway.ui.theme") || "system";
+        } catch {}
+        if (!["light", "dark", "system"].includes(mode)) mode = "system";
+        const theme =
+          mode === "system"
+            ? matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : mode;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <title>Asterway</title>
   </head>
   <body>

@@ -1,0 +1,19 @@
+:root {
+  --aw-font:
+    "Geist Variable", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --aw-space-1: 4px;
+  --aw-space-2: 8px;
+  --aw-space-3: 12px;
+  --aw-space-4: 16px;
+  --aw-space-5: 16px;
+  --aw-space-6: 24px;
+  --aw-space-8: 32px;
+  --aw-space-10: 40px;
+  --aw-radius-input: 8px;
+  --aw-radius-card: 12px;
+  --aw-radius-dialog: 16px;
+  --aw-sidebar-width: 256px;
+  --aw-sidebar-collapsed: 64px;
+  --aw-topbar-height: 56px;
+  --aw-motion: cubic-bezier(0.22, 1, 0.36, 1);
+}

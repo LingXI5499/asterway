@@ -71,7 +71,12 @@ public class MenuServiceImpl implements MenuService {
                     "habit/categories",
                     "notification/index",
                     "dashboard/index",
-                    "statistics/index");
+                    "statistics/index",
+                    "agent/index",
+                    "agent/memories",
+                    "agent/knowledge",
+                    "agent/runs",
+                    "agent/reviews");
 
     @Override
     public List<MenuVO> list() {

@@ -39,7 +39,8 @@ public class SecurityConfig {
         cors.setAllowedOrigins(List.of(
                 "http://localhost:5173", "http://127.0.0.1:5173",
                 "http://localhost:5174", "http://127.0.0.1:5174",
-                "http://localhost:5175", "http://127.0.0.1:5175"));
+                "http://localhost:5175", "http://127.0.0.1:5175",
+                "http://localhost:5176", "http://127.0.0.1:5176"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         cors.setExposedHeaders(List.of("X-Trace-Id", "X-Session-Token", "X-Session-Expires-At"));
@@ -55,7 +56,8 @@ public class SecurityConfig {
                 .requestCache(config -> config.disable())
                 .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(config -> config
-                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                        // 异步派发只处理已通过初始认证的 MVC 请求。
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/asterway/sessions", "/asterway/registrations",
                                 "/asterway/captchas", "/asterway/captcha-verifications").permitAll()

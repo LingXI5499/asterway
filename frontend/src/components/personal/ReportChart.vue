@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, computed } from "vue";
 import { init, use } from "echarts/core";
 import { BarChart, LineChart } from "echarts/charts";
 import {
@@ -8,6 +8,7 @@ import {
   GridComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
+import { chartTheme, resolvedTheme } from "../../stores/uiPreferences";
 use([
   BarChart,
   LineChart,
@@ -22,23 +23,43 @@ const props = defineProps({
   label: String,
 });
 const canvas = ref(null);
+const hasData = computed(
+  () =>
+    props.rows.length > 0 &&
+    (props.kind !== "habits" ||
+      props.rows.some((row) => row.habitCompletionRate != null)),
+);
 let chart, observer;
 function draw() {
   if (!chart) return;
   const rows = props.rows;
+  const theme = chartTheme();
   const base = {
     animation: !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    color: ["#416ee5", "#238871", "#c78a25"],
-    tooltip: { trigger: "axis", confine: true },
+    color: theme.colors,
+    textStyle: { color: theme.text, fontFamily: theme.font },
+    tooltip: {
+      trigger: "axis",
+      confine: true,
+      backgroundColor: theme.surface,
+      borderColor: theme.border,
+      textStyle: { color: theme.text },
+    },
     grid: { left: 48, right: 24, top: 48, bottom: 40 },
     xAxis: {
       type: "category",
       data: rows.map((row) => row.businessDate),
-      axisLabel: { fontSize: 12 },
+      axisLabel: { fontSize: 12, color: theme.text },
+      axisLine: { lineStyle: { color: theme.border } },
       axisTick: { alignWithLabel: true },
     },
-    yAxis: { type: "value", splitLine: { lineStyle: { color: "#edf0f7" } } },
-    legend: { top: 0, textStyle: { fontSize: 12 } },
+    yAxis: {
+      type: "value",
+      nameTextStyle: { color: theme.text },
+      axisLabel: { color: theme.text },
+      splitLine: { lineStyle: { color: theme.border } },
+    },
+    legend: { top: 0, textStyle: { fontSize: 12, color: theme.text } },
   };
   if (props.kind === "effort")
     Object.assign(base, {
@@ -62,7 +83,7 @@ function draw() {
         name: "完成率",
         min: 0,
         max: 100,
-        axisLabel: { formatter: "{value}%" },
+        axisLabel: { formatter: "{value}%", color: theme.text },
       },
       series: [
         {
@@ -113,6 +134,7 @@ onMounted(() => {
   observer.observe(canvas.value);
 });
 watch(() => [props.rows, props.kind], draw, { deep: true });
+watch(resolvedTheme, draw, { flush: "post" });
 onBeforeUnmount(() => {
   observer?.disconnect();
   chart?.dispose();
@@ -120,5 +142,29 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div ref="canvas" class="report-chart" role="img" :aria-label="label" />
+  <div class="report-chart-wrap">
+    <div
+      ref="canvas"
+      class="report-chart"
+      :class="{ 'is-empty': !hasData }"
+      role="img"
+      :aria-label="label"
+      :aria-hidden="!hasData"
+    />
+    <div v-if="!hasData" class="chart-empty-state">
+      <AppEmptyState
+        :title="
+          kind === 'habits' && rows.length
+            ? '当前日期页无应做记录'
+            : '当前区间暂无趋势记录'
+        "
+        :description="
+          kind === 'habits'
+            ? '没有应做次数时不计算完成率，也不显示为 0%。'
+            : '可以调整查询区间，查看已有的真实投入。'
+        "
+        icon="statistics"
+      />
+    </div>
+  </div>
 </template>

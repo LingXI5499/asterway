@@ -112,68 +112,58 @@ async function allRead() {
       :error="list.error"
       @retry="list.load"
     >
-      <el-table
-        :data="list.rows"
-        v-loading="list.busy"
-        empty-text="暂无站内消息，目标达标后会在这里提醒你"
-      >
-        <el-table-column label="消息" min-width="260"
-          ><template #default="{ row }"
-            ><el-button
-              v-if="canGrow('notification:message:read')"
-              link
-              type="primary"
-              @click="detail(row)"
-              >{{ row.title }}</el-button
-            ><span v-else>{{ row.title }}</span>
-            <p class="table-excerpt">{{ row.content }}</p></template
-          ></el-table-column
+      <div class="notice-list" v-loading="list.busy">
+        <article
+          v-for="row in list.rows"
+          :key="row.id"
+          class="notice-row"
+          :class="{ unread: !row.readAt }"
         >
-        <el-table-column label="已读状态" width="100"
-          ><template #default="{ row }"
-            ><el-tag :type="row.readAt ? 'info' : 'primary'">{{
-              row.readAt ? "已读" : "未读"
-            }}</el-tag></template
-          ></el-table-column
-        >
-        <el-table-column label="业务处理" width="130"
-          ><template #default="{ row }"
-            ><el-tag
-              :type="
-                row.handleStatus === 'PENDING'
-                  ? 'warning'
-                  : row.handleStatus === 'CONFIRMED'
-                    ? 'success'
-                    : 'info'
-              "
-              >{{ handleStates[row.handleStatus] }}</el-tag
-            ></template
-          ></el-table-column
-        >
-        <el-table-column label="发送时间" min-width="180"
-          ><template #default="{ row }">{{
-            instantText(row.createdAt)
-          }}</template></el-table-column
-        >
-        <el-table-column label="操作" width="210" fixed="right"
-          ><template #default="{ row }">
+          <div class="notice-icon">
+            <AppIcon name="notification" :size="22" />
+          </div>
+          <div class="notice-copy">
+            <h3>
+              <el-button
+                v-if="canGrow('notification:message:read')"
+                link
+                type="primary"
+                @click="detail(row)"
+                >{{ row.title }}</el-button
+              ><span v-else>{{ row.title }}</span>
+            </h3>
+            <p>{{ row.content }}</p>
+            <div class="notice-meta">
+              <span>{{ instantText(row.createdAt) }}</span
+              ><span>{{ row.readAt ? "已读" : "未读" }}</span
+              ><AppStatusTag :value="row.handleStatus" />
+            </div>
+          </div>
+          <div class="notice-actions">
             <el-button
               v-if="canGrow('notification:message:read')"
-              link
+              text
               type="primary"
               @click="detail(row)"
               >详情与处理</el-button
             >
             <el-button
               v-if="!row.readAt && canGrow('notification:message:mark_read')"
-              link
+              text
               :disabled="!!pending"
               @click="read(row)"
               >标为已读</el-button
             >
-          </template></el-table-column
-        > </el-table
-      ><PagePagination :state="list" @change="list.load" />
+          </div>
+        </article>
+        <AppEmptyState
+          v-if="!list.rows.length && !list.busy"
+          title="消息都在这里，进展不会错过"
+          description="目标达标后会收到提醒，由你亲自决定完成或继续推进。"
+          icon="notification"
+        />
+      </div>
+      <PagePagination :state="list" @change="list.load" />
     </LoadState>
   </section>
   <NotificationDetails v-model="opened" :id="detailId" @changed="list.load" />

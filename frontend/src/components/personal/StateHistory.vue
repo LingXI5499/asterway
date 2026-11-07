@@ -105,7 +105,7 @@ onBeforeUnmount(() => {
             </p>
           </article>
         </el-timeline-item></el-timeline
-      ><el-empty v-else description="还没有状态历史" />
+      ><AppEmptyState v-else description="还没有状态历史" />
       <PagePagination :state="list" @change="load" />
     </LoadState>
   </el-drawer>

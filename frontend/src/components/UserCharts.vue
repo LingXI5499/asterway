@@ -8,6 +8,7 @@ import {
   GridComponent,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
+import { chartTheme, resolvedTheme } from "../stores/uiPreferences";
 use([
   PieChart,
   BarChart,
@@ -24,10 +25,17 @@ let charts = [],
   observer;
 function draw() {
   const s = props.statistics;
+  const theme = chartTheme();
+  const tooltip = {
+    backgroundColor: theme.surface,
+    borderColor: theme.border,
+    textStyle: { color: theme.text },
+  };
   charts[0]?.setOption({
-    color: ["#416ee5", "#33b9a2"],
-    tooltip: { trigger: "item" },
-    legend: { bottom: 0 },
+    color: theme.colors,
+    textStyle: { color: theme.text, fontFamily: theme.font },
+    tooltip: { ...tooltip, trigger: "item" },
+    legend: { bottom: 0, textStyle: { color: theme.text } },
     series: [
       {
         type: "pie",
@@ -40,11 +48,22 @@ function draw() {
     ],
   });
   charts[1]?.setOption({
-    color: ["#416ee5"],
-    tooltip: { trigger: "axis" },
+    color: [theme.colors[0]],
+    textStyle: { color: theme.text, fontFamily: theme.font },
+    tooltip: { ...tooltip, trigger: "axis" },
     grid: { left: 40, right: 16, bottom: 32, top: 24 },
-    xAxis: { type: "category", data: ["启用", "禁用", "已删除"] },
-    yAxis: { type: "value", minInterval: 1 },
+    xAxis: {
+      type: "category",
+      data: ["启用", "禁用", "已删除"],
+      axisLabel: { color: theme.text },
+      axisLine: { lineStyle: { color: theme.border } },
+    },
+    yAxis: {
+      type: "value",
+      minInterval: 1,
+      axisLabel: { color: theme.text },
+      splitLine: { lineStyle: { color: theme.border } },
+    },
     series: [
       {
         type: "bar",
@@ -68,6 +87,7 @@ onMounted(async () => {
   observer.observe(bar.value);
 });
 watch(() => props.statistics, draw, { deep: true });
+watch(resolvedTheme, draw, { flush: "post" });
 onBeforeUnmount(() => {
   observer?.disconnect();
   charts.forEach((c) => c.dispose());

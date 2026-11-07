@@ -97,10 +97,16 @@ onMounted(loadSummary);
     />
     <template v-if="execution.current">
       <div class="focus-title">
-        <el-tag type="success">运行中</el-tag
-        ><strong>{{ execution.current.taskName }}</strong>
+        <AppStatusTag value="RUNNING" /><strong>{{
+          execution.current.taskName
+        }}</strong>
       </div>
-      <div class="focus-clock" aria-live="off">
+      <div
+        class="focus-clock"
+        role="timer"
+        aria-label="本次实际投入时长"
+        aria-live="off"
+      >
         {{ duration(elapsedSeconds()) }}
       </div>
       <p class="hint">
@@ -143,7 +149,10 @@ onMounted(loadSummary);
       <div class="focus-clock idle">00:00:00</div>
       <p class="muted">当前没有运行中的执行，选择已安排任务后开始。</p>
       <div class="start-selection">
-        <span>{{ selected?.name || "尚未选择任务" }}</span
+        <span class="selected-task"
+          ><AppIcon :name="selected ? 'task' : 'inbox'" />{{
+            selected?.name || "请在下方选择一个已安排任务"
+          }}</span
         ><el-button
           v-if="canStartTask()"
           type="primary"

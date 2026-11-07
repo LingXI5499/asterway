@@ -59,6 +59,10 @@
             <groupId>com.asterway</groupId>
             <artifactId>notification</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.asterway</groupId>
+            <artifactId>agent</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { api, session, loadCurrent, clearSession } from "../api/http";
 import {
@@ -13,7 +13,12 @@ import {
 import TimeZoneSelect from "../components/TimeZoneSelect.vue";
 const props = defineProps({ forced: Boolean });
 const router = useRouter(),
-  tab = ref("profile"),
+  route = useRoute(),
+  tab = ref(
+    ["profile", "password", "zone"].includes(route.query.tab)
+      ? route.query.tab
+      : "profile",
+  ),
   busy = ref(false),
   error = ref(""),
   profile = ref({}),

@@ -148,7 +148,14 @@ defineExpose({ reload: () => load() });
           v-loading="busy"
           empty-text="本周暂无安排，可先前往周计划添加任务"
         >
-          <el-table-column label="选择" width="80"
+          <template #empty
+            ><AppEmptyState
+              :description="
+                error
+                  ? '加载失败，请查看提示后重试。'
+                  : '本周暂无安排，可先前往周计划添加任务'
+              " /></template
+          ><el-table-column label="选择" width="80"
             ><template #default="{ row }"
               ><el-radio
                 :model-value="chosen"

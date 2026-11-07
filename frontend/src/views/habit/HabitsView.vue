@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import {
   habitApi,
@@ -36,6 +36,15 @@ const list = usePaged((params, signal) =>
 );
 const categories = (params, signal) => habitApi.categories(params, signal);
 const idOf = (row) => row.habitId || row.id;
+const checked = (row) => !!(row.checkinId || row.checkedToday);
+const todayGroups = computed(() => [
+  {
+    title: "等待打卡",
+    done: false,
+    rows: list.rows.filter((row) => !checked(row)),
+  },
+  { title: "已经完成", done: true, rows: list.rows.filter(checked) },
+]);
 function sealed(row) {
   return row.historyLockedThrough && today() <= row.historyLockedThrough;
 }
@@ -157,7 +166,108 @@ watch(mode, () => {
       :error="list.error"
       @retry="list.load"
     >
+      <div v-if="mode === 'TODAY'" v-loading="list.busy" class="habit-today">
+        <template v-for="group in todayGroups" :key="group.title">
+          <section v-if="group.rows.length" class="habit-group">
+            <div class="section-heading">
+              <h3>{{ group.title }}</h3>
+              <span class="hint">本页 {{ group.rows.length }} 项</span>
+            </div>
+            <div class="habit-check-list">
+              <article
+                v-for="row in group.rows"
+                :key="idOf(row)"
+                class="habit-check-row"
+                :class="{ checked: group.done }"
+              >
+                <span class="habit-indicator"
+                  ><AppIcon :name="group.done ? 'check' : 'habit'"
+                /></span>
+                <div class="habit-row-copy">
+                  <strong>{{ row.name }}</strong>
+                  <p class="hint">
+                    {{
+                      row.expectedTime
+                        ? "提示时间 " + row.expectedTime
+                        : "今天留出一点时间，坚持一次"
+                    }}
+                    · {{ habitStates[row.status] }}
+                  </p>
+                </div>
+                <div class="toolbar">
+                  <el-button
+                    v-if="
+                      canGrow('habit:checkin:create') &&
+                      canGrow('habit:habit:read') &&
+                      !group.done
+                    "
+                    type="primary"
+                    :disabled="!!pending || !row.canCheckin"
+                    :loading="pending === idOf(row)"
+                    @click="act('checkin', row)"
+                    ><AppIcon name="check" :size="16" /><span
+                      >今日打卡</span
+                    ></el-button
+                  >
+                  <el-button
+                    v-if="
+                      canGrow('habit:checkin:cancel') &&
+                      canGrow('habit:checkin:read') &&
+                      group.done
+                    "
+                    :disabled="!!pending || !row.canCancel"
+                    @click="act('cancel', row)"
+                    >撤销今日</el-button
+                  >
+                  <el-dropdown
+                    v-if="
+                      canGrow('habit:checkin:read') ||
+                      canGrow('habit:habit:history')
+                    "
+                    trigger="click"
+                    @command="(value) => history(row, value)"
+                  >
+                    <el-button
+                      text
+                      aria-label="查看习惯历史"
+                      title="查看习惯历史"
+                      ><AppIcon name="more"
+                    /></el-button>
+                    <template #dropdown
+                      ><el-dropdown-menu>
+                        <el-dropdown-item
+                          v-if="canGrow('habit:checkin:read')"
+                          command="checkins"
+                          >打卡历史</el-dropdown-item
+                        >
+                        <el-dropdown-item
+                          v-if="canGrow('habit:habit:history')"
+                          command="revisions"
+                          >规则历史</el-dropdown-item
+                        >
+                      </el-dropdown-menu></template
+                    >
+                  </el-dropdown>
+                </div>
+              </article>
+            </div>
+          </section>
+        </template>
+        <AppEmptyState
+          v-if="!list.rows.length && !list.busy"
+          title="今天还没有应做的习惯"
+          description="从一个小习惯开始，每天留下一次真实记录。"
+          icon="habit"
+          ><el-button
+            v-if="canGrow('habit:habit:create')"
+            type="primary"
+            @click="edit()"
+            >创建习惯</el-button
+          ></AppEmptyState
+        >
+      </div>
       <el-table
+        v-else
         :data="list.rows"
         v-loading="list.busy"
         :empty-text="
@@ -166,7 +276,14 @@ watch(mode, () => {
             : '暂无习惯，试试创建或调整筛选条件'
         "
       >
-        <el-table-column
+        <template #empty
+          ><AppEmptyState
+            :description="
+              mode === 'TODAY'
+                ? '今天暂无应做习惯，可以先创建一个习惯'
+                : '暂无习惯，试试创建或调整筛选条件'
+            " /></template
+        ><el-table-column
           prop="name"
           label="习惯"
           min-width="190"

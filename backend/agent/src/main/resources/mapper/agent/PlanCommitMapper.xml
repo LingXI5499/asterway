@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.asterway.agent.mapper.PlanCommitMapper">
+    <select id="findByKeyForUpdate" resultType="java.util.Map">
+        SELECT id,user_id,run_id,plan_version_id,idempotency_key,request_hash,status,attempts,
+            result::text AS result_json,error_code,error_message
+        FROM agent.plan_commit WHERE idempotency_key=#{idempotencyKey} FOR UPDATE
+    </select>
+    <select id="findConfirmedPlan" resultType="java.util.Map">
+        SELECT p.snapshot::text AS snapshot_json, p.status AS plan_status,
+            r.status AS run_status, r.latest_plan_version_id,
+            r.expires_at &lt;= clock_timestamp() AS expired
+        FROM agent.plan_version p
+        JOIN agent.workflow_run r ON r.id=p.run_id AND r.user_id=p.user_id
+        JOIN agent.conversation c ON c.id=r.conversation_id AND c.user_id=r.user_id
+        WHERE p.id=#{planVersionId} AND p.run_id=#{runId} AND p.user_id=#{userId}
+            AND c.deleted_at IS NULL AND c.status='ACTIVE'
+        FOR UPDATE OF r,p
+    </select>
+    <insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO agent.plan_commit(user_id,run_id,plan_version_id,idempotency_key,request_hash,
+            status,attempts,result)
+        VALUES(#{userId},#{runId},#{planVersionId},#{idempotencyKey},#{requestHash},'PENDING',0,'{}'::jsonb)
+    </insert>
+    <update id="markRunning">
+        WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        UPDATE agent.plan_commit SET status='RUNNING',attempts=attempts+1,
+            started_at=GREATEST(stamp.at,created_at,updated_at),finished_at=NULL,
+            error_code=NULL,error_message=NULL,
+            updated_at=GREATEST(stamp.at,created_at,updated_at),version=version+1
+        FROM stamp
+        WHERE id=#{id} AND status IN ('PENDING','FAILED') AND attempts&lt;#{maxAttempts}
+    </update>
+    <update id="markSucceeded">
+        WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        UPDATE agent.plan_commit SET status='SUCCEEDED',
+            finished_at=GREATEST(stamp.at,created_at,updated_at,started_at),
+            result=#{resultJson}::jsonb,error_code=NULL,error_message=NULL,
+            updated_at=GREATEST(stamp.at,created_at,updated_at,started_at),version=version+1
+        FROM stamp
+        WHERE id=#{id} AND status='RUNNING'
+    </update>
+    <update id="markFailed">
+        WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        UPDATE agent.plan_commit SET status='FAILED',
+            started_at=GREATEST(stamp.at,created_at,updated_at),
+            finished_at=GREATEST(stamp.at,created_at,updated_at),attempts=attempts+1,
+            error_code=#{errorCode},error_message=#{errorMessage},
+            updated_at=GREATEST(stamp.at,created_at,updated_at),version=version+1
+        FROM stamp
+        WHERE id=#{id} AND status IN ('PENDING','FAILED') AND attempts&lt;10
+    </update>
+</mapper>

@@ -25,6 +25,11 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 asterway:
+  agent:
+    base-url: http://127.0.0.1:8001
+    internal-key: ''
+    connect-timeout-seconds: 5
+    request-timeout-seconds: 280
   execution:
     heartbeat-interval-seconds: 20
     heartbeat-timeout-seconds: 90

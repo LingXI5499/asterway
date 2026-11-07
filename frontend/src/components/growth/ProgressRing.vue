@@ -4,6 +4,7 @@ import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { init, use } from "echarts/core";
 import { PieChart } from "echarts/charts";
 import { CanvasRenderer } from "echarts/renderers";
+import { chartTheme, resolvedTheme } from "../../stores/uiPreferences";
 use([PieChart, CanvasRenderer]);
 const props = defineProps({ value: [Number, String] });
 const node = ref(null);
@@ -11,9 +12,10 @@ let chart, observer;
 function draw() {
   if (!chart) return;
   const value = Number(props.value || 0);
+  const theme = chartTheme();
   chart.setOption({
     animation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
-    color: ["#416ee5", "#eaf0fa"],
+    color: [theme.colors[0], theme.border],
     series: [
       {
         type: "pie",
@@ -32,13 +34,20 @@ onMounted(() => {
   observer.observe(node.value);
 });
 watch(() => props.value, draw);
+watch(resolvedTheme, draw, { flush: "post" });
 onBeforeUnmount(() => {
   observer?.disconnect();
   chart?.dispose();
 });
 </script>
 <template>
-  <div class="progress-ring">
+  <div
+    class="progress-ring"
+    role="img"
+    :aria-label="
+      value == null ? '暂无可计算的任务进度' : '加权完成进度 ' + value + '%'
+    "
+  >
     <div ref="node" class="ring-canvas" />
     <div class="ring-label">
       <strong>{{

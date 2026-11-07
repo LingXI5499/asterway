@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { defaultPath } from "../router";
 defineProps({ forbidden: Boolean });
 const router = useRouter();
 </script>
@@ -11,12 +12,12 @@ const router = useRouter();
       :sub-title="
         forbidden
           ? '当前账户没有访问该页面的权限。'
-          : '请检查地址，或返回个人中心。'
+          : '这个地址没有对应的页面，可以返回工作区继续。'
       "
       ><template #extra
         ><el-button @click="router.back()">返回上一页</el-button
-        ><el-button type="primary" @click="router.push('/account/profile')"
-          >个人中心</el-button
+        ><el-button type="primary" @click="router.push(defaultPath())"
+          >返回工作区</el-button
         ></template
       ></el-result
     >

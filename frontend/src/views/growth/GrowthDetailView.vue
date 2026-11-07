@@ -77,8 +77,11 @@ onMounted(load);
               )
             "
             >{{ kind === "goal" ? "返回目标管理" : "返回所属目标" }}</el-button
-          ><el-tag>{{ states[record.status] }}</el-tag
-          ><el-tag v-if="archived" type="info">已归档，只读</el-tag>
+          ><AppStatusTag :value="record.status" /><el-tag
+            v-if="archived"
+            type="info"
+            >已归档，只读</el-tag
+          >
         </div>
         <h2>{{ record.name }}</h2>
         <p class="preserve-text">{{ record.description || "尚未填写描述" }}</p>
@@ -144,11 +147,18 @@ onMounted(load);
         title="请先恢复目标，再修改其阶段、任务或计划安排"
         type="info"
         :closable="false"
-      /><el-empty
+      /><AppEmptyState
         v-if="!canGrow(`${childKind}:${childKind}:list`)"
         description="当前未授予子项列表权限"
       /><template v-else
         ><el-table v-if="kind === 'goal'" :data="rows" v-loading="busy"
+          ><template #empty
+            ><AppEmptyState
+              :description="
+                error
+                  ? '加载失败，请查看提示后重试。'
+                  : '暂无记录，可调整筛选条件或从第一条记录开始。'
+              " /></template
           ><el-table-column label="阶段" min-width="180"
             ><template #default="{ row }"
               ><el-button
@@ -164,9 +174,8 @@ onMounted(load);
               ><ProgressValue
                 :value="row.progress" /></template></el-table-column
           ><el-table-column label="状态"
-            ><template #default="{ row }">{{
-              states[row.status]
-            }}</template></el-table-column
+            ><template #default="{ row }"
+              ><AppStatusTag :value="row.status" /></template></el-table-column
           ><el-table-column label="操作" width="210"
             ><template #default="{ row }"
               ><el-button

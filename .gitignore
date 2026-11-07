@@ -4,3 +4,7 @@
 工程证据/
 __pycache__/
 *.py[cod]
+
+# Local uploads and editor metadata
+agent/data/
+agent/.idea/

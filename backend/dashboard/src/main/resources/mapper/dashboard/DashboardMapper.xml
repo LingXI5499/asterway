@@ -107,6 +107,7 @@ WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NULL AND w.week_start_date=date_
         OR (#{section}='TODAY' AND d.plan_date=#{ctx.today})
         OR (#{section}='WEEK_UNDATED' AND a.daily_plan_id IS NULL))) counted
     ]]></select>
+    <!-- 当前目标按账号有效时区的当日日期筛选，列表和分页总数保持相同口径。 -->
     <select id="goals" resultType="com.asterway.dashboard.vo.DashboardGoalVO"><![CDATA[
 WITH task_totals AS (
     SELECT s.goal_id,count(*) AS task_count,count(*) FILTER(WHERE t.status='COMPLETED') AS completed_tasks,
@@ -118,6 +119,7 @@ SELECT g.id::text,g.name,g.status,g.version,g.completion_condition_met,
     COALESCE(tt.task_count,0) AS task_count,COALESCE(tt.completed_tasks,0) AS completed_tasks,
     round(100.0*tt.completed_weight/NULLIF(tt.total_weight,0),2) AS current_progress
 FROM goal g LEFT JOIN task_totals tt ON tt.goal_id=g.id WHERE g.user_id=#{ctx.userId} AND g.deleted_at IS NULL AND g.archived_at IS NULL
+    AND (g.start_date IS NULL OR g.start_date<=#{ctx.today})
 ORDER BY g.created_at DESC,g.id DESC LIMIT LEAST(100,GREATEST(1,#{size})) OFFSET GREATEST(0,#{offset})
     ]]></select>
     <select id="goalsCount" resultType="long"><![CDATA[
@@ -130,7 +132,8 @@ SELECT count(*) FROM(WITH task_totals AS (
 SELECT g.id::text,g.name,g.status,g.version,g.completion_condition_met,
     COALESCE(tt.task_count,0) AS task_count,COALESCE(tt.completed_tasks,0) AS completed_tasks,
     round(100.0*tt.completed_weight/NULLIF(tt.total_weight,0),2) AS current_progress
-FROM goal g LEFT JOIN task_totals tt ON tt.goal_id=g.id WHERE g.user_id=#{ctx.userId} AND g.deleted_at IS NULL AND g.archived_at IS NULL) counted
+FROM goal g LEFT JOIN task_totals tt ON tt.goal_id=g.id WHERE g.user_id=#{ctx.userId} AND g.deleted_at IS NULL AND g.archived_at IS NULL
+    AND (g.start_date IS NULL OR g.start_date<=#{ctx.today})) counted
     ]]></select>
     <select id="habits" resultType="com.asterway.dashboard.vo.DashboardHabitVO"><![CDATA[
 WITH days AS (

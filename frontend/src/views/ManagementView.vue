@@ -354,6 +354,11 @@ onMounted(load);
       :default-expand-all="expanded"
       v-loading="busy"
       empty-text="暂无符合条件的记录"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error ? '加载失败，请查看提示后重试。' : '暂无符合条件的记录'
+          " /></template
       ><el-table-column
         :prop="isUser ? 'username' : 'name'"
         :label="isUser ? '用户名' : '名称'"

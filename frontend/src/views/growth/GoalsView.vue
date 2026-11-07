@@ -9,6 +9,7 @@ const rows = ref([]),
   size = ref(20),
   keyword = ref(""),
   mode = ref("CURRENT"),
+  density = ref("cards"),
   range = ref([]),
   busy = ref(false),
   error = ref(""),
@@ -96,16 +97,117 @@ onMounted(load);
         "
         >查询</el-button
       ><el-button @click="reset">重置</el-button>
+      <div class="view-density" role="group" aria-label="目标展示方式">
+        <el-button
+          text
+          :type="density === 'cards' ? 'primary' : ''"
+          :aria-pressed="density === 'cards'"
+          aria-label="卡片视图"
+          title="卡片视图"
+          @click="density = 'cards'"
+          ><AppIcon name="grid"
+        /></el-button>
+        <el-button
+          text
+          :type="density === 'list' ? 'primary' : ''"
+          :aria-pressed="density === 'list'"
+          aria-label="列表视图"
+          title="列表视图"
+          @click="density = 'list'"
+          ><AppIcon name="list"
+        /></el-button>
+      </div>
     </div>
-    <el-alert
-      v-if="error"
-      :title="error"
-      type="error"
-      :closable="false"
-    /><el-table
+    <el-alert v-if="error" :title="error" type="error" :closable="false" />
+    <div v-if="density === 'cards'" v-loading="busy" class="goal-grid">
+      <article v-for="row in rows" :key="row.id" class="goal-card">
+        <div class="goal-card-heading">
+          <el-button
+            v-if="canGrow('goal:goal:read')"
+            link
+            type="primary"
+            @click="actions.details('goal', row)"
+            >{{ row.name }}</el-button
+          ><strong v-else>{{ row.name }}</strong>
+          <AppStatusTag :value="row.status" :archived="!!row.archivedAt" />
+        </div>
+        <div class="goal-card-dates">
+          <AppIcon name="day" :size="14" /><span>{{
+            row.startDate || "未设开始日"
+          }}</span
+          ><span>至</span
+          ><span>{{ row.expectedEndDate || "未设预计结束" }}</span>
+        </div>
+        <ProgressValue :value="row.progress" />
+        <div class="toolbar">
+          <el-button
+            v-if="canGrow('goal:goal:read')"
+            link
+            type="primary"
+            @click="actions.details('goal', row)"
+            >查看详情<AppIcon name="arrow" :size="14"
+          /></el-button>
+          <template v-if="!row.archivedAt">
+            <el-button
+              v-if="canGrow('goal:goal:update')"
+              link
+              @click="actions.edit('goal', row)"
+              >编辑</el-button
+            >
+            <el-button
+              v-if="canGrow('goal:goal:status')"
+              link
+              @click="actions.status('goal', row)"
+              >状态</el-button
+            >
+            <el-button
+              v-if="canGrow('goal:goal:archive')"
+              link
+              type="warning"
+              @click="actions.archive(row)"
+              >归档</el-button
+            >
+          </template>
+          <el-button
+            v-else-if="canGrow('goal:goal:restore')"
+            link
+            type="primary"
+            @click="actions.restore(row)"
+            >恢复</el-button
+          >
+        </div>
+      </article>
+    </div>
+    <AppEmptyState
+      v-if="density === 'cards' && !rows.length && !busy && !error"
+      :title="
+        keyword || range?.length ? '没有匹配的目标' : '给下一步成长一个方向'
+      "
+      description="从一个目标开始，再拆分成清晰的阶段与任务。"
+      icon="goal"
+    >
+      <el-button
+        v-if="canGrow('goal:goal:create')"
+        type="primary"
+        @click="actions.edit('goal')"
+        >创建目标</el-button
+      >
+      <el-button v-if="keyword || range?.length" @click="reset"
+        >清空筛选</el-button
+      >
+    </AppEmptyState>
+    <el-table
+      v-else-if="density === 'list'"
       :data="rows"
       v-loading="busy"
       empty-text="暂无目标，可以先创建一个目标"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error
+              ? '加载失败，请查看提示后重试。'
+              : '暂无目标，可以先创建一个目标'
+          " /></template
       ><el-table-column prop="name" label="目标" min-width="200"
         ><template #default="{ row }"
           ><el-button
@@ -121,10 +223,7 @@ onMounted(load);
           ><ProgressValue :value="row.progress" /></template></el-table-column
       ><el-table-column label="状态" width="100"
         ><template #default="{ row }"
-          ><el-tag :type="row.status === 'COMPLETED' ? 'success' : 'info'">{{
-            states[row.status]
-          }}</el-tag></template
-        ></el-table-column
+          ><AppStatusTag :value="row.status" /></template></el-table-column
       ><el-table-column
         prop="startDate"
         label="开始日期"

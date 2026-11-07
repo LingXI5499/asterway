@@ -50,6 +50,13 @@ onMounted(load);
       :title="error"
       type="error"
       :closable="false" /><el-table :data="rows" v-loading="busy"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error
+              ? '加载失败，请查看提示后重试。'
+              : '暂无记录，可调整筛选条件或从第一条记录开始。'
+          " /></template
       ><el-table-column prop="weeklyPlanId" label="周计划" /><el-table-column
         prop="dailyPlanId"
         label="日计划"

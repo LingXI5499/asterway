@@ -3,10 +3,10 @@ export const report = (error) => {
   if (!["cancel", "close"].includes(error))
     ElMessage.error(error.message || "操作失败");
 };
-export const confirmAction = (message) =>
+export const confirmAction = (message, confirmButtonText = "确认操作") =>
   ElMessageBox.confirm(message, "确认操作", {
     type: "warning",
-    confirmButtonText: "确定",
+    confirmButtonText,
     cancelButtonText: "取消",
   });
 export const dateText = (value) =>

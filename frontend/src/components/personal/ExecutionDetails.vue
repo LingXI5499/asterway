@@ -181,7 +181,12 @@ onBeforeUnmount(() => {
           v-loading="busy"
           empty-text="尚无执行时间段"
         >
-          <el-table-column prop="segmentNo" label="段" width="64" />
+          <template #empty
+            ><AppEmptyState
+              :description="
+                error ? '加载失败，请查看提示后重试。' : '尚无执行时间段'
+              " /></template
+          ><el-table-column prop="segmentNo" label="段" width="64" />
           <el-table-column label="开始 / 继续" min-width="180"
             ><template #default="{ row: s }">{{
               instantText(s.startedAt, s.timeZone)
