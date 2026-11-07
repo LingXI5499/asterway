@@ -21,7 +21,7 @@ export const isManager = () =>
     ["ADMIN", "SUPER_ADMIN"].includes(role),
   );
 export const isGrowthPermission = (code) =>
-  /^(goal|stage|task|planning|execution|habit|notification|dashboard|statistics):/.test(
+  /^(goal|stage|task|planning|execution|habit|notification|dashboard|statistics|agent):/.test(
     code || "",
   );
 export const canGrow = (code) =>

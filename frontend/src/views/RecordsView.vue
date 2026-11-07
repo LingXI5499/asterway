@@ -38,6 +38,7 @@ async function revoke(row, all = false) {
   try {
     await confirmAction(
       all ? "退出全部设备后需要重新登录，是否继续？" : "确定强制退出该会话？",
+      all ? "退出全部设备" : "退出该会话",
     );
     await api(path + (all ? "" : "/" + row.id), { method: "DELETE" });
     ElMessage.success("会话已退出");
@@ -92,6 +93,11 @@ onMounted(load);
       type="error"
       :closable="false"
     /><el-table :data="items" v-loading="busy" empty-text="暂无记录"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error ? '加载失败，请查看提示后重试。' : '暂无记录'
+          " /></template
       ><el-table-column
         prop="username"
         label="用户"
@@ -116,11 +122,10 @@ onMounted(load);
         prop="ipAddress"
         label="IP 地址"
         min-width="140"
-      /><el-table-column
-        v-if="logs"
-        prop="outcome"
-        label="结果"
-      /><el-table-column
+      /><el-table-column v-if="logs" prop="outcome" label="结果" min-width="110"
+        ><template #default="{ row }"
+          ><AppStatusTag :value="row.outcome" /></template></el-table-column
+      ><el-table-column
         v-if="logs"
         prop="reasonCode"
         label="原因"

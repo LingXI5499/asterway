@@ -32,6 +32,9 @@ defineEmits([
     :data="rows"
     v-loading="loading"
     empty-text="暂无任务，先创建任务或调整筛选条件"
+    ><template #empty
+      ><AppEmptyState
+        :description="'暂无任务，先创建任务或调整筛选条件'" /></template
     ><el-table-column label="任务" min-width="200"
       ><template #default="{ row }"
         ><el-button
@@ -60,17 +63,7 @@ defineEmits([
       show-overflow-tooltip
     /><el-table-column label="状态" width="100"
       ><template #default="{ row }"
-        ><el-tag
-          :type="
-            row.status === 'COMPLETED'
-              ? 'success'
-              : row.status === 'PAUSED'
-                ? 'warning'
-                : 'info'
-          "
-          >{{ states[row.status] }}</el-tag
-        ></template
-      ></el-table-column
+        ><AppStatusTag :value="row.status" /></template></el-table-column
     ><el-table-column label="优先级" width="90"
       ><template #default="{ row }">{{
         priorities[row.priority]
@@ -83,7 +76,7 @@ defineEmits([
         positions[row.assignmentStatus] ||
         (row.dailyPlanId ? "已安排到日" : "已安排到周")
       }}</template></el-table-column
-    ><el-table-column label="操作" min-width="480" fixed="right"
+    ><el-table-column label="操作" min-width="300" fixed="right"
       ><template #default="{ row }"
         ><el-button
           v-if="canStartTask() && canGrow('task:task:read')"
@@ -113,46 +106,57 @@ defineEmits([
           type="primary"
           @click="$emit('status', row)"
           >状态</el-button
-        ><el-button
+        >
+        <el-dropdown
           v-if="
-            canGrow('planning:assignment:manage') &&
-            canGrow('planning:assignment:read')
+            canGrow('planning:assignment:read') || canGrow('task:task:delete')
           "
-          :disabled="
-            row.status === 'COMPLETED' ||
-            !!(row.archivedAt || row.goalArchivedAt)
-          "
-          link
-          type="primary"
-          @click="$emit('assign', row)"
-          >安排／改期</el-button
-        ><el-button
-          v-if="
-            canGrow('planning:assignment:remove') &&
-            canGrow('planning:assignment:read')
-          "
-          :disabled="
-            !!(row.archivedAt || row.goalArchivedAt) ||
-            row.assignmentStatus === 'POOL'
-          "
-          link
-          type="warning"
-          @click="$emit('unassign', row)"
-          >移出</el-button
-        ><el-button
-          v-if="canGrow('planning:assignment:read')"
-          link
-          type="primary"
-          @click="$emit('history', row)"
-          >历史</el-button
-        ><el-button
-          v-if="canGrow('task:task:delete')"
-          :disabled="readOnly || !!(row.archivedAt || row.goalArchivedAt)"
-          link
-          type="danger"
-          @click="$emit('remove', row)"
-          >删除</el-button
-        ></template
+          trigger="click"
+          @command="(command) => $emit(command, row)"
+        >
+          <el-button text aria-label="更多任务操作"
+            >更多<AppIcon name="more" :size="16"
+          /></el-button>
+          <template #dropdown
+            ><el-dropdown-menu>
+              <el-dropdown-item
+                v-if="
+                  canGrow('planning:assignment:manage') &&
+                  canGrow('planning:assignment:read')
+                "
+                command="assign"
+                :disabled="
+                  row.status === 'COMPLETED' ||
+                  !!(row.archivedAt || row.goalArchivedAt)
+                "
+                >安排／改期</el-dropdown-item
+              >
+              <el-dropdown-item
+                v-if="
+                  canGrow('planning:assignment:remove') &&
+                  canGrow('planning:assignment:read')
+                "
+                command="unassign"
+                :disabled="
+                  !!(row.archivedAt || row.goalArchivedAt) ||
+                  row.assignmentStatus === 'POOL'
+                "
+                >移出当前安排</el-dropdown-item
+              >
+              <el-dropdown-item
+                v-if="canGrow('planning:assignment:read')"
+                command="history"
+                >安排历史</el-dropdown-item
+              >
+              <el-dropdown-item
+                v-if="canGrow('task:task:delete')"
+                command="remove"
+                :disabled="readOnly || !!(row.archivedAt || row.goalArchivedAt)"
+                >删除任务</el-dropdown-item
+              >
+            </el-dropdown-menu></template
+          >
+        </el-dropdown></template
       ></el-table-column
     ></el-table
   >

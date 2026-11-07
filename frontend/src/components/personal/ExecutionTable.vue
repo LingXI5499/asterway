@@ -17,7 +17,8 @@ async function control(action, row) {
 </script>
 <template>
   <el-table :data="rows" v-loading="loading" empty-text="暂无执行记录">
-    <el-table-column
+    <template #empty><AppEmptyState :description="'暂无执行记录'" /></template
+    ><el-table-column
       prop="taskName"
       label="任务"
       min-width="180"
@@ -25,18 +26,8 @@ async function control(action, row) {
     />
     <el-table-column label="状态" width="104"
       ><template #default="{ row }"
-        ><el-tag
-          :type="
-            row.status === 'RUNNING'
-              ? 'success'
-              : row.status === 'PAUSED'
-                ? 'warning'
-                : 'info'
-          "
-          >{{ executionStates[row.status] }}</el-tag
-        ></template
-      ></el-table-column
-    >
+        ><AppStatusTag :value="row.status" /></template
+    ></el-table-column>
     <el-table-column label="首次开始" min-width="180"
       ><template #default="{ row }">{{
         instantText(row.startedAt)

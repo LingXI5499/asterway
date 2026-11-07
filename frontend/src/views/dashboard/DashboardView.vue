@@ -115,6 +115,38 @@ onBeforeUnmount(() => {
       >
     </div>
   </section>
+  <section v-if="execution.current" class="card dashboard-focus">
+    <div class="dashboard-focus-copy">
+      <div class="dashboard-focus-icon">
+        <AppIcon name="execution" :size="24" />
+      </div>
+      <div>
+        <span class="eyebrow">当前专注</span>
+        <h2>{{ execution.current.taskName }}</h2>
+        <span class="mini-clock">{{ duration(elapsedSeconds()) }}</span>
+      </div>
+    </div>
+    <el-button type="primary" @click="router.push('/execution')"
+      >进入执行工作台<AppIcon name="arrow" :size="16"
+    /></el-button>
+  </section>
+  <section v-else class="card dashboard-focus">
+    <div class="dashboard-focus-copy">
+      <div class="dashboard-focus-icon">
+        <AppIcon name="execution" :size="24" />
+      </div>
+      <div>
+        <h2>留一段时间，专注眼前的事</h2>
+        <p class="muted">从已安排的任务开始，系统会记录你的真实投入。</p>
+      </div>
+    </div>
+    <el-button
+      v-if="canGrow('execution:session:list')"
+      type="primary"
+      @click="router.push('/execution')"
+      ><AppIcon name="plus" :size="16" /><span>选择任务开始</span></el-button
+    >
+  </section>
   <LoadState
     :loading="overviewBusy && !overview"
     :error="overviewError"
@@ -122,44 +154,43 @@ onBeforeUnmount(() => {
   >
     <div v-if="metrics" class="metrics-grid four">
       <article class="card metric">
-        <span>今日计划完成</span
-        ><strong
+        <span class="metric-icon">今日计划完成<AppIcon name="task" /></span
+        ><strong v-if="metrics.todayTasks"
           >{{ metrics.todayCurrentCompletedTasks
           }}<small> / {{ metrics.todayTasks }}</small></strong
         >
+        <strong v-else class="metric-duration">暂无安排</strong>
         <p class="hint">今日安排任务的当前状态</p>
       </article>
       <article class="card metric">
-        <span>今日实际投入</span
+        <span class="metric-icon">今日实际投入<AppIcon name="clock" /></span
         ><strong class="metric-duration">{{
           duration(metrics.actualSeconds)
         }}</strong>
         <p class="hint">已排除暂停间隔</p>
       </article>
       <article class="card metric">
-        <span>今日习惯完成</span
-        ><strong
+        <span class="metric-icon">今日习惯完成<AppIcon name="habit" /></span
+        ><strong v-if="metrics.habitDue"
           >{{ metrics.habitDone
           }}<small> / {{ metrics.habitDue }}</small></strong
         >
-        <p class="hint">{{ rateText(metrics.habitCompletionRate) }}</p>
+        <strong v-else class="metric-duration">无应做</strong>
+        <p class="hint">
+          {{
+            metrics.habitDue
+              ? rateText(metrics.habitCompletionRate)
+              : "按今日规则与有效打卡统计"
+          }}
+        </p>
       </article>
       <article class="card metric">
-        <span>本周尚未定日</span><strong>{{ metrics.weekUndatedTasks }}</strong>
+        <span class="metric-icon">本周尚未定日<AppIcon name="week" /></span
+        ><strong>{{ metrics.weekUndatedTasks }}</strong>
         <p class="hint">不计入今日计划任务数</p>
       </article>
     </div>
   </LoadState>
-  <section v-if="execution.current" class="card running-summary">
-    <div>
-      <el-tag type="success">当前执行</el-tag
-      ><strong>{{ execution.current.taskName }}</strong
-      ><span class="mini-clock">{{ duration(elapsedSeconds()) }}</span>
-    </div>
-    <el-button type="primary" @click="router.push('/execution')"
-      >进入执行工作台</el-button
-    >
-  </section>
   <div class="dashboard-grid">
     <section class="card">
       <div class="section-heading">
@@ -187,7 +218,9 @@ onBeforeUnmount(() => {
           v-loading="tasks.busy"
           empty-text="这个分组暂无安排"
         >
-          <el-table-column label="任务" min-width="160"
+          <template #empty
+            ><AppEmptyState :description="'这个分组暂无安排'" /></template
+          ><el-table-column label="任务" min-width="160"
             ><template #default="{ row }"
               ><el-button
                 v-if="canGrow('task:task:read')"
@@ -200,12 +233,8 @@ onBeforeUnmount(() => {
           >
           <el-table-column label="状态" width="100"
             ><template #default="{ row }"
-              ><el-tag
-                :type="row.status === 'COMPLETED' ? 'success' : 'info'"
-                >{{ states[row.status] }}</el-tag
-              ></template
-            ></el-table-column
-          >
+              ><AppStatusTag :value="row.status" /></template
+          ></el-table-column>
           <el-table-column label="操作" width="100"
             ><template #default="{ row }"
               ><el-button
@@ -283,7 +312,7 @@ onBeforeUnmount(() => {
             }}</el-tag>
           </article>
         </div>
-        <el-empty v-else description="今天暂无应做习惯" />
+        <AppEmptyState v-else description="今天暂无应做习惯" />
         <PagePagination :state="habits" @change="habits.load" />
       </LoadState>
     </section>
@@ -309,7 +338,10 @@ onBeforeUnmount(() => {
         v-loading="goals.busy"
         empty-text="还没有目标，可以从一个小目标开始"
       >
-        <el-table-column label="目标" min-width="200"
+        <template #empty
+          ><AppEmptyState
+            :description="'还没有目标，可以从一个小目标开始'" /></template
+        ><el-table-column label="目标" min-width="200"
           ><template #default="{ row }"
             ><el-button
               v-if="canGrow('goal:goal:read')"
@@ -331,11 +363,8 @@ onBeforeUnmount(() => {
         >
         <el-table-column label="状态" width="110"
           ><template #default="{ row }"
-            ><el-tag :type="row.status === 'COMPLETED' ? 'success' : 'info'">{{
-              states[row.status]
-            }}</el-tag></template
-          ></el-table-column
-        > </el-table
+            ><AppStatusTag :value="row.status" /></template
+        ></el-table-column> </el-table
       ><PagePagination :state="goals" @change="goals.load" />
     </LoadState>
   </section>

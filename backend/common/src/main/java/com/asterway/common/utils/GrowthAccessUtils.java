@@ -20,7 +20,8 @@ public final class GrowthAccessUtils {
                         || code.startsWith("habit:")
                         || code.startsWith("notification:")
                         || code.startsWith("dashboard:")
-                        || code.startsWith("statistics:"));
+                        || code.startsWith("statistics:")
+                        || code.startsWith("agent:"));
     }
 
     public static boolean menu(String code, String component) {
@@ -32,6 +33,7 @@ public final class GrowthAccessUtils {
                                 || component.startsWith("habit/")
                                 || component.startsWith("notification/")
                                 || component.startsWith("dashboard/")
-                                || component.startsWith("statistics/"));
+                                || component.startsWith("statistics/")
+                                || component.startsWith("agent/"));
     }
 }

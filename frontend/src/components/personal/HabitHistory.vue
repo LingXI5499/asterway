@@ -149,7 +149,12 @@ onBeforeUnmount(() => {
         v-loading="busy"
         empty-text="还没有打卡记录"
       >
-        <el-table-column
+        <template #empty
+          ><AppEmptyState
+            :description="
+              error ? '加载失败，请查看提示后重试。' : '还没有打卡记录'
+            " /></template
+        ><el-table-column
           prop="businessDate"
           label="原始打卡日"
           min-width="130"
@@ -205,7 +210,12 @@ onBeforeUnmount(() => {
         v-loading="busy"
         empty-text="还没有规则修订"
       >
-        <el-table-column type="expand"
+        <template #empty
+          ><AppEmptyState
+            :description="
+              error ? '加载失败，请查看提示后重试。' : '还没有规则修订'
+            " /></template
+        ><el-table-column type="expand"
           ><template #default="{ row }"
             ><div class="history-expanded">
               <strong>完成标准</strong>

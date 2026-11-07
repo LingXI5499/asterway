@@ -75,8 +75,11 @@ onMounted(load);
       <div class="toolbar">
         <el-button text @click="router.push(`/growth/stages/${record.stageId}`)"
           >返回所属阶段</el-button
-        ><el-tag>{{ states[record.status] }}</el-tag
-        ><el-tag v-if="goal?.archivedAt" type="info">目标已归档</el-tag>
+        ><AppStatusTag :value="record.status" /><el-tag
+          v-if="goal?.archivedAt"
+          type="info"
+          >目标已归档</el-tag
+        >
       </div>
       <h2>{{ record.name }}</h2>
       <p class="preserve-text">{{ record.description || "尚未填写描述" }}</p>

@@ -107,9 +107,16 @@ function reset() {
       :title="error"
       type="error"
       :closable="false"
-    /><el-empty v-if="!goal" description="请先选择目标，查看其阶段" /><template
-      v-else
+    /><AppEmptyState
+      v-if="!goal"
+      description="请先选择目标，查看其阶段"
+    /><template v-else
       ><el-table :data="rows" v-loading="busy" empty-text="该目标暂无阶段"
+        ><template #empty
+          ><AppEmptyState
+            :description="
+              error ? '加载失败，请查看提示后重试。' : '该目标暂无阶段'
+            " /></template
         ><el-table-column label="阶段" min-width="200"
           ><template #default="{ row }"
             ><el-button
@@ -124,9 +131,8 @@ function reset() {
           ><template #default="{ row }"
             ><ProgressValue :value="row.progress" /></template></el-table-column
         ><el-table-column label="状态"
-          ><template #default="{ row }">{{
-            states[row.status]
-          }}</template></el-table-column
+          ><template #default="{ row }"
+            ><AppStatusTag :value="row.status" /></template></el-table-column
         ><el-table-column
           prop="startDate"
           label="开始日期"

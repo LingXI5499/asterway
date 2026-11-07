@@ -114,7 +114,14 @@ async function remove(row) {
         v-loading="list.busy"
         empty-text="还没有分类，可以先创建一个"
       >
-        <el-table-column
+        <template #empty
+          ><AppEmptyState
+            :description="
+              error
+                ? '加载失败，请查看提示后重试。'
+                : '还没有分类，可以先创建一个'
+            " /></template
+        ><el-table-column
           prop="name"
           label="分类名称"
           min-width="200"

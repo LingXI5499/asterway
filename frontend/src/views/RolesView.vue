@@ -114,6 +114,13 @@ onMounted(load);
       ><span class="muted">系统使用用户、管理员、超级管理员三种角色。</span>
     </div>
     <el-table :data="roles"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error
+              ? '加载失败，请查看提示后重试。'
+              : '暂无记录，可调整筛选条件或从第一条记录开始。'
+          " /></template
       ><el-table-column prop="name" label="角色名称" /><el-table-column
         prop="code"
         label="角色编码"

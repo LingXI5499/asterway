@@ -41,8 +41,9 @@ onMounted(load);
       :title="error"
       type="error"
       :closable="false"
-    /><el-skeleton v-if="!form" :rows="3" /><el-form
-      v-else
+    /><el-button v-if="error && !form" @click="load">重新加载设置</el-button
+    ><el-skeleton v-if="!form && !error" :rows="3" /><el-form
+      v-else-if="form"
       label-position="top"
       class="form-narrow"
       @submit.prevent="save"

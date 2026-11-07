@@ -27,7 +27,7 @@ h3 {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 24px;
-  box-shadow: 0 12px 32px #283f6812;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--aw-text) 8%, transparent);
 }
 .personal-hero h2 {
   margin: 12px 0;
@@ -59,19 +59,19 @@ h3 {
   transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .metric > span {
-  color: #748299;
+  color: var(--aw-text-secondary);
   font-size: 14px;
   line-height: 20px;
 }
 .metric > strong {
-  color: #26354c;
+  color: var(--aw-text);
   font-size: 30px;
   line-height: 36px;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 .metric strong small {
-  color: #748299;
+  color: var(--aw-text-secondary);
   font-size: 16px;
   font-weight: 500;
 }
@@ -84,13 +84,13 @@ h3 {
 }
 .metric.card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 32px #283f6820;
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--aw-text) 8%, transparent);
 }
 .inset-metric {
-  border: 1px solid #e6ebf4;
+  border: 1px solid var(--aw-border);
   border-radius: 8px;
   padding: 16px;
-  background: #f8faff;
+  background: var(--aw-surface-muted);
 }
 .inline-error {
   display: flex;
@@ -98,11 +98,11 @@ h3 {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #fff5f3;
-  border: 1px solid #f0d6d0;
+  background: var(--aw-danger-soft);
+  border: 1px solid var(--aw-border-strong);
   border-radius: 8px;
   margin-bottom: 16px;
-  color: #a13b2d;
+  color: var(--aw-danger);
   font-size: 14px;
   line-height: 20px;
   overflow-wrap: anywhere;
@@ -133,7 +133,7 @@ h3 {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #748299;
+  color: var(--aw-text-secondary);
   line-height: 16px;
 }
 .field-hint {
@@ -146,7 +146,7 @@ h3 {
 }
 .focus-card {
   position: relative;
-  box-shadow: 0 16px 32px #283f6812;
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--aw-text) 8%, transparent);
 }
 .focus-card h2 {
   margin: 12px 0;
@@ -176,7 +176,7 @@ h3 {
   overflow-wrap: anywhere;
 }
 .focus-clock.idle {
-  color: #9daac0;
+  color: var(--aw-text-tertiary);
 }
 .focus-card > .hint,
 .focus-card > .muted {
@@ -203,7 +203,7 @@ h3 {
   flex-direction: column;
   gap: 8px;
   padding: 24px;
-  background: #f4f7fc;
+  background: var(--aw-bg);
   border-radius: 8px;
   margin: 24px 0;
 }
@@ -213,7 +213,7 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 .duration-block span {
-  color: #748299;
+  color: var(--aw-text-secondary);
   font-size: 14px;
   line-height: 20px;
 }
@@ -236,7 +236,7 @@ h3 {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  border: 1px solid #e6ebf4;
+  border: 1px solid var(--aw-border);
   border-radius: 8px;
   padding: 16px;
 }
@@ -282,11 +282,11 @@ h3 {
   align-items: center;
   gap: 16px;
   max-width: min(680px, calc(100vw - 32px));
-  background: #fff;
-  border: 1px solid #cbd9f5;
+  background: var(--aw-surface);
+  border: 1px solid var(--aw-border-strong);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 16px 40px #263f6830;
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--aw-text) 8%, transparent);
 }
 .execution-bar-label {
   display: flex;
@@ -296,7 +296,7 @@ h3 {
   padding: 0;
   background: transparent;
   border: 0;
-  color: #26354c;
+  color: var(--aw-text);
   font: inherit;
   cursor: pointer;
 }
@@ -323,14 +323,14 @@ h3 {
 }
 .execution-bar-warning {
   flex-basis: 100%;
-  color: #a06016;
+  color: var(--aw-warning);
   font-size: 12px;
   line-height: 16px;
 }
 .running-dot {
   width: 8px;
   height: 8px;
-  background: #238871;
+  background: var(--aw-success);
   border-radius: 9999px;
   flex-shrink: 0;
 }
@@ -338,19 +338,19 @@ h3 {
   padding-bottom: 160px;
 }
 .execution-bar-label:focus-visible {
-  outline: 2px solid #416ee5;
+  outline: 2px solid var(--aw-brand);
   outline-offset: 4px;
   border-radius: 4px;
 }
 .notice-content {
-  background: #f4f7fc;
+  background: var(--aw-bg);
   padding: 24px;
   border-radius: 8px;
   margin: 24px 0;
 }
 .table-excerpt {
   margin: 8px 0 0;
-  color: #748299;
+  color: var(--aw-text-secondary);
   font-size: 12px;
   line-height: 16px;
   overflow: hidden;
@@ -372,10 +372,10 @@ h3 {
 }
 .chart-panel {
   padding: 16px;
-  border: 1px solid #e6ebf4;
+  border: 1px solid var(--aw-border);
   border-radius: 8px;
   min-width: 0;
-  background: #fff;
+  background: var(--aw-surface);
 }
 .chart-panel.wide {
   grid-column: 1 / -1;
@@ -391,10 +391,10 @@ h3 {
   padding: 16px 8px;
 }
 .timeline-fact {
-  border: 1px solid #e6ebf4;
+  border: 1px solid var(--aw-border);
   border-radius: 8px;
   padding: 16px;
-  background: #fff;
+  background: var(--aw-surface);
 }
 .timeline-fact p {
   margin: 8px 0 0;
@@ -446,7 +446,7 @@ h3 {
     inset: 0;
     z-index: 1199;
     border: 0;
-    background: #18263c66;
+    background: var(--aw-overlay);
   }
   .workspace {
     width: 100%;

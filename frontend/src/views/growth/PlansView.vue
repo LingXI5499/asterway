@@ -224,20 +224,66 @@ onMounted(() => {
       </div>
     </div>
     <div v-if="!daily" class="week-strip">
-      <button
+      <div
         v-for="d in weekDays"
         :key="d.date"
         class="day-tile"
         :class="{ today: d.date === today() }"
-        @click="openDay(d.date)"
-        :disabled="!canGrow('planning:daily:read')"
       >
-        <span>{{ d.name }}</span
-        ><strong>{{ d.date.slice(5) }}</strong
-        ><small>{{
-          days.some((x) => x.planDate === d.date) ? "已创建日计划" : "按需安排"
-        }}</small>
-      </button>
+        <button
+          class="day-tile-open"
+          @click="openDay(d.date)"
+          :disabled="!canGrow('planning:daily:read')"
+          :aria-label="'查看' + d.date + '日计划'"
+        >
+          <span>{{ d.name }}{{ d.date === today() ? " · 今天" : "" }}</span
+          ><strong>{{ d.date.slice(5) }}</strong
+          ><small>{{
+            days.some((x) => x.planDate === d.date)
+              ? "已创建日计划"
+              : "按需安排"
+          }}</small>
+        </button>
+        <div
+          v-if="rows.some((r) => r.planDate === d.date)"
+          class="week-task-list"
+        >
+          <button
+            v-for="task in rows.filter((r) => r.planDate === d.date)"
+            :key="task.id"
+            class="week-task-chip"
+            :disabled="!canGrow('task:task:read')"
+            @click="actions.details('task', task)"
+          >
+            <strong>{{ task.taskName || task.name }}</strong
+            ><small
+              >{{ task.goalName || "所属目标" }} /
+              {{ task.stageName || "所属阶段" }}</small
+            ><AppStatusTag :value="task.status" />
+          </button>
+        </div>
+      </div>
+    </div>
+    <p v-if="!daily && plan" class="hint">
+      周视图按当前页安排预览；全部任务及翻页操作见下方列表，未定日任务独立保留。
+    </p>
+    <div
+      v-if="!daily && rows.some((r) => !r.dailyPlanId && !r.planDate)"
+      class="inset-metric week-undated"
+    >
+      <div class="plan-list-heading">
+        <AppIcon name="inbox" />
+        <h3>本页未定日任务</h3>
+      </div>
+      <div class="toolbar">
+        <el-button
+          v-for="task in rows.filter((r) => !r.dailyPlanId && !r.planDate)"
+          :key="task.id"
+          :disabled="!canGrow('task:task:read')"
+          @click="actions.details('task', task)"
+          >{{ task.taskName || task.name }}</el-button
+        >
+      </div>
     </div>
     <el-alert
       v-if="past"
@@ -249,7 +295,7 @@ onMounted(() => {
       :title="error"
       type="error"
       :closable="false"
-    /><el-skeleton v-if="busy && !plan" :rows="5" /><el-empty
+    /><el-skeleton v-if="busy && !plan" :rows="5" /><AppEmptyState
       v-else-if="!plan"
       :description="!week ? '该周尚未创建周计划' : '该日期尚未创建日计划'"
       ><el-button
@@ -266,7 +312,7 @@ onMounted(() => {
         :loading="saving"
         @click="create('day')"
         >创建该日日计划</el-button
-      ></el-empty
+      ></AppEmptyState
     ><template v-if="plan"
       ><div class="toolbar">
         <el-button
@@ -325,6 +371,13 @@ onMounted(() => {
     title="历史周计划"
     size="min(520px,100%)"
     ><el-table :data="historyRows"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error
+              ? '加载失败，请查看提示后重试。'
+              : '暂无记录，可调整筛选条件或从第一条记录开始。'
+          " /></template
       ><el-table-column prop="weekStartDate" label="周一日期" /><el-table-column
         label="操作"
         ><template #default="{ row }"

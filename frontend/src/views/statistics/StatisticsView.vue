@@ -212,7 +212,12 @@ onBeforeUnmount(() => {
         v-loading="trends.busy"
         empty-text="所选周期暂无日期数据"
       >
-        <el-table-column
+        <template #empty
+          ><AppEmptyState
+            :description="
+              error ? '加载失败，请查看提示后重试。' : '所选周期暂无日期数据'
+            " /></template
+        ><el-table-column
           prop="businessDate"
           label="日期"
           min-width="130"
@@ -275,7 +280,14 @@ onBeforeUnmount(() => {
         v-loading="groups.busy"
         empty-text="当前周期没有应做或有效打卡"
       >
-        <el-table-column label="名称" min-width="200"
+        <template #empty
+          ><AppEmptyState
+            :description="
+              error
+                ? '加载失败，请查看提示后重试。'
+                : '当前周期没有应做或有效打卡'
+            " /></template
+        ><el-table-column label="名称" min-width="200"
           ><template #default="{ row }"
             >{{ row.name }}
             <el-tag v-if="row.deleted" type="info" size="small"
@@ -303,6 +315,11 @@ onBeforeUnmount(() => {
     <h2>当前对象概况</h2>
     <p class="hint">仅统计当前有效未归档对象，与上方历史完成动作分开。</p>
     <el-table :data="objects" empty-text="当前没有有效对象"
+      ><template #empty
+        ><AppEmptyState
+          :description="
+            error ? '加载失败，请查看提示后重试。' : '当前没有有效对象'
+          " /></template
       ><el-table-column label="对象"
         ><template #default="{ row }">{{
           kindNames[row.kind]

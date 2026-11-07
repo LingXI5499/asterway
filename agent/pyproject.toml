@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asterway-agent"
+version = "0.1.0"
+description = "Asterway AI Agent Service"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "httpx",
+    "openai",
+    "sqlalchemy[asyncio]>=2.0,<2.1",
+    "asyncpg>=0.29,<0.31",
+    "pypdf==6.21.4",
+    "python-docx==1.2.0",
+    "tzdata==2026.6",
+    "langgraph==1.2.20",
+    "langgraph-checkpoint-postgres==3.2.0",
+    "pgvector==0.5.1",
+    "psycopg[binary,pool]==3.3.8"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

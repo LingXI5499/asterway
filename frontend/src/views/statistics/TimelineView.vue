@@ -103,7 +103,7 @@ onMounted(search);
             </p>
           </article>
         </el-timeline-item> </el-timeline
-      ><el-empty v-else description="当前区间还没有真实事件记录" />
+      ><AppEmptyState v-else description="当前区间还没有真实事件记录" />
       <PagePagination :state="list" @change="list.load" />
     </LoadState>
   </section>

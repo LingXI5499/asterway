@@ -24,6 +24,7 @@
         <module>dashboard</module>
         <module>statistics</module>
         <module>notification</module>
+        <module>agent</module>
         <module>app</module>
     </modules>
     <properties>
@@ -105,6 +106,11 @@
             <dependency>
                 <groupId>com.asterway</groupId>
                 <artifactId>notification</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.asterway</groupId>
+                <artifactId>agent</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
