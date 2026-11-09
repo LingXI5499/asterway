@@ -1,29 +1,52 @@
+# 列出不进入版本管理的本地文件，避免提交依赖、缓存、构建产物或私密配置。
 # Maven
+# 不把匹配 target/ 的本地文件加入版本管理。
 target/
+# 即使被前面的规则忽略，也保留这个必要文件。
 !.mvn/wrapper/maven-wrapper.jar
+# 不把匹配 pom.xml.tag 的本地文件加入版本管理。
 pom.xml.tag
+# 不把匹配 pom.xml.releaseBackup 的本地文件加入版本管理。
 pom.xml.releaseBackup
+# 不把匹配 pom.xml.versionsBackup 的本地文件加入版本管理。
 pom.xml.versionsBackup
+# 不把匹配 release.properties 的本地文件加入版本管理。
 release.properties
 
 # IDE
+# 不把匹配 .idea/ 的本地文件加入版本管理。
 .idea/
+# 不把匹配 *.iml 的本地文件加入版本管理。
 *.iml
+# 不把匹配 *.ipr 的本地文件加入版本管理。
 *.ipr
+# 不把匹配 *.iws 的本地文件加入版本管理。
 *.iws
+# 不把匹配 .vscode/ 的本地文件加入版本管理。
 .vscode/
+# 不把匹配 .settings/ 的本地文件加入版本管理。
 .settings/
+# 不把匹配 .project 的本地文件加入版本管理。
 .project
+# 不把匹配 .classpath 的本地文件加入版本管理。
 .classpath
 
 # OS
+# 不把匹配 .DS_Store 的本地文件加入版本管理。
 .DS_Store
+# 不把匹配 Thumbs.db 的本地文件加入版本管理。
 Thumbs.db
 
 # 日志与本地秘密
+# 不把匹配 *.log 的本地文件加入版本管理。
 *.log
+# 不把匹配 logs/ 的本地文件加入版本管理。
 logs/
+# 不把匹配 .env 的本地文件加入版本管理。
 .env
+# 不把匹配 .env.local 的本地文件加入版本管理。
 .env.local
+# 不把匹配 application-local.yml 的本地文件加入版本管理。
 application-local.yml
+# 不把匹配 .asterway-private/ 的本地文件加入版本管理。
 .asterway-private/

@@ -1,48 +1,85 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.execution.mapper.ExecutionSegmentMapper。 -->
 <mapper namespace="com.asterway.execution.mapper.ExecutionSegmentMapper">
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=open，resultType=com.asterway.execution.entity.ExecutionSegmentEntity。 -->
     <select id="open" resultType="com.asterway.execution.entity.ExecutionSegmentEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT s.id,s.execution_id,s.assignment_id,s.segment_no,s.started_at,s.ended_at,s.end_reason,
+               <!-- 继续列出本次使用的字段：当前配置中的eligibleuntil（s.eligible_until）、当前配置中的用户使用的时区（s.time_zone）、当前配置中的心跳超时秒数（s.heartbeat_timeout_seconds）、当前配置中的创建时at（s.created_at）、当前配置中的更新时at（s.updated_at）。 -->
                s.eligible_until,s.time_zone,s.heartbeat_timeout_seconds,s.created_at,s.updated_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM execution_segment s JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.execution_id=#{executionId} AND s.ended_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=nextNumber，resultType=int。 -->
     <select id="nextNumber" resultType="int">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT COALESCE(MAX(s.segment_no),0)+1 FROM execution_segment s
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.execution_id=#{executionId}
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 execution_segment 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO execution_segment(execution_id,assignment_id,segment_no,started_at,eligible_until,
+            <!-- 继续列出本次使用的字段：用户使用的时区（time_zone）、心跳超时秒数（heartbeat_timeout_seconds）、创建时at（created_at）。 -->
             time_zone,heartbeat_timeout_seconds,created_at,updated_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{executionId},#{assignmentId},#{segmentNo},#{startedAt},#{eligibleUntil},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{timeZone},#{heartbeatTimeoutSeconds},#{createdAt},#{updatedAt})。 -->
             #{timeZone},#{heartbeatTimeoutSeconds},#{createdAt},#{updatedAt})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=close。 -->
     <update id="close">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE execution_segment s SET ended_at=#{endedAt},end_reason=#{reason},updated_at=#{now}
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM execution_session e WHERE e.id=s.execution_id AND e.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.id=#{id} AND s.ended_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=shorten。 -->
     <update id="shorten">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE execution_segment s SET eligible_until=#{deadline},updated_at=#{now}
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM execution_session e WHERE e.id=s.execution_id AND e.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.execution_id=#{executionId} AND s.ended_at IS NULL AND s.eligible_until&gt;#{deadline}
     </update>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=effectiveEnd。 -->
     <sql id="effectiveEnd">
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,。 -->
         COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds),s.eligible_until)))
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.execution.vo.ExecutionSegmentVO。 -->
     <select id="page" resultType="com.asterway.execution.vo.ExecutionSegmentVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT s.id::text AS id,s.segment_no,s.assignment_id::text AS assignment_id,s.started_at,s.ended_at,
-               s.end_reason,<include refid="effectiveEnd"/> AS effective_ended_at,
-               floor(EXTRACT(EPOCH FROM <include refid="effectiveEnd"/>-s.started_at))::bigint AS actual_seconds,
+               <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
+               s.end_reason,<!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/> AS effective_ended_at,
+               <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
+               floor(EXTRACT(EPOCH FROM <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/>-s.started_at))::bigint AS actual_seconds,
+               <!-- 继续列出本次使用的字段：当前配置中的用户使用的时区（s.time_zone）。 -->
                s.time_zone
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM execution_segment s JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{ctx.userId}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.execution_id=#{executionId} ORDER BY s.segment_no LIMIT #{size} OFFSET #{offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FROM execution_segment s
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN execution_session e ON e.id=s.execution_id AND e.user_id=#{userId}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.execution_id=#{executionId}
     </select>
 </mapper>

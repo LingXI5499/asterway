@@ -1,73 +1,128 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 声明 Maven 模块、依赖和编译打包规则，供导入工程及构建时使用。 -->
+<!-- 声明这个 Maven 工程的整体配置。 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 声明 POM 使用的模型格式版本。 -->
     <modelVersion>4.0.0</modelVersion>
+    <!-- 从指定父工程继承统一版本和构建规则。 -->
     <parent>
+        <!-- 声明依赖或工程所属组织标识。 -->
         <groupId>com.asterway</groupId>
+        <!-- 声明当前工程、依赖或插件的名称。 -->
         <artifactId>asterway-backend</artifactId>
+        <!-- 指定使用的版本号。 -->
         <version>0.1.0-SNAPSHOT</version>
     </parent>
+    <!-- 声明当前工程、依赖或插件的名称。 -->
     <artifactId>app</artifactId>
+    <!-- 设置 name 对应的工程或映射参数。 -->
     <name>asterway-app</name>
+    <!-- 设置 description 对应的工程或映射参数。 -->
     <description>唯一启动工程，仅保留启动类、本地配置和业务 SQL。</description>
+    <!-- 列出当前模块实际需要的依赖。 -->
     <dependencies>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>org.springframework.boot</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>spring-boot-starter-test</artifactId>
+            <!-- 限制依赖在哪些构建或运行阶段可用。 -->
             <scope>test</scope>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>common</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>identity</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>goal</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>stage</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>task</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>planning</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>execution</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>habit</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>dashboard</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>statistics</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>notification</artifactId>
         </dependency>
+        <!-- 声明下面这项外部库或工程依赖。 -->
         <dependency>
+            <!-- 声明依赖或工程所属组织标识。 -->
             <groupId>com.asterway</groupId>
+            <!-- 声明当前工程、依赖或插件的名称。 -->
             <artifactId>agent</artifactId>
         </dependency>
     </dependencies>
+    <!-- 声明编译、资源处理与打包步骤。 -->
     <build>
+        <!-- 列出本模块使用的构建插件。 -->
         <plugins>
+            <!-- 声明一个构建插件及其参数。 -->
             <plugin>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>org.springframework.boot</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>

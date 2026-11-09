@@ -1,0 +1,118 @@
+{
+  "phase": "P1.1",
+  "recordedAt": "2026-11-05T08:26:43.715541+00:00",
+  "status": "LOCAL_READY_FOR_USER_ACCEPTANCE",
+  "backend": {
+    "mavenSubmodules": 13,
+    "reactorProjects": 14,
+    "package": "PASSED",
+    "testCompilationAndExecution": "SKIPPED",
+    "jdk": 17,
+    "startup": "PASSED",
+    "port": 8089,
+    "publicAgentEndpoints": 2
+  },
+  "python": {
+    "version": "3.12",
+    "syntaxImportOpenApiAndRuff": "PASSED",
+    "health": {
+      "success": true,
+      "service": "asterway-agent",
+      "status": "running",
+      "phase": "P1.1",
+      "capabilities": [
+        "chat",
+        "sse"
+      ]
+    },
+    "port": 8001
+  },
+  "frontend": {
+    "build": "PASSED",
+    "port": 5175,
+    "newPage": "/agent",
+    "totalRoutePages": 33,
+    "knownWarning": "Existing main bundle exceeds 500 kB"
+  },
+  "database": {
+    "newTables": 0,
+    "authorizationIsolation": "PASSED_ROLLED_BACK",
+    "localInitializedPermissions": 2,
+    "localInitializedMenuNodes": 2,
+    "businessFactWrites": false
+  },
+  "manualChecks": {
+    "ordinaryUserSse": "PASSED_REAL_PROVIDER",
+    "stopKeepsPartialReply": "PASSED",
+    "mobileLayout": "PASSED_AFTER_FIX",
+    "unauthenticatedJavaPythonAndLegacyChat": "401",
+    "cancelWriteExceptionHandling": "IMPLEMENTED_AND_PACKAGED"
+  },
+  "notVerified": [
+    "independent Java JSON model reply",
+    "rate limit",
+    "forced timeout",
+    "long network outage",
+    "actual administrator login",
+    "multi-user concurrency"
+  ],
+  "privacy": {
+    "publicExampleKeys": "BLANK",
+    "actualModelAndInternalKeyMatchesInAgentSources": 0,
+    "privateEnvironmentIgnored": true
+  },
+  "nextPhase": "P1.2_NOT_STARTED_PENDING_USER_ACCEPTANCE",
+  "git": {
+    "branch": "feature/LingXI-develop",
+    "commitCreated": false,
+    "featurePushed": false,
+    "mainMerged": false,
+    "stashChanged": false
+  },
+  "sourceSha256": {
+    "agent/.env.example": "b83398197f7979a602d5e45fbc252e7880da2b9da44e065ef16550f86a8e6cf5",
+    "agent/app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/api/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/api/routes/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/api/routes/chat.py": "318c63e7f989b8a6bbc977308005fadcf7e337886c69b433c5ab85d64a11c565",
+    "agent/app/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/core/config.py": "f3dc31b98ffc8b3e911fd4eb8ff218f19d3281f3529d7ffba7bc46d008651e0c",
+    "agent/app/core/context.py": "2fe16ebab35a13ae8a2edcd763a94f1b08e9ed8835d3a3b5eda6330325ff4e15",
+    "agent/app/core/errors.py": "465cd652b6969847650ab7be81af9aa235f03882bbd81edaa0d8156894df1b63",
+    "agent/app/integrations/__init__.py": "c768bfb88e47b6482bf189783a16703a6eab722812fc1e3e2dd7f3ff4ed69581",
+    "agent/app/integrations/java_client.py": "fc8b811f10d2766a2980f85197c326513bdba4ee760e49946c6dd82134d28b59",
+    "agent/app/llm/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/llm/chat_service.py": "5ffc589047f81b8df9cc92538cf20c68d8b18941c443b1db0e28c029e48e557a",
+    "agent/app/llm/client.py": "402e68058f741bc38720bc2703efeeab71bb2f576b019b98904e7d81df0d31c7",
+    "agent/app/llm/prompts/__init__.py": "76bc58ad4dfb0e7e437d1bfb50a37168e0c4593ec3c50609996d81079b4bc970",
+    "agent/app/llm/prompts/chat.py": "390657f035260946faf7f742d8cecb1884f3d9ddd0c3dfeb8e64e4a1046670fb",
+    "agent/app/main.py": "ba87c3d2a42daae4c80883dc410b95fcf96d804434777054f588427e3c5fc7df",
+    "agent/app/schemas/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "agent/app/schemas/chat.py": "e142c8647aacda9a97d7afbfaa6e93494a3caa2b9cda92b9c03313f5a93daa63",
+    "backend/agent/pom.xml": "9e912a015ea1d2718fb5f2ed65e08266f95ed95ad5a967c7794168c15c203f29",
+    "backend/agent/src/main/java/com/asterway/agent/controller/AgentChatController.java": "182e02bd5ec84400617b6a156aa83e272a7f442fd390e4ac6518a494ec7983c4",
+    "backend/agent/src/main/java/com/asterway/agent/dto/AgentChatDTO.java": "badf5384c4613798e220120d66642291a1ba9104af7327566c3c3f20b9d3ebfb",
+    "backend/agent/src/main/java/com/asterway/agent/service/AgentChatService.java": "5c9b8745d687925cfb8a4c8ff4be96c73f61a3d48c462dc7a9b4a0db4192039d",
+    "backend/agent/src/main/java/com/asterway/agent/service/impl/AgentChatServiceImpl.java": "3a7dfa1e22139fad309c46b440850bf822f1eb6dd93e905dd942b0c10d94c935",
+    "backend/agent/src/main/java/com/asterway/agent/vo/AgentChatResultVO.java": "a8b196d03f2578bd41159ed231f615f5a95d5afbd42f1a209363cfdc7c84adfd",
+    "backend/app/pom.xml": "44896bd728dad38ac5bba5b780128846f871eb92cb76284a0f05822d8fb43eb5",
+    "backend/app/src/main/resources/application.yml": "ebfaed04683ef64ad27f61c6e19dbc68defb373ca54028a339e012e2c86ce3dc",
+    "backend/app/src/main/resources/sql/agent.sql": "7e9985e1d707d5a4695dd90c68a20a9acbd6b49bae80d700fe1b3ee01821c2ef",
+    "backend/common/src/main/java/com/asterway/common/config/AgentConfig.java": "52088671684d4d6e06712d3c577307ab4d1598f42f02fd037234f57b40c8f4fb",
+    "backend/common/src/main/java/com/asterway/common/config/SecurityConfig.java": "841111c22d2792f107aefa04ad7a06be8816e460bdb9449fd6989004800af1a1",
+    "backend/common/src/main/java/com/asterway/common/filter/JwtAuthenticationFilter.java": "f938005827c49e166f458269513976d0cd014645fe59a837272b0054332ed53c",
+    "backend/common/src/main/java/com/asterway/common/integration/AgentClient.java": "6fc0a1bb5962942066271cd78b01e603b0c2d221f1b6b9caafae91630e62e7da",
+    "backend/common/src/main/java/com/asterway/common/integration/AgentRequestContext.java": "22c9a65654164960f7e87a70f16d3cf0b38155647035ac3bbbe713091665f4f3",
+    "backend/common/src/main/java/com/asterway/common/utils/GrowthAccessUtils.java": "d3298bed6427787e21ba4d8284490e326737d02c0c2d9aac19bda819678b9f03",
+    "backend/identity/src/main/java/com/asterway/identity/service/impl/MenuServiceImpl.java": "70cb0f3128df80202b10277644878e236613f907c8b4cbbcb6dfb331c4d6a3c7",
+    "backend/pom.xml": "b413da3de81777eaa5719f6d62b2d5741d678d8f60302486e3e5570cfd09d9c4",
+    "frontend/src/api/agent.js": "55404a0718b050d05e25d5053db8a73caac3b0bd15f1dbd9df2907ee085fe829",
+    "frontend/src/api/growth.js": "91dfef8805c973d2ed1208cac9b88feb6f914ca91d6af49d9dcecb093e66315b",
+    "frontend/src/api/http.js": "26ffd5d7d7e4c04c778eb45f87907d4b50fddf98594a6d5f2e93c62acd45b973",
+    "frontend/src/components/NavigationItems.vue": "f6afed385705c66643b00a3d7fff0e733d19848d868bc8eedc0c0798492740a5",
+    "frontend/src/router/index.js": "be8ed3fa3e5196551dcad4f2f06e2d7734448d06914de49ac09b434767fb3fe0",
+    "frontend/src/views/WorkspaceView.vue": "f0561351ce24e35a762340bd015604553be22ab84d44b2586dd29db59e1039b6",
+    "frontend/src/views/agent/AgentChatView.vue": "7122d5e5544d8cd214abfe447213c28e86b49b489a0823c1ba2f7de04fc6b168",
+    "scripts/initialize_agent_local.ps1": "bd45926596add5d41ab1a95dd0d08918e18066df27667efce32af0d2dbb82cd7"
+  }
+}

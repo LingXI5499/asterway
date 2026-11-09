@@ -1,0 +1,366 @@
+{
+  "stage": "P1.3.2d",
+  "recordedAt": "2026-11-05T23:20:00+08:00",
+  "scope": "习惯列表/详情、习惯分类、今日应做习惯、打卡历史、规则修订历史的 6 个只读工具；复用既有 Java GET 接口，未新增或修改 Java/SQL/权限，未改前端；工具不打卡、不撤销打卡、不创建/修改/暂停/结束习惯。",
+  "runtime": {
+    "pythonHealth": {
+      "success": true,
+      "service": "asterway-agent",
+      "status": "running",
+      "phase": "P1.3",
+      "capabilities": [
+        "chat",
+        "sse",
+        "conversation",
+        "tools"
+      ]
+    },
+    "pythonProcess": {
+      "path": "[local path omitted]",
+      "pid": 944,
+      "startTime": "2026-11-05T23:08:44.3361404+08:00"
+    },
+    "javaProcess": {
+      "startTime": "2026-11-05T19:07:45.8338722+08:00",
+      "pid": 39916
+    },
+    "frontendProcess": {
+      "startTime": "2026-11-05T19:47:16.9798923+08:00",
+      "pid": 18988
+    },
+    "toolCount": 24,
+    "branch": "feature/LingXI-develop",
+    "head": "964e350a429ff78ceff902de7bb85427302093e0"
+  },
+  "validations": {
+    "pythonRuff": "PASS",
+    "pythonCompile": "PASS",
+    "pythonImportAndToolSchemas": "PASS（24 个工具；新增 6 个习惯类工具）",
+    "frontendBuild": "PASS（npm run build，1.27 秒；前端未改动，保留既有大分块提示）",
+    "pythonRestartAndHealth": "PASS（重启后运行进程加载最终源码）",
+    "javaBuild": "未执行（本阶段未修改 Java 源码）",
+    "sqlChanged": false,
+    "permissionsChanged": false,
+    "habitFactsIntegrity": "PASS（无 RUNNING 轮次、无时间约束违反；习惯/打卡/修订事实与 Java 接口一致）",
+    "strictTestFrameworksAdded": false,
+    "browserUiExecutedByDeveloper": false
+  },
+  "toolDeterministicChecks": {
+    "list_habits_default": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "idsMatch": "PASS",
+      "namesMatch": "PASS",
+      "statusLabels": "PASS",
+      "readingCheckedToday": "PASS",
+      "runningWeekdays": "PASS"
+    },
+    "list_habits_active": {
+      "totalMatches": "PASS",
+      "allActive": "PASS"
+    },
+    "list_habits_paused": {
+      "totalMatches": "PASS",
+      "nameMatches": "PASS"
+    },
+    "list_habits_ended": {
+      "totalMatches": "PASS",
+      "nameMatches": "PASS"
+    },
+    "list_habits_keyword": {
+      "totalMatches": "PASS",
+      "nameMatches": "PASS"
+    },
+    "list_habits_category": {
+      "totalMatches": "PASS",
+      "allCategory": "PASS"
+    },
+    "get_habit_reading": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "nameMatches": "PASS",
+      "statusMatches": "PASS",
+      "cycleMatches": "PASS",
+      "weekdaysMatch": "PASS",
+      "checkedTodayMatches": "PASS"
+    },
+    "get_habit_running": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "nameMatches": "PASS",
+      "statusMatches": "PASS",
+      "cycleMatches": "PASS",
+      "weekdaysMatch": "PASS",
+      "checkedTodayMatches": "PASS"
+    },
+    "get_habit_paused": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "nameMatches": "PASS",
+      "statusMatches": "PASS",
+      "cycleMatches": "PASS",
+      "weekdaysMatch": "PASS",
+      "checkedTodayMatches": "PASS"
+    },
+    "get_habit_ended": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "nameMatches": "PASS",
+      "statusMatches": "PASS",
+      "cycleMatches": "PASS",
+      "weekdaysMatch": "PASS",
+      "checkedTodayMatches": "PASS"
+    },
+    "list_habit_categories": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "namesMatch": "PASS"
+    },
+    "get_today_habits": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "namesMatch": "PASS",
+      "dateMatchesJava": "PASS",
+      "timeZoneMatchesJava": "PASS",
+      "readingChecked": "PASS",
+      "meditationNotChecked": "PASS",
+      "hasNote": "PASS"
+    },
+    "list_habit_checkins": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "businessDatesMatch": "PASS",
+      "allValid": "PASS",
+      "reasonLabelPresent": "PASS",
+      "hasPastCheckins": "PASS"
+    },
+    "list_habit_checkins_range": {
+      "totalMatches": "PASS",
+      "datesInRange": "PASS"
+    },
+    "list_habit_checkins_cancelled_empty": {
+      "totalMatches": "PASS",
+      "notError": "PASS"
+    },
+    "list_habit_checkins_cancelled": {
+      "totalMatches": "PASS",
+      "hasCancelled": "PASS",
+      "cancelledLabel": "PASS"
+    },
+    "list_habit_revisions": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "revisionNosMatch": "PASS",
+      "actionsMatch": "PASS",
+      "actionLabelsPresent": "PASS",
+      "containsEditAndPause": "PASS"
+    },
+    "list_habit_revisions_water": {
+      "totalMatches": "PASS",
+      "hasPaused": "PASS"
+    },
+    "invalid_habit_id": {
+      "isError": "PASS"
+    },
+    "unknown_habit": {
+      "isError": "PASS"
+    },
+    "invalid_limit": {
+      "isError": "PASS"
+    },
+    "invalid_status": {
+      "isError": "PASS"
+    },
+    "invalid_checkin_date_pair": {
+      "isError": "PASS"
+    },
+    "invalid_checkin_date_format": {
+      "isError": "PASS"
+    },
+    "unknown_habit_checkins": {
+      "isError": "PASS"
+    },
+    "unknown_habit_revisions": {
+      "isError": "PASS"
+    },
+    "path_guard": {
+      "allowedAccepted": "PASS",
+      "allRejected": "PASS"
+    },
+    "habit_checkin_permission": {
+      "revokedIsError": "PASS",
+      "mentionsPermission": "PASS",
+      "restoredNotError": "PASS",
+      "grantRestored": "PASS"
+    },
+    "cross_user_isolation": {
+      "detail404": "PASS",
+      "checkins404": "PASS",
+      "revisions404": "PASS",
+      "bHabitsEmpty": "PASS",
+      "bTodayEmpty": "PASS",
+      "bCategoriesEmpty": "PASS",
+      "noDataLeak": "PASS"
+    },
+    "registry": {
+      "twentyFourTools": "PASS",
+      "hasHabitTools": "PASS",
+      "hasSchemas": "PASS"
+    }
+  },
+  "endToEnd": {
+    "real_model_used_new_habit_tools": "PASS",
+    "all_six_habit_tools_used": "PASS",
+    "habits_round_uses_list_habits": "PASS",
+    "habits_total_matches_java": "PASS",
+    "habits_reply_mentions_names": "PASS",
+    "habits_reply_mentions_cycle": "PASS",
+    "today_round_uses_today_tool": "PASS",
+    "today_total_matches_java": "PASS",
+    "today_date_matches_java": "PASS",
+    "today_reply_mentions_checked": "PASS",
+    "categories_total_matches_java": "PASS",
+    "categories_reply_mentions_category": "PASS",
+    "detail_round_uses_detail_tool": "PASS",
+    "detail_matches_java": "PASS",
+    "detail_reply_mentions_time": "PASS",
+    "checkins_round_uses_checkin_tool": "PASS",
+    "checkins_total_matches_java": "PASS",
+    "checkins_business_dates_match_java": "PASS",
+    "checkins_reply_mentions_dates": "PASS",
+    "cancelled_payload_has_cancelled": "PASS",
+    "cancelled_reply_mentions_cancelled": "PASS",
+    "revisions_total_matches_java": "PASS",
+    "revisions_reply_mentions_edit_pause_resume": "PASS",
+    "paused_round_uses_habit_tools": "PASS",
+    "paused_reply_mentions_paused": "PASS",
+    "tool_chain_paired": "PASS",
+    "public_refresh_hides_tools": "PASS",
+    "context_rebuild_contains_tool_chain": "PASS",
+    "turn_count_matches_rounds": "PASS",
+    "no_internal_ids_in_replies": "PASS"
+  },
+  "regressions": {
+    "P1.3.1EndToEnd": {
+      "real_model_calls_two_tools": "PASS",
+      "tool_chain_persisted_and_paired": "PASS",
+      "final_reply_saved_complete": "PASS",
+      "overview_matches_java": "PASS",
+      "task_tool_uses_real_data": "PASS",
+      "continuity_answer_names_high_priority_task": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "refresh_hides_internal_tool_messages": "PASS",
+      "refresh_user_message_count_matches_turns": "PASS",
+      "replay_same_request_no_new_turn": "PASS",
+      "empty_result_not_fabricated": "PASS",
+      "cancel_marks_turn_cancelled": "PASS",
+      "cancel_stream_terminates": "PASS",
+      "cancel_preserves_partial_text": "PASS",
+      "after_cancel_new_question_completes": "PASS",
+      "disconnect_turn_not_stuck_running": "PASS",
+      "disconnect_detail_has_no_running_turn": "PASS",
+      "disconnect_followup_works": "PASS",
+      "stale_login_rejected": "PASS",
+      "runtime_health_p1_3": "PASS",
+      "final_source_loaded": "PASS"
+    },
+    "P1.3.2aEndToEnd": {
+      "real_model_called_new_tools": "PASS",
+      "goal_round_used_goal_tool": "PASS",
+      "stage_round_used_stage_tool": "PASS",
+      "task_round_used_task_or_stage_tool": "PASS",
+      "task_detail_round_used_task_tool": "PASS",
+      "goals_answer_mentions_both_goals": "PASS",
+      "stages_answer_mentions_both_stages": "PASS",
+      "tasks_answer_mentions_task_names": "PASS",
+      "task_detail_answer_mentions_30_min": "PASS",
+      "empty_goal_answer_says_none": "PASS",
+      "goal_count_answer_is_two": "PASS",
+      "tool_chain_paired": "PASS",
+      "public_refresh_hides_tools": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "turn_count_matches_rounds": "PASS",
+      "no_internal_ids_in_replies": "PASS",
+      "list_goals_payload_total_two": "PASS"
+    },
+    "P1.3.2bEndToEnd": {
+      "real_model_used_new_planning_tools": "PASS",
+      "all_six_planning_tools_used": "PASS",
+      "list_weekly_plans_used": "PASS",
+      "week_round_uses_weekly_plan": "PASS",
+      "week_exists_mentions_week_start": "PASS",
+      "week_tasks_mentions_both_tasks": "PASS",
+      "today_daily_mentions_daily_plan_and_task": "PASS",
+      "previous_week_mentions_pending_task": "PASS",
+      "pending_mentions_pending_task": "PASS",
+      "assignment_week_mentions_week": "PASS",
+      "assignment_pool_mentions_unassigned": "PASS",
+      "assignment_date_mentions_previous_day": "PASS",
+      "tool_chain_paired": "PASS",
+      "public_refresh_hides_tools": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "turn_count_matches_rounds": "PASS",
+      "no_internal_ids_in_replies": "PASS",
+      "planning_tasks_payload_has_real_tasks": "PASS",
+      "pending_payload_matches_fixture": "PASS"
+    },
+    "P1.3.2cEndToEnd": {
+      "real_model_used_new_execution_tools": "PASS",
+      "at_least_four_execution_tools_used": "PASS",
+      "history_round_uses_execution_list": "PASS",
+      "history_today_total_matches_java": "PASS",
+      "history_today_names_match_java": "PASS",
+      "segments_round_uses_segments_tool": "PASS",
+      "segments_reply_mentions_pause": "PASS",
+      "segments_payload_has_user_pause": "PASS",
+      "current_round_uses_current_tool": "PASS",
+      "current_payload_is_running": "PASS",
+      "current_reply_mentions_task": "PASS",
+      "summary_today_matches_java": "PASS",
+      "summary_today_date_range": "PASS",
+      "summary_task_matches_java": "PASS",
+      "summary_goal_matches_java": "PASS",
+      "summary_today_reply_mentions_duration": "PASS",
+      "summary_task_reply_mentions_pause": "PASS",
+      "last_week_reply_says_none": "PASS",
+      "detail_round_uses_detail_or_segments": "PASS",
+      "execution_a_segments_two": "PASS",
+      "tool_chain_paired": "PASS",
+      "public_refresh_hides_tools": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "turn_count_matches_rounds": "PASS",
+      "no_internal_ids_in_replies": "PASS"
+    }
+  },
+  "newTools": [
+    "list_habits",
+    "get_habit",
+    "list_habit_categories",
+    "get_today_habits",
+    "list_habit_checkins",
+    "list_habit_revisions"
+  ],
+  "dataFixtureNote": "习惯、分类、今日打卡、撤销打卡与规则修订均通过正常 Java 习惯接口创建，共 1 个分类、6 个验收习惯（覆盖每天/指定星期、进行中/已暂停/已结束）与多动作修订链。因打卡接口只允许为今天打卡，历史打卡通过本机开发库受控 SQL 为阅读习惯补 2 条过去日期事实，未改表结构或权限。本机开发库中可能同时存在用户手工操作产生的最新习惯数据，验收时工具与 Java 原始接口按同一时刻数据比对。",
+  "observedBehaviorNote": "P1.3.1 断连回归中，浏览器断开后 Java 代理有时不能立即把断连传回上游，轮次先继续生成，随后由 120 秒到期兜底归一为 FAILED（errorCode=AGENT_TIMEOUT）；本次回归放宽等待窗口到 160 秒后轮次在截止时间内结束，之后追问正常。另一轮曾观察到上游在约 108 秒时清理为 CANCELLED。最终都不会长期停留在 RUNNING；P1.3.2d 没有修改 Java 代理，该延迟已记录为后续可优化项。",
+  "evidence": {
+    "deterministicCheckGroups": 30,
+    "endToEndAssertions": 30,
+    "regressionAssertions": {
+      "P1.3.1EndToEnd": 21,
+      "P1.3.2aEndToEnd": 17,
+      "P1.3.2bEndToEnd": 19,
+      "P1.3.2cEndToEnd": 25
+    },
+    "p131DisconnectFinalStatus": "FAILED",
+    "p131DisconnectFinalErrorCode": "AGENT_TIMEOUT"
+  },
+  "conclusion": "P1.3.2d 编码与开发侧真实验收完成：6 个习惯查询工具与真实 Java 习惯事实逐项一致，模型能解释习惯列表与状态/周期、分类归属、今日应做与打卡状态、跨日期打卡历史与撤销事实、规则修订链；参数校验、空结果、权限撤销与恢复、跨用户隔离、工具链落库均取得真实证据；P1.3.1、P1.3.2a、P1.3.2b、P1.3.2c 回归全部通过。",
+  "notVerified": [
+    "浏览器页面上的实际问答体验与工具状态展示由用户人工验收",
+    "打卡、撤销打卡、创建/修改/暂停/结束习惯只能由业务页面或已有写入接口发起；本阶段工具不提供写入",
+    "超过 20 条习惯、分类、打卡或修订记录的分页：工具只返回第一页并给出 total/hasMore",
+    "历史打卡依赖接口仅支持今天写入的既有约束，跨多天历史用受控 SQL 夹具验证",
+    "多用户并发修改同一习惯时的读取一致性沿用既有 Java 业务约束，本阶段未做压力验证",
+    "Java 真实网络超时沿用 P1.3.1 本地模拟结论"
+  ]
+}

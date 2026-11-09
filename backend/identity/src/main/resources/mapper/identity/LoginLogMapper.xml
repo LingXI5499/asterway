@@ -1,45 +1,81 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.LoginLogMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.LoginLogMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.LoginLogEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.LoginLogEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 user_id，对象属性 userId。 -->
         <result column="user_id" property="userId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 username_snapshot，对象属性 usernameSnapshot。 -->
         <result column="username_snapshot" property="usernameSnapshot"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 outcome，对象属性 outcome。 -->
         <result column="outcome" property="outcome"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 reason_code，对象属性 reasonCode。 -->
         <result column="reason_code" property="reasonCode"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 session_id，对象属性 sessionId。 -->
         <result column="session_id" property="sessionId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 ip_address，对象属性 ipAddress。 -->
         <result column="ip_address" property="ipAddress"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 user_agent，对象属性 userAgent。 -->
         <result column="user_agent" property="userAgent"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 device_label，对象属性 deviceLabel。 -->
         <result column="device_label" property="deviceLabel"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 trace_id，对象属性 traceId。 -->
         <result column="trace_id" property="traceId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 occurred_at，对象属性 occurredAt。 -->
         <result column="occurred_at" property="occurredAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：编号（id）。 -->
         id,
+        <!-- 继续列出本次使用的字段：用户编号（user_id）。 -->
         user_id,
+        <!-- 继续列出本次使用的字段：用户名确认时的数据快照（username_snapshot）。 -->
         username_snapshot,
+        <!-- 继续列出本次使用的字段：outcome。 -->
         outcome,
+        <!-- 继续列出本次使用的字段：原因编码（reason_code）。 -->
         reason_code,
+        <!-- 继续列出本次使用的字段：会话编号（session_id）。 -->
         session_id,
+        <!-- 继续列出本次使用的字段：ipaddress（ip_address）。 -->
         ip_address,
+        <!-- 继续列出本次使用的字段：用户成长助手（user_agent）。 -->
         user_agent,
+        <!-- 继续列出本次使用的字段：设备显示名称（device_label）。 -->
         device_label,
+        <!-- 继续列出本次使用的字段：追踪标识编号（trace_id）。 -->
         trace_id,
+        <!-- 继续列出本次使用的字段：occurredat（occurred_at）。 -->
         occurred_at
     </sql>
 
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE true
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=regularOnly。 -->
         <if test="regularOnly">AND l.user_id IS NOT NULL AND EXISTS (SELECT 1 FROM identity_user u WHERE u.id=l.user_id AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id WHERE ur.user_id=u.id AND r.code IN ('ADMIN','SUPER_ADMIN')))</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=userId != null。 -->
         <if test="userId != null">AND l.user_id=#{userId}</if>
     </sql>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert">INSERT INTO identity_login_log(user_id,username_snapshot,outcome,reason_code,session_id,ip_address,user_agent,device_label,trace_id)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{userId},#{usernameSnapshot},#{outcome},#{reasonCode},#{sessionId}::uuid,#{ipAddress}::inet,#{userAgent},#{deviceLabel},#{traceId})</insert>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findPage，resultMap=entityMap。 -->
     <select id="findPage" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_login_log l <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_login_log l <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY occurred_at DESC,id DESC LIMIT #{size} OFFSET #{offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
-        SELECT count(*) FROM identity_login_log l <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT count(*) FROM identity_login_log l <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
     </select>
 </mapper>

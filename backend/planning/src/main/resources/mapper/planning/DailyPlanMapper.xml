@@ -1,76 +1,147 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.planning.mapper.DailyPlanMapper。 -->
 <mapper namespace="com.asterway.planning.mapper.DailyPlanMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entity，type=com.asterway.planning.entity.DailyPlanEntity。 -->
     <resultMap id="entity" type="com.asterway.planning.entity.DailyPlanEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 user_id，对象属性 userId。 -->
         <result column="user_id" property="userId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 weekly_plan_id，对象属性 weeklyPlanId。 -->
         <result column="weekly_plan_id" property="weeklyPlanId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 plan_date，对象属性 planDate。 -->
         <result column="plan_date" property="planDate"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 deleted_at，对象属性 deletedAt。 -->
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">r.id,
+            <!-- 继续列出本次使用的字段：r中的用户编号（r.user_id）。 -->
             r.user_id,
+            <!-- 继续列出本次使用的字段：r中的每周方案编号（r.weekly_plan_id）。 -->
             r.weekly_plan_id,
+            <!-- 继续列出本次使用的字段：r中的方案日期（r.plan_date）。 -->
             r.plan_date,
+            <!-- 继续列出本次使用的字段：r中的版本号（r.version）。 -->
             r.version,
+            <!-- 继续列出本次使用的字段：r中的创建时at（r.created_at）。 -->
             r.created_at,
+            <!-- 继续列出本次使用的字段：r中的更新时at（r.updated_at）。 -->
             r.updated_at,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：r.deleted_at</sql>。 -->
             r.deleted_at</sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.deleted_at IS NULL
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.weeklyPlanId != null。 -->
         <if test="q.weeklyPlanId != null">AND r.weekly_plan_id=#{q.weeklyPlanId}</if>
     </sql>
-    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entity。 -->
+    <select id="findById" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM daily_plan r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=r.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.deleted_at IS NULL</select>
-    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultMap=entity。 -->
+    <select id="page" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM daily_plan r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=r.user_id
-          AND w.deleted_at IS NULL <include refid="filters"/>
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
+          AND w.deleted_at IS NULL <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY r.id DESC
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT #{q.size}
+        <!-- 先跳过指定数量的记录，再取当前页内容。 -->
         OFFSET #{q.offset}</select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">SELECT count(*)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM daily_plan r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=r.user_id
-          AND w.deleted_at IS NULL <include refid="filters"/></select>
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
+          AND w.deleted_at IS NULL <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/></select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO daily_plan (user_id,
+            <!-- 继续列出本次使用的字段：每周方案编号（weekly_plan_id）。 -->
             weekly_plan_id,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：plan_date)。 -->
             plan_date)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{userId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{weeklyPlanId},。 -->
             #{weeklyPlanId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{planDate})</insert>。 -->
             #{planDate})</insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">UPDATE daily_plan
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET weekly_plan_id=#{weeklyPlanId},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             plan_date=#{planDate},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             version=version+1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=CURRENT_TIMESTAMP
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL</update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=softDelete。 -->
     <update id="softDelete">UPDATE daily_plan
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET deleted_at=CURRENT_TIMESTAMP,version=version+1,updated_at=CURRENT_TIMESTAMP
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL</update>
-    <select id="byDate" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=byDate，resultMap=entity。 -->
+    <select id="byDate" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM daily_plan r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=r.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=r.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.plan_date=#{date}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.deleted_at IS NULL</select>
 </mapper>

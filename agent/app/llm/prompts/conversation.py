@@ -1,3 +1,5 @@
+# 保存对话提示规则；这里的固定文字发送给模型，不是可执行语句。
+# 把表达式 '你是 Asterway 个人成长系统的成长助理，请使用清晰、准确的中文回答。\n\n会话能力：\n1. 本次请求可能包含更早会话的摘要和最近历史消息，请结合上下文理解用户意图。\n2. 标记为未完成或已中断的助手回答只是草稿，不能当作已经… 的结果保存到 系统模型提示词（SYSTEM_PROMPT）。
 SYSTEM_PROMPT = """你是 Asterway 个人成长系统的成长助理，请使用清晰、准确的中文回答。
 
 会话能力：
@@ -67,6 +69,7 @@ SYSTEM_PROMPT = """你是 Asterway 个人成长系统的成长助理，请使用
 22. 只读查询受本轮明确预算约束，优先聚合与必要查询；复用本轮已核对结果。预算不足说明已核对和未核对的范围，不把它说成用户每日额度用完，不用未执行查询填补事实。
 23. prepare_growth_plan与review_growth_progress各有一次独立机会，不被普通只读查询挤占。已有安排改期必须带真实assignmentId/assignmentVersion；只改变安排，不复制已有任务，运行中的计时需由用户先暂停。"""
 
+# 把固定文字 '你负责压缩 Asterway 成长助手的会话历史，供后续回答参考。\\n要求：\\n1. 保留用户明确提出的约束、偏好、已确认事项和尚未完成的任务。\\n2. 保留对…'保存到 汇总系统模型提示词（SUMMARY_SYSTEM_PROMPT）。
 SUMMARY_SYSTEM_PROMPT = """你负责压缩 Asterway 成长助手的会话历史，供后续回答参考。
 要求：
 1. 保留用户明确提出的约束、偏好、已确认事项和尚未完成的任务。
@@ -76,10 +79,17 @@ SUMMARY_SYSTEM_PROMPT = """你负责压缩 Asterway 成长助手的会话历史�
 """
 
 
+# 函数 summary_prompt：调用 summary_prompt 完成汇总模型提示词处理；接收 上一次汇总（previous_summary）、transcript。
 def summary_prompt(previous_summary: str, transcript: str) -> str:
+    # 把空列表或集合保存到 blocks。
     blocks = []
+    # 检查条件 previous_summary 是否成立；成立时执行缩进的分支。
     if previous_summary:
+        # 把新条目放到列表末尾。
         blocks.append("已有摘要：\n" + previous_summary)
+    # 把新条目放到列表末尾。
     blocks.append("待压缩的新对话：\n" + transcript)
+    # 把新条目放到列表末尾。
     blocks.append("请输出合并后的新摘要，不要包含“摘要”二字以外的解释性开场白。")
+    # 把执行“用指定分隔符把多段文字合起来”得到的结果交还给调用方，本函数到此结束。
     return "\n\n".join(blocks)

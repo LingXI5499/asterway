@@ -1,21 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.task.mapper.TaskStateHistoryMapper。 -->
 <mapper namespace="com.asterway.task.mapper.TaskStateHistoryMapper">
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 task_state_history 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO task_state_history(user_id,task_id,event_type,before_status,after_status,name_snapshot,entity_version,occurred_at,source_type)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{taskId},#{eventType},#{beforeStatus},#{afterStatus},#{nameSnapshot},#{entityVersion},#{occurredAt},#{sourceType})
     </insert>
     <!-- 历史读取不以当前删除、归档或父链状态裁剪。 -->
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=historicalSubject，resultType=long。 -->
     <select id="historicalSubject" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id FROM task WHERE user_id=#{userId} AND id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FROM task_state_history WHERE user_id=#{userId} AND task_id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.task.vo.TaskStateHistoryVO。 -->
     <select id="page" resultType="com.asterway.task.vo.TaskStateHistoryVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id::text,task_id::text,event_type,before_status,after_status,
+            <!-- 继续列出本次使用的字段：名称确认时的数据快照（name_snapshot）、版本号（entity_version）、occurredat（occurred_at）、来源类型（source_type）、创建时at（created_at）。 -->
             name_snapshot,entity_version,occurred_at,source_type,created_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task_state_history WHERE user_id=#{userId} AND task_id=#{id}
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY occurred_at DESC,id DESC LIMIT #{size} OFFSET #{offset}
     </select>
 </mapper>

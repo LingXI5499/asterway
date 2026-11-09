@@ -1,111 +1,199 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.UserMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.UserMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.UserEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.UserEntity">
+        <!-- 指定主键列与对象属性的对应关系；数据库列 id，对象属性 id。 -->
         <id column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 username，对象属性 username。 -->
         <result column="username" property="username"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 password_hash，对象属性 passwordHash。 -->
         <result column="password_hash" property="passwordHash"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 nickname，对象属性 nickname。 -->
         <result column="nickname" property="nickname"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_enabled，对象属性 enabled。 -->
         <result column="is_enabled" property="enabled"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 must_change_password，对象属性 mustChangePassword。 -->
         <result column="must_change_password" property="mustChangePassword"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 auth_version，对象属性 authVersion。 -->
         <result column="auth_version" property="authVersion"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 time_zone，对象属性 timeZone。 -->
         <result column="time_zone" property="timeZone"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 pending_time_zone，对象属性 pendingTimeZone。 -->
         <result column="pending_time_zone" property="pendingTimeZone"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 time_zone_effective_at，对象属性 timeZoneEffectiveAt。 -->
         <result column="time_zone_effective_at" property="timeZoneEffectiveAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_by，对象属性 createdBy。 -->
         <result column="created_by" property="createdBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_by，对象属性 updatedBy。 -->
         <result column="updated_by" property="updatedBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 deleted_at，对象属性 deletedAt。 -->
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：编号（id）。 -->
         id,
+        <!-- 继续列出本次使用的字段：用户名（username）。 -->
         username,
+        <!-- 继续列出本次使用的字段：密码摘要值（password_hash）。 -->
         password_hash,
+        <!-- 继续列出本次使用的字段：昵称（nickname）。 -->
         nickname,
+        <!-- 继续列出本次使用的字段：是否是否启用（is_enabled）。 -->
         is_enabled,
+        <!-- 继续列出本次使用的字段：must修改密码（must_change_password）。 -->
         must_change_password,
+        <!-- 继续列出本次使用的字段：认证版本号（auth_version）。 -->
         auth_version,
+        <!-- 继续列出本次使用的字段：用户使用的时区（time_zone）。 -->
         time_zone,
+        <!-- 继续列出本次使用的字段：等待处理时间时区（pending_time_zone）。 -->
         pending_time_zone,
+        <!-- 继续列出本次使用的字段：时间时区生效at（time_zone_effective_at）。 -->
         time_zone_effective_at,
+        <!-- 继续列出本次使用的字段：版本号（version）。 -->
         version,
+        <!-- 继续列出本次使用的字段：创建时at（created_at）。 -->
         created_at,
+        <!-- 继续列出本次使用的字段：更新时at（updated_at）。 -->
         updated_at,
+        <!-- 继续列出本次使用的字段：创建时按（created_by）。 -->
         created_by,
+        <!-- 继续列出本次使用的字段：更新时按（updated_by）。 -->
         updated_by,
+        <!-- 继续列出本次使用的字段：删除标记at（deleted_at）。 -->
         deleted_at
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entityMap。 -->
     <select id="findById" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_user WHERE id = #{id}
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_user WHERE id = #{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findByUsername，resultMap=entityMap。 -->
     <select id="findByUsername" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_user
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_user
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE lower(username COLLATE "C") = lower(#{username} COLLATE "C")
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockById，resultMap=entityMap。 -->
     <select id="lockById" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_user WHERE id = #{id} FOR UPDATE
+        <!-- 读取后面列出的字段或计算结果；FOR UPDATE 会同时锁住对应记录。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_user WHERE id = #{id} FOR UPDATE
     </select>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE u.deleted_at IS NULL
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=keyword != null and keyword !=。 -->
         <if test="keyword != null and keyword != ''">
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND (u.username ILIKE '%' || #{keyword} || '%' OR u.nickname ILIKE '%' || #{keyword} || '%')
         </if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=enabled != null。 -->
         <if test="enabled != null">AND u.is_enabled = #{enabled}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=role != null and role !=。 -->
         <if test="role != null and role != ''">
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE ur.user_id = u.id AND r.code = #{role})
         </if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=regularOnly。 -->
         <if test="regularOnly">AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN', 'SUPER_ADMIN'))</if>
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findPage，resultMap=entityMap。 -->
     <select id="findPage" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_user u <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_user u <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY u.created_at DESC, u.id DESC LIMIT #{size} OFFSET #{offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
-        SELECT count(*) FROM identity_user u <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT count(*) FROM identity_user u <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=statistics，resultType=map。 -->
     <select id="statistics" resultType="map">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN',
+             <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：'SUPER_ADMIN'))) AS users,。 -->
              'SUPER_ADMIN'))) AS users,
 
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT (NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN',
+             <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：'SUPER_ADMIN')))) AS administrators,。 -->
              'SUPER_ADMIN')))) AS administrators,
 
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT u.is_enabled) AS disabled,。 -->
             count(*) FILTER (WHERE u.deleted_at IS NULL AND NOT u.is_enabled) AS disabled,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：count(*) FILTER (WHERE u.deleted_at IS NOT NULL) AS deleted。 -->
             count(*) FILTER (WHERE u.deleted_at IS NOT NULL) AS deleted
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM identity_user u
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=regularOnly。 -->
         <if test="regularOnly">WHERE NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id = ur.role_id WHERE ur.user_id = u.id AND r.code IN ('ADMIN', 'SUPER_ADMIN'))</if>
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        <!-- 向 identity_user 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO identity_user (username, password_hash, nickname, time_zone, must_change_password, created_by, updated_by)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{username}, #{passwordHash}, #{nickname}, #{timeZone}, #{mustChangePassword}, #{createdBy}, #{updatedBy})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=updateProfile。 -->
     <update id="updateProfile">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_user SET username = #{username}, nickname = #{nickname}, version = version + 1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at = now(), updated_by = #{updatedBy}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=updatePassword。 -->
     <update id="updatePassword">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_user SET password_hash = #{passwordHash}, must_change_password = #{mustChangePassword},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             auth_version = auth_version + 1, version = version + 1, updated_at = now(), updated_by = #{updatedBy}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=updateStatus。 -->
     <update id="updateStatus">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_user SET is_enabled = #{enabled}, deleted_at = #{deletedAt}, auth_version = auth_version + 1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             version = version + 1, updated_at = now(), updated_by = #{updatedBy}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=updateTimeZone。 -->
     <update id="updateTimeZone">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_user SET time_zone = #{timeZone}, pending_time_zone = #{pendingTimeZone},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             time_zone_effective_at = #{timeZoneEffectiveAt}, version = version + 1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at = now(), updated_by = #{updatedBy}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=invalidateSessions。 -->
     <update id="invalidateSessions">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_user SET auth_version=auth_version+1,version=version+1,updated_at=now(),updated_by=#{actorId}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
 </mapper>

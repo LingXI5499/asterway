@@ -1,46 +1,91 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.planning.mapper.PlanningTaskMapper。 -->
 <mapper namespace="com.asterway.planning.mapper.PlanningTaskMapper">
+    <!-- 定义可被其他语句复用的 SQL 片段；id=source。 -->
     <sql id="source">
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task_assignment a
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN task t ON t.id=a.task_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.user_id=a.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.deleted_at IS NULL
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN stage s ON s.id=t.stage_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.user_id=a.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.deleted_at IS NULL
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=s.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=a.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.deleted_at IS NULL
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=a.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=a.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.deleted_at IS NULL
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN daily_plan d ON d.id=a.daily_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND d.user_id=a.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND d.weekly_plan_id=w.id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND d.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE a.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND a.ended_at IS NULL
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND (a.daily_plan_id IS NULL OR d.id IS NOT NULL)
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.weeklyPlanId != null。 -->
         <if test="q.weeklyPlanId != null">AND a.weekly_plan_id=#{q.weeklyPlanId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.dailyPlanId != null。 -->
         <if test="q.dailyPlanId != null">AND a.daily_plan_id=#{q.dailyPlanId}</if>
-        <if test="q.goalId != null">AND g.id=#{q.goalId}</if><if test="q.stageId != null">AND s.id=#{q.stageId}</if>
+        <!-- 仅筛选本周尚未指定日期的任务；分页列表和总数共用这个条件。 -->
+        <if test="q.assignmentStatus == 'WEEK'">AND a.daily_plan_id IS NULL</if>
+        <!-- 优先级使用绑定参数，和任务管理中的筛选保持一致。 -->
+        <if test="q.priority != null and q.priority != ''">AND t.priority=#{q.priority}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.goalId != null。 -->
+        <if test="q.goalId != null">AND g.id=#{q.goalId}</if><!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.stageId != null。 --><if test="q.stageId != null">AND s.id=#{q.stageId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.keyword != null and q.keyword !=。 -->
         <if test="q.keyword != null and q.keyword != ''">AND t.name ILIKE '%' || #{q.keyword} || '%'</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.status != null and q.status !=。 -->
         <if test="q.status != null and q.status != ''">AND t.status=#{q.status}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.dateFrom != null。 -->
         <if test="q.dateFrom != null">AND COALESCE(d.plan_date,w.week_start_date) &gt;= #{q.dateFrom}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.dateTo != null。 -->
         <if test="q.dateTo != null">AND COALESCE(d.plan_date,w.week_start_date+6) &lt;= #{q.dateTo}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=pending。 -->
         <if test="pending">AND t.status&lt;&gt;'COMPLETED'
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.archived_at IS NULL
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND (d.plan_date &lt; #{q.today} OR w.week_start_date+6 &lt; #{q.today})</if>
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.planning.vo.PlanningTaskVO。 -->
     <select id="page" resultType="com.asterway.planning.vo.PlanningTaskVO">
-        SELECT a.id AS assignment_id,a.version AS assignment_version,t.id AS task_id,t.name AS task_name,t.status,t.priority,t.weight,
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT a.id AS assignment_id,a.version AS assignment_version,t.id AS task_id,t.name AS task_name,t.description,t.estimated_minutes,t.status,t.priority,t.weight,
+            <!-- 继续列出本次使用的字段：s编号作为阶段编号（s.id AS stage_id）、s名称作为阶段名称（s.name AS stage_name）、g编号作为目标编号（g.id AS goal_id）、g名称作为目标名称（g.name AS goal_name）、a中的每周方案编号（a.weekly_plan_id）、a中的每日方案编号（a.daily_plan_id）。 -->
             s.id AS stage_id,s.name AS stage_name,g.id AS goal_id,g.name AS goal_name,a.weekly_plan_id,a.daily_plan_id,
+            <!-- 继续列出本次使用的字段：w中的周开始日期（w.week_start_date）、d中的方案日期（d.plan_date）、a中的排序顺序（a.sort_order）、g中的已归档at（g.archived_at）。 -->
             w.week_start_date,d.plan_date,a.sort_order,g.archived_at
+        <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=source。 -->
         <include refid="source"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY COALESCE(d.plan_date,w.week_start_date+6),a.sort_order,a.id
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT #{q.size}
+        <!-- 先跳过指定数量的记录，再取当前页内容。 -->
         OFFSET #{q.offset}
     </select>
-    <select id="count" resultType="long">SELECT count(*) <include refid="source"/></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
+    <select id="count" resultType="long">SELECT count(*) <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=source。 --><include refid="source"/></select>
 </mapper>

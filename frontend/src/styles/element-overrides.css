@@ -1,203 +1,345 @@
+/* 以下规则应用于 :root, :root.dark 选中的元素。 */
+/* 定义elementoverrides的页面样式，具体选择器说明哪些元素应用这些显示规则。 */
 :root,
 :root.dark {
+  /* 声明主题变量 —el-font-family，供其他样式统一引用；取值 var(—aw-font)。 */
   --el-font-family: var(--aw-font);
+  /* 声明主题变量 —el-font-size-base，供其他样式统一引用；取值 14px。 */
   --el-font-size-base: 14px;
+  /* 声明主题变量 —el-color-primary，供其他样式统一引用；取值 var(—aw-brand)。 */
   --el-color-primary: var(--aw-brand);
+  /* 声明主题变量 —el-color-primary-light-3，供其他样式统一引用；取值 color-mix( in srgb, var(—aw-brand) 70%, var(—aw-surface) )。 */
   --el-color-primary-light-3: color-mix(
     in srgb,
     var(--aw-brand) 70%,
     var(--aw-surface)
   );
+  /* 声明主题变量 —el-color-primary-light-5，供其他样式统一引用；取值 color-mix( in srgb, var(—aw-brand) 50%, var(—aw-surface) )。 */
   --el-color-primary-light-5: color-mix(
     in srgb,
     var(--aw-brand) 50%,
     var(--aw-surface)
   );
+  /* 声明主题变量 —el-color-primary-light-7，供其他样式统一引用；取值 color-mix( in srgb, var(—aw-brand) 30%, var(—aw-surface) )。 */
   --el-color-primary-light-7: color-mix(
     in srgb,
     var(--aw-brand) 30%,
     var(--aw-surface)
   );
+  /* 声明主题变量 —el-color-primary-light-8，供其他样式统一引用；取值 color-mix( in srgb, var(—aw-brand) 20%, var(—aw-surface) )。 */
   --el-color-primary-light-8: color-mix(
     in srgb,
     var(--aw-brand) 20%,
     var(--aw-surface)
   );
+  /* 声明主题变量 —el-color-primary-light-9，供其他样式统一引用；取值 var(—aw-brand-soft)。 */
   --el-color-primary-light-9: var(--aw-brand-soft);
+  /* 声明主题变量 —el-color-primary-dark-2，供其他样式统一引用；取值 var(—aw-brand-hover)。 */
   --el-color-primary-dark-2: var(--aw-brand-hover);
+  /* 声明主题变量 —el-color-success，供其他样式统一引用；取值 var(—aw-success)。 */
   --el-color-success: var(--aw-success);
+  /* 声明主题变量 —el-color-success-light-9，供其他样式统一引用；取值 var(—aw-success-soft)。 */
   --el-color-success-light-9: var(--aw-success-soft);
+  /* 声明主题变量 —el-color-warning，供其他样式统一引用；取值 var(—aw-warning)。 */
   --el-color-warning: var(--aw-warning);
+  /* 声明主题变量 —el-color-warning-light-9，供其他样式统一引用；取值 var(—aw-warning-soft)。 */
   --el-color-warning-light-9: var(--aw-warning-soft);
+  /* 声明主题变量 —el-color-danger，供其他样式统一引用；取值 var(—aw-danger)。 */
   --el-color-danger: var(--aw-danger);
+  /* 声明主题变量 —el-color-danger-light-9，供其他样式统一引用；取值 var(—aw-danger-soft)。 */
   --el-color-danger-light-9: var(--aw-danger-soft);
+  /* 声明主题变量 —el-color-info，供其他样式统一引用；取值 var(—aw-info)。 */
   --el-color-info: var(--aw-info);
+  /* 声明主题变量 —el-color-info-light-9，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-color-info-light-9: var(--aw-surface-muted);
+  /* 声明主题变量 —el-bg-color，供其他样式统一引用；取值 var(—aw-surface)。 */
   --el-bg-color: var(--aw-surface);
+  /* 声明主题变量 —el-bg-color-page，供其他样式统一引用；取值 var(—aw-bg)。 */
   --el-bg-color-page: var(--aw-bg);
+  /* 声明主题变量 —el-bg-color-overlay，供其他样式统一引用；取值 var(—aw-surface)。 */
   --el-bg-color-overlay: var(--aw-surface);
+  /* 声明主题变量 —el-fill-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-fill-color: var(--aw-surface-muted);
+  /* 声明主题变量 —el-fill-color-light，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-fill-color-light: var(--aw-surface-muted);
+  /* 声明主题变量 —el-fill-color-lighter，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-fill-color-lighter: var(--aw-surface-muted);
+  /* 声明主题变量 —el-fill-color-extra-light，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-fill-color-extra-light: var(--aw-surface-muted);
+  /* 声明主题变量 —el-fill-color-blank，供其他样式统一引用；取值 var(—aw-surface)。 */
   --el-fill-color-blank: var(--aw-surface);
+  /* 声明主题变量 —el-fill-color-dark，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-fill-color-dark: var(--aw-border);
+  /* 声明主题变量 —el-fill-color-darker，供其他样式统一引用；取值 var(—aw-border-strong)。 */
   --el-fill-color-darker: var(--aw-border-strong);
+  /* 声明主题变量 —el-text-color-primary，供其他样式统一引用；取值 var(—aw-text)。 */
   --el-text-color-primary: var(--aw-text);
+  /* 声明主题变量 —el-text-color-regular，供其他样式统一引用；取值 var(—aw-text)。 */
   --el-text-color-regular: var(--aw-text);
+  /* 声明主题变量 —el-text-color-secondary，供其他样式统一引用；取值 var(—aw-text-secondary)。 */
   --el-text-color-secondary: var(--aw-text-secondary);
+  /* 声明主题变量 —el-text-color-placeholder，供其他样式统一引用；取值 var(—aw-text-tertiary)。 */
   --el-text-color-placeholder: var(--aw-text-tertiary);
+  /* 声明主题变量 —el-text-color-disabled，供其他样式统一引用；取值 var(—aw-text-tertiary)。 */
   --el-text-color-disabled: var(--aw-text-tertiary);
+  /* 声明主题变量 —el-border-color，供其他样式统一引用；取值 var(—aw-border-strong)。 */
   --el-border-color: var(--aw-border-strong);
+  /* 声明主题变量 —el-border-color-light，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-border-color-light: var(--aw-border);
+  /* 声明主题变量 —el-border-color-lighter，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-border-color-lighter: var(--aw-border);
+  /* 声明主题变量 —el-border-color-extra-light，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-border-color-extra-light: var(--aw-border);
+  /* 声明主题变量 —el-border-radius-base，供其他样式统一引用；取值 var(—aw-radius-input)。 */
   --el-border-radius-base: var(--aw-radius-input);
+  /* 声明主题变量 —el-border-radius-small，供其他样式统一引用；取值 6px。 */
   --el-border-radius-small: 6px;
+  /* 声明主题变量 —el-box-shadow，供其他样式统一引用；取值 var(—aw-shadow-float)。 */
   --el-box-shadow: var(--aw-shadow-float);
+  /* 声明主题变量 —el-box-shadow-light，供其他样式统一引用；取值 var(—aw-shadow)。 */
   --el-box-shadow-light: var(--aw-shadow);
+  /* 声明主题变量 —el-box-shadow-dark，供其他样式统一引用；取值 var(—aw-shadow-float)。 */
   --el-box-shadow-dark: var(--aw-shadow-float);
+  /* 声明主题变量 —el-mask-color，供其他样式统一引用；取值 var(—aw-overlay)。 */
   --el-mask-color: var(--aw-overlay);
+  /* 声明主题变量 —el-mask-color-extra-light，供其他样式统一引用；取值 var(—aw-overlay)。 */
   --el-mask-color-extra-light: var(--aw-overlay);
+  /* 声明主题变量 —el-overlay-color-lighter，供其他样式统一引用；取值 var(—aw-overlay)。 */
   --el-overlay-color-lighter: var(--aw-overlay);
+  /* 声明主题变量 —el-menu-bg-color，供其他样式统一引用；取值 transparent。 */
   --el-menu-bg-color: transparent;
+  /* 声明主题变量 —el-menu-text-color，供其他样式统一引用；取值 var(—aw-text-secondary)。 */
   --el-menu-text-color: var(--aw-text-secondary);
+  /* 声明主题变量 —el-menu-active-color，供其他样式统一引用；取值 var(—aw-brand)。 */
   --el-menu-active-color: var(--aw-brand);
+  /* 声明主题变量 —el-menu-hover-bg-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-menu-hover-bg-color: var(--aw-surface-muted);
+  /* 声明主题变量 —el-disabled-bg-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-disabled-bg-color: var(--aw-surface-muted);
+  /* 声明主题变量 —el-disabled-border-color，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-disabled-border-color: var(--aw-border);
 }
+/* 以下规则应用于 .el-button 选中的元素。 */
 .el-button {
+  /* 限制最小高度；取值 36px。 */
   min-height: 36px;
+  /* 设置字重；取值 500。 */
   font-weight: 500;
 }
+/* 以下规则应用于 .el-button—primary:not(.is-plain):not(.is-text):not(.is-link) 选中的元素。 */
 .el-button--primary:not(.is-plain):not(.is-text):not(.is-link) {
+  /* 声明主题变量 —el-button-text-color，供其他样式统一引用；取值 var(—aw-on-brand)。 */
   --el-button-text-color: var(--aw-on-brand);
+  /* 声明主题变量 —el-button-hover-text-color，供其他样式统一引用；取值 var(—aw-on-brand)。 */
   --el-button-hover-text-color: var(--aw-on-brand);
 }
+/* 以下规则应用于 .el-button.is-link, .el-button.is-text 选中的元素。 */
 .el-button.is-link,
 .el-button.is-text {
+  /* 限制最小高度；取值 28px。 */
   min-height: 28px;
 }
+/* 以下规则应用于 .el-input__wrapper, .el-select__wrapper 选中的元素。 */
 .el-input__wrapper,
 .el-select__wrapper {
+  /* 限制最小高度；取值 36px。 */
   min-height: 36px;
 }
+/* 以下规则应用于 .el-table 选中的元素。 */
 .el-table {
+  /* 声明主题变量 —el-table-header-bg-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-table-header-bg-color: var(--aw-surface-muted);
+  /* 声明主题变量 —el-table-tr-bg-color，供其他样式统一引用；取值 var(—aw-surface)。 */
   --el-table-tr-bg-color: var(--aw-surface);
+  /* 声明主题变量 —el-table-row-hover-bg-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-table-row-hover-bg-color: var(--aw-surface-muted);
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 .el-table th.el-table__cell 选中的元素。 */
 .el-table th.el-table__cell {
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .el-table .el-table__cell 选中的元素。 */
 .el-table .el-table__cell {
+  /* 设置内容与边框之间的内侧留白；取值 12px 0。 */
   padding: 12px 0;
 }
+/* 以下规则应用于 .el-table .cell 选中的元素。 */
 .el-table .cell {
+  /* 设置每行文字的高度；取值 22px。 */
   line-height: 22px;
 }
+/* 以下规则应用于 .el-table .el-table__empty-block 选中的元素。 */
 .el-table .el-table__empty-block {
+  /* 限制最小高度；取值 136px。 */
   min-height: 136px;
 }
+/* 以下规则应用于 .el-tag 选中的元素。 */
 .el-tag {
+  /* 设置边角圆弧大小；取值 6px。 */
   border-radius: 6px;
+  /* 设置字重；取值 500。 */
   font-weight: 500;
 }
+/* 以下规则应用于 .el-dialog, .el-message-box 选中的元素。 */
 .el-dialog,
 .el-message-box {
+  /* 设置边角圆弧大小；取值 var(—aw-radius-dialog)。 */
   border-radius: var(--aw-radius-dialog);
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置内容与边框之间的内侧留白；取值 24px。 */
   padding: 24px;
 }
+/* 以下规则应用于 .el-dialog__title, .el-drawer__title 选中的元素。 */
 .el-dialog__title,
 .el-drawer__title {
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .el-dialog__body 选中的元素。 */
 .el-dialog__body {
+  /* 设置顶部内侧留白；取值 16px。 */
   padding-top: 16px;
 }
+/* 以下规则应用于 .el-dialog__footer 选中的元素。 */
 .el-dialog__footer {
+  /* 设置顶部内侧留白；取值 24px。 */
   padding-top: 24px;
 }
+/* 以下规则应用于 .el-drawer 选中的元素。 */
 .el-drawer {
+  /* 设置左侧边框；取值 1px solid var(—aw-border)。 */
   border-left: 1px solid var(--aw-border);
 }
+/* 以下规则应用于 .el-pagination 选中的元素。 */
 .el-pagination {
+  /* 声明主题变量 —el-pagination-bg-color，供其他样式统一引用；取值 transparent。 */
   --el-pagination-bg-color: transparent;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
 }
+/* 以下规则应用于 .el-pagination button, .el-pager li 选中的元素。 */
 .el-pagination button,
 .el-pager li {
+  /* 设置边角圆弧大小；取值 6px。 */
   border-radius: 6px;
 }
+/* 以下规则应用于 .el-pager li.is-active 选中的元素。 */
 .el-pager li.is-active {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
 }
+/* 以下规则应用于 .el-empty 选中的元素。 */
 .el-empty {
+  /* 设置内容与边框之间的内侧留白；取值 32px 16px。 */
   padding: 32px 16px;
 }
+/* 以下规则应用于 .el-empty__description p 选中的元素。 */
 .el-empty__description p {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .el-dropdown-menu, .el-picker-panel, .el-select-dropdown 选中的元素。 */
 .el-dropdown-menu,
 .el-picker-panel,
 .el-select-dropdown {
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 .el-form-item__label 选中的元素。 */
 .el-form-item__label {
+  /* 设置字重；取值 500。 */
   font-weight: 500;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .el-tabs__item 选中的元素。 */
 .el-tabs__item {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .el-tabs__item.is-active 选中的元素。 */
 .el-tabs__item.is-active {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
 }
+/* 以下规则应用于 .el-tabs__nav-wrap::after 选中的元素。 */
 .el-tabs__nav-wrap::after {
+  /* 设置高度；取值 1px。 */
   height: 1px;
 }
+/* 以下规则应用于 .el-progress-bar__outer 选中的元素。 */
 .el-progress-bar__outer {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-border)。 */
   background: var(--aw-border);
 }
+/* 以下规则应用于 .el-progress-bar__inner 选中的元素。 */
 .el-progress-bar__inner {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand)。 */
   background: var(--aw-brand);
 }
+/* 以下规则应用于 .el-skeleton 选中的元素。 */
 .el-skeleton {
+  /* 声明主题变量 —el-skeleton-color，供其他样式统一引用；取值 var(—aw-surface-muted)。 */
   --el-skeleton-color: var(--aw-surface-muted);
+  /* 声明主题变量 —el-skeleton-to-color，供其他样式统一引用；取值 var(—aw-border)。 */
   --el-skeleton-to-color: var(--aw-border);
 }
+/* 以下规则应用于 .el-descriptions 选中的元素。 */
 .el-descriptions {
+  /* 声明主题变量 —el-descriptions-table-border，供其他样式统一引用；取值 1px solid var(—aw-border)。 */
   --el-descriptions-table-border: 1px solid var(--aw-border);
 }
+/* 以下规则应用于 .el-descriptions__body, .el-descriptions__content.el-descriptions__cell.is-bordered-content 选中的元素。 */
 .el-descriptions__body,
 .el-descriptions__content.el-descriptions__cell.is-bordered-content {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .el-descriptions__label.el-descriptions__cell.is-bordered-label 选中的元素。 */
 .el-descriptions__label.el-descriptions__cell.is-bordered-label {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface-muted)。 */
   background: var(--aw-surface-muted);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 639px)。 */
 @media (max-width: 639px) {
+  /* 以下规则应用于 .el-dialog 选中的元素。 */
   .el-dialog {
+    /* 设置宽度；取值 calc(100vw - 24px)。 */
     width: calc(100vw - 24px) !important;
+    /* 限制最大宽度；取值 calc(100vw - 24px)。 */
     max-width: calc(100vw - 24px);
+    /* 设置元素外侧留白；取值 12px auto。 */
     margin: 12px auto;
+    /* 设置内容与边框之间的内侧留白；取值 16px。 */
     padding: 16px;
   }
+  /* 以下规则应用于 .el-drawer 选中的元素。 */
   .el-drawer {
+    /* 限制最大宽度；取值 100vw。 */
     max-width: 100vw;
   }
+  /* 以下规则应用于 .el-message-box 选中的元素。 */
   .el-message-box {
+    /* 设置宽度；取值 calc(100vw - 24px)。 */
     width: calc(100vw - 24px);
   }
+  /* 以下规则应用于 .el-pagination__sizes 选中的元素。 */
   .el-pagination__sizes {
+    /* 设置右侧外侧留白；取值 0。 */
     margin-right: 0;
   }
 }

@@ -1,0 +1,99 @@
+{
+  "phase": "P1.2-frontend",
+  "recordedAt": "2026-11-05T11:41:57.076539+00:00",
+  "status": "LOCAL_READY_FOR_USER_ACCEPTANCE",
+  "scope": {
+    "routeAdded": false,
+    "page": "/agent",
+    "layout": "left conversation list, right conversation pane; mobile slide-over list",
+    "replacedInterface": "P1.1 single-turn temporary chat",
+    "interactions": [
+      "create and switch conversation",
+      "search and load more conversations",
+      "rename conversation",
+      "delete conversation",
+      "message cursor pagination",
+      "send with browser requestId",
+      "markdown reply rendering",
+      "stop generation",
+      "refresh recovery for running turn",
+      "retry after failure or interruption",
+      "auto title from first question"
+    ]
+  },
+  "adjustments": {
+    "closeConversationRemoved": true,
+    "backendCloseEndpoint": "RETAINED_UNUSED_BY_PAGE",
+    "legacyClosedConversationsReopened": 1,
+    "markdownRenderer": "markdown-it@15.0.3",
+    "markdownRawHtml": "DISABLED",
+    "markdownLinks": "TARGET_BLANK_NOOPENER_NOREFERRER_NOFOLLOW",
+    "completeFieldFix": "Java public AgentMessageVO field is complete; page previously read isComplete"
+  },
+  "frontend": {
+    "buildCommand": "npm run build",
+    "workingDirectory": "frontend",
+    "build": "PASSED",
+    "exitCode": 0,
+    "builtInSeconds": 1.19,
+    "totalRoutePages": 33,
+    "agentViewChunk": "126.99 kB",
+    "agentViewChunkGzip": "53.10 kB",
+    "agentStyleChunk": "12.49 kB",
+    "newDependency": "markdown-it@15.0.3",
+    "testCompilationAndExecution": "SKIPPED",
+    "realHttpOrSseRequests": false,
+    "knownWarning": "Existing main bundle exceeds 500 kB"
+  },
+  "permissions": {
+    "consumed": [
+      "agent:chat:read",
+      "agent:chat:send",
+      "agent:conversation:list",
+      "agent:conversation:read",
+      "agent:conversation:create",
+      "agent:conversation:update",
+      "agent:conversation:delete"
+    ],
+    "closePermission": "RETAINED_IN_BACKEND_UNUSED_BY_PAGE",
+    "frontendGate": "role USER without ADMIN or SUPER_ADMIN",
+    "pageMenuEntryEnabled": false,
+    "enableStep": "SET LOCAL asterway.agent_frontend_ready='true' and rerun the AGENT AUTHORIZATION block after acceptance"
+  },
+  "database": {
+    "schemaChanged": false,
+    "tablesChanged": false,
+    "authorizationChanged": false,
+    "dataCleanup": "one legacy CLOSED conversation set to ACTIVE; version +1; closed_at cleared",
+    "remainingClosedConversations": 0,
+    "businessFactWritesByFrontend": false
+  },
+  "notVerified": [
+    "real Java and Python HTTP integration",
+    "real SSE streaming and persisted partial text",
+    "refresh recovery of a running turn",
+    "markdown layout in the browser, long tables and code block wrapping",
+    "multi-turn context and summary trigger beyond 16 messages",
+    "multi-user conversation isolation",
+    "mobile slide-over panel and scroll anchoring",
+    "clipboard copy"
+  ],
+  "git": {
+    "branch": "feature/LingXI-develop",
+    "commitCreated": false,
+    "featurePushed": false,
+    "mainMerged": false,
+    "stashChanged": false
+  },
+  "sourceSha256": {
+    "frontend/src/api/agent.js": "72d9b5e4c570e095accb24bb18fe70be75da57f455d4adccd730c10260841868",
+    "frontend/src/components/agent/AgentConversationList.vue": "3a26e74613b4bd530bcb0cf78ed513d6912e8296468904bfbc2d09b6e0980d58",
+    "frontend/src/components/agent/AgentConversationPane.vue": "cc7d545da80720bfdc90f62ecba2a7a948dc00a1c04112457dd8353e35092ed2",
+    "frontend/src/components/agent/AgentMarkdown.vue": "e00be9f08031624f875a8264e8aaed2f0dab8b8be97cb7de03a178c339e5b879",
+    "frontend/src/components/agent/AgentMessageItem.vue": "2df3a51984a020528ee9b233129757dc2360781d91638a972483d1626b9cee73",
+    "frontend/src/views/agent/AgentChatView.vue": "6c81b80e0ca414510b96e6345ca920b94cc13a3e9e13d3e3f247d15b7dd38ef6",
+    "frontend/src/components/ui/AppIcon.vue": "e6f77b1b7b63bbf7a069f885895c959f66a2c9b19bbc6cd6a21cdd9f001c8e7e",
+    "frontend/src/components/ui/AppStatusTag.vue": "c9670f543fd262ca176046e55f724d6f281b044d9282ab9ba9c4c5bee0088e11",
+    "frontend/package.json": "cccec0c90668ac7e4109b89702bc549d2ed8625844ef15ea20edccb06e81851b"
+  }
+}

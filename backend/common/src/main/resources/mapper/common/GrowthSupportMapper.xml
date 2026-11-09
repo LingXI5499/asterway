@@ -1,134 +1,249 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.common.mapper.GrowthSupportMapper。 -->
 <mapper namespace="com.asterway.common.mapper.GrowthSupportMapper">
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockAnyUser，resultType=long。 -->
     <select id="lockAnyUser" resultType="long">
+        <!-- 读取后面列出的字段或计算结果；FOR UPDATE 会同时锁住对应记录。 -->
         SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=calendarAccount，resultType=com.asterway.common.security.ExecutionAccountData。 -->
     <select id="calendarAccount" resultType="com.asterway.common.security.ExecutionAccountData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id AS user_id,(is_enabled AND deleted_at IS NULL) AS enabled,auth_version,
+            <!-- 继续列出本次使用的字段：用户使用的时区（time_zone）、等待处理时间时区（pending_time_zone）、时间时区生效at（time_zone_effective_at）。 -->
             time_zone,pending_time_zone,time_zone_effective_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM identity_user WHERE id=#{userId}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockUser，resultType=long。 -->
     <select id="lockUser" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM identity_user
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND is_enabled
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL FOR UPDATE
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=timeZone，resultType=string。 -->
     <select id="timeZone" resultType="string">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT CASE WHEN pending_time_zone IS NOT NULL
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND time_zone_effective_at &lt;= CURRENT_TIMESTAMP THEN pending_time_zone ELSE time_zone END
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM identity_user
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND is_enabled
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=goal，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="goal" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,version,id AS goal_id,status,archived_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM goal
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=stage，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="stage" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT s.id,s.version,s.goal_id,s.status,g.archived_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage s
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=s.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=s.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=task，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="task" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT t.id,t.version,t.stage_id,s.goal_id,t.status,g.archived_at,g.name AS goal_name,s.name AS stage_name,a.weekly_plan_id,a.daily_plan_id,
+        <!-- 根据后续 WHEN 条件选择本字段最终使用的值。 -->
         CASE WHEN a.id IS NULL THEN 'POOL' WHEN a.daily_plan_id IS NULL THEN 'WEEK' ELSE 'DAY' END AS assignment_status
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task t
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN stage s ON s.id=t.stage_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.user_id=t.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.deleted_at IS NULL
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=s.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=t.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.deleted_at IS NULL
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN task_assignment a ON a.task_id=t.id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND a.user_id=t.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND a.ended_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE t.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=week，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="week" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,version,week_start_date
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM weekly_plan
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=day，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="day" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT d.id,d.version,d.weekly_plan_id,d.plan_date,w.week_start_date
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM daily_plan d
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=d.weekly_plan_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.user_id=d.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE d.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND d.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND d.deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=stages，resultType=long。 -->
     <select id="stages" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE goal_id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=tasks，resultType=long。 -->
     <select id="tasks" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE stage_id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
     </select>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=endTask。 -->
     <update id="endTask">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE task_assignment
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET ended_at=clock_timestamp(),end_reason='TASK_DELETED',version=version+1,updated_at=clock_timestamp()
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND task_id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND ended_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=endGoal。 -->
     <update id="endGoal">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE task_assignment a
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET ended_at=clock_timestamp(),end_reason='GOAL_ARCHIVED',version=a.version+1,updated_at=clock_timestamp()
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task t
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN stage s ON s.id=t.stage_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.user_id=t.user_id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE a.task_id=t.id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND a.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.goal_id=#{id}
 
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND a.ended_at IS NULL
     </update>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=stageOverview，resultType=com.asterway.common.result.GrowthOverviewVO。 -->
     <select id="stageOverview" resultType="com.asterway.common.result.GrowthOverviewVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT s.id,s.name,s.status,(SELECT ROUND(100.0*COALESCE(SUM(t.weight::numeric) FILTER(WHERE t.status='COMPLETED'),0)/NULLIF(SUM(t.weight::numeric),0),2)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task t
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE t.stage_id=s.id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.user_id=s.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.deleted_at IS NULL) AS progress
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage s
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.goal_id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.deleted_at IS NULL
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY s.sort_order,s.id
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT 100
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=taskOverview，resultType=com.asterway.common.result.GrowthOverviewVO。 -->
     <select id="taskOverview" resultType="com.asterway.common.result.GrowthOverviewVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,name,status,NULL::numeric AS progress
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND stage_id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY sort_order,id
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT 100
     </select>
 </mapper>

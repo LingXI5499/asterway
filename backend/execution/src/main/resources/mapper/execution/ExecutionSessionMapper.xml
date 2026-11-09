@@ -1,208 +1,376 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.execution.mapper.ExecutionSessionMapper。 -->
 <mapper namespace="com.asterway.execution.mapper.ExecutionSessionMapper">
+    <!-- 定义可被其他语句复用的 SQL 片段；id=entityColumns。 -->
     <sql id="entityColumns">
+        <!-- 继续列出本次使用的字段：捕获到的异常中的编号（e.id）、捕获到的异常中的用户编号（e.user_id）、捕获到的异常中的任务编号（e.task_id）、捕获到的异常中的状态（e.status）、捕获到的异常中的开始时at（e.started_at）、捕获到的异常中的finishedat（e.finished_at）、捕获到的异常中的最后一次心跳at（e.last_heartbeat_at）。 -->
         e.id,e.user_id,e.task_id,e.status,e.started_at,e.finished_at,e.last_heartbeat_at,
+        <!-- 继续列出本次使用的字段：捕获到的异常中的请求入口会话编号（e.controller_session_id）、捕获到的异常中的finish原因（e.finish_reason）、捕获到的异常中的版本号（e.version）、捕获到的异常中的创建时at（e.created_at）、捕获到的异常中的更新时at（e.updated_at）。 -->
         e.controller_session_id,e.finish_reason,e.version,e.created_at,e.updated_at
     </sql>
 
     <!-- 历史父链不加 deleted_at/archived_at 过滤，所有关联仍限定同一 owner。 -->
+    <!-- 定义可被其他语句复用的 SQL 片段；id=historyFrom。 -->
     <sql id="historyFrom">
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM execution_session e
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN task t ON t.id=e.task_id AND t.user_id=e.user_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN stage st ON st.id=t.stage_id AND st.user_id=e.user_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=st.goal_id AND g.user_id=e.user_id
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockUser，resultType=long。 -->
     <select id="lockUser" resultType="long">
+        <!-- 读取后面列出的字段或计算结果；FOR UPDATE 会同时锁住对应记录。 -->
         SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=tryLockUser，resultType=long。 -->
     <select id="tryLockUser" resultType="long">
+        <!-- 读取后面列出的字段或计算结果；FOR UPDATE 会同时锁住对应记录。 -->
         SELECT id FROM identity_user WHERE id=#{userId} FOR UPDATE SKIP LOCKED
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=account，resultType=com.asterway.common.security.ExecutionAccountData。 -->
     <select id="account" resultType="com.asterway.common.security.ExecutionAccountData">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id AS user_id,(is_enabled AND deleted_at IS NULL) AS enabled,auth_version,
+               <!-- 继续列出本次使用的字段：用户使用的时区（time_zone）、等待处理时间时区（pending_time_zone）、时间时区生效at（time_zone_effective_at）。 -->
                time_zone,pending_time_zone,time_zone_effective_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM identity_user WHERE id=#{userId}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=eligibleTask，resultType=com.asterway.execution.vo.ExecutionTaskVO。 -->
     <select id="eligibleTask" resultType="com.asterway.execution.vo.ExecutionTaskVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT t.id AS task_id,t.version AS task_version,t.status AS task_status,
+               <!-- 继续列出本次使用的字段：a编号作为任务安排编号（a.id AS assignment_id）、w中的周开始日期（w.week_start_date）、d中的方案日期（d.plan_date）、g编号作为目标编号（g.id AS goal_id）、st编号作为阶段编号（st.id AS stage_id）。 -->
                a.id AS assignment_id,w.week_start_date,d.plan_date,g.id AS goal_id,st.id AS stage_id
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task t
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN stage st ON st.id=t.stage_id AND st.user_id=t.user_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=st.goal_id AND g.user_id=t.user_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN task_assignment a ON a.task_id=t.id AND a.user_id=t.user_id AND a.ended_at IS NULL
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN weekly_plan w ON w.id=a.weekly_plan_id AND w.user_id=t.user_id
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN daily_plan d ON d.id=a.daily_plan_id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE t.id=#{taskId} AND t.user_id=#{userId} AND t.deleted_at IS NULL AND t.status&lt;&gt;'COMPLETED'
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND st.deleted_at IS NULL AND st.status&lt;&gt;'COMPLETED'
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.deleted_at IS NULL AND g.archived_at IS NULL AND g.status&lt;&gt;'COMPLETED'
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND (t.start_date IS NULL OR t.start_date&lt;=#{today})
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND (g.start_date IS NULL OR g.start_date&lt;=#{today})
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.deleted_at IS NULL
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND w.week_start_date=#{today}::date-(EXTRACT(ISODOW FROM #{today}::date)::integer-1)
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND (a.daily_plan_id IS NULL OR (d.id IS NOT NULL AND d.user_id=t.user_id
+              <!-- 再增加一个必须同时满足的筛选条件。 -->
               AND d.weekly_plan_id=w.id AND d.deleted_at IS NULL AND d.plan_date=#{today}))
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=scopeExists，resultType=long。 -->
     <select id="scopeExists" resultType="long">
+        <!-- 按顺序选择第一条满足条件的 SQL 分支。 -->
         <choose>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'TASK'">SELECT id FROM task WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'STAGE'">SELECT id FROM stage WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'GOAL'">SELECT id FROM goal WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'WEEK'">SELECT id FROM weekly_plan WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'DAY'">SELECT id FROM daily_plan WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- 前面分支都不成立时采用这里的 SQL。 -->
             <otherwise>SELECT NULL::bigint</otherwise>
         </choose>
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=find，resultType=com.asterway.execution.entity.ExecutionSessionEntity。 -->
     <select id="find" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
-        SELECT <include refid="entityColumns"/> FROM execution_session e
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=entityColumns。 --><include refid="entityColumns"/> FROM execution_session e
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.user_id=#{userId} AND e.id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=running，resultType=com.asterway.execution.entity.ExecutionSessionEntity。 -->
     <select id="running" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
-        SELECT <include refid="entityColumns"/> FROM execution_session e
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=entityColumns。 --><include refid="entityColumns"/> FROM execution_session e
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.user_id=#{userId} AND e.status='RUNNING'
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=unfinishedTask，resultType=com.asterway.execution.entity.ExecutionSessionEntity。 -->
     <select id="unfinishedTask" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
-        SELECT <include refid="entityColumns"/> FROM execution_session e
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=entityColumns。 --><include refid="entityColumns"/> FROM execution_session e
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.user_id=#{userId} AND e.task_id=#{taskId} AND e.status IN ('RUNNING','PAUSED')
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=unfinished，resultType=com.asterway.execution.entity.ExecutionSessionEntity。 -->
     <select id="unfinished" resultType="com.asterway.execution.entity.ExecutionSessionEntity">
-        SELECT <include refid="entityColumns"/> <include refid="historyFrom"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=entityColumns。 --><include refid="entityColumns"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/>
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.user_id=#{userId} AND e.status IN ('RUNNING','PAUSED')
+        <!-- 按顺序选择第一条满足条件的 SQL 分支。 -->
         <choose>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'TASK'">AND e.task_id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
             <when test="scope == 'GOAL'">AND g.id=#{id}</when>
+            <!-- 前面分支都不成立时采用这里的 SQL。 -->
             <otherwise>AND false</otherwise>
         </choose>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY e.id LIMIT #{limit}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=runningInScope，resultType=boolean。 -->
     <select id="runningInScope" resultType="boolean">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT EXISTS (
-            SELECT 1 <include refid="historyFrom"/>
+            <!-- 读取后面列出的字段或计算结果。 -->
+            SELECT 1 <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/>
+            <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
             LEFT JOIN execution_segment os ON os.execution_id=e.id AND os.ended_at IS NULL
+            <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
             LEFT JOIN task_assignment a ON a.id=os.assignment_id AND a.user_id=e.user_id
+            <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
             WHERE e.user_id=#{userId} AND e.status='RUNNING'
+            <!-- 按顺序选择第一条满足条件的 SQL 分支。 -->
             <choose>
+                <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
                 <when test="scope == 'TASK'">AND e.task_id=#{id}</when>
+                <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
                 <when test="scope == 'STAGE'">AND st.id=#{id}</when>
+                <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
                 <when test="scope == 'GOAL'">AND g.id=#{id}</when>
+                <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
                 <when test="scope == 'WEEK'">AND a.weekly_plan_id=#{id}</when>
+                <!-- test 成立时采用这个 SQL 分支；test=scope ==。 -->
                 <when test="scope == 'DAY'">AND a.daily_plan_id=#{id}</when>
+                <!-- 前面分支都不成立时采用这里的 SQL。 -->
                 <otherwise>AND false</otherwise>
             </choose>
         )
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=dueUsers，resultType=long。 -->
     <select id="dueUsers" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT e.user_id FROM execution_session e
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN execution_segment s ON s.execution_id=e.id AND s.ended_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.status='RUNNING' AND LEAST(s.eligible_until,
+              <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
               e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds))&lt;=#{now}
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY LEAST(s.eligible_until,e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds)),e.id
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT #{limit}
     </select>
 
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 execution_session 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO execution_session(user_id,task_id,status,started_at,last_heartbeat_at,
+            <!-- 继续列出本次使用的字段：请求入口会话编号（controller_session_id）、版本号（version）、创建时at（created_at）。 -->
             controller_session_id,version,created_at,updated_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{taskId},#{status},#{startedAt},#{lastHeartbeatAt},
+            <!-- 继续列出本次使用的字段：0。 -->
             #{controllerSessionId},0,#{createdAt},#{updatedAt})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=changeState。 -->
     <update id="changeState">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE execution_session SET status=#{row.status},finished_at=#{row.finishedAt},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             last_heartbeat_at=#{row.lastHeartbeatAt},controller_session_id=#{row.controllerSessionId},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             finish_reason=#{row.finishReason},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{row.userId} AND id=#{row.id} AND version=#{expected}
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=heartbeat。 -->
     <update id="heartbeat">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE execution_session e SET last_heartbeat_at=GREATEST(e.last_heartbeat_at,#{now}),updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.id=#{id} AND e.user_id=#{userId} AND e.status='RUNNING' AND e.controller_session_id=#{sessionId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND EXISTS (SELECT 1 FROM execution_segment s WHERE s.execution_id=e.id AND s.id=#{segmentId}
+              <!-- 再增加一个必须同时满足的筛选条件。 -->
               AND s.ended_at IS NULL AND s.started_at&lt;=#{now} AND s.eligible_until&gt;#{now}
+              <!-- 再增加一个必须同时满足的筛选条件。 -->
               AND e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds)&gt;#{now})
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=startTask。 -->
     <update id="startTask">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE task SET status='IN_PROGRESS',completed_at=NULL,version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{taskId} AND user_id=#{userId} AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL AND status&lt;&gt;'COMPLETED'
     </update>
 
+    <!-- 定义可被其他语句复用的 SQL 片段；id=effectiveEnd。 -->
     <sql id="effectiveEnd">
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,。 -->
         COALESCE(s.ended_at,GREATEST(s.started_at,LEAST(#{ctx.now}::timestamptz,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             e.last_heartbeat_at+make_interval(secs =&gt; s.heartbeat_timeout_seconds),s.eligible_until)))
     </sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=resourceFilters。 -->
     <sql id="resourceFilters">
+        <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
         e.user_id=#{ctx.userId}
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.taskId != null。 -->
         <if test="q.taskId != null">AND e.task_id=#{q.taskId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.stageId != null。 -->
         <if test="q.stageId != null">AND st.id=#{q.stageId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.goalId != null。 -->
         <if test="q.goalId != null">AND g.id=#{q.goalId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.status != null。 -->
         <if test="q.status != null">AND e.status=#{q.status}</if>
     </sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=dateFilter。 -->
     <sql id="dateFilter">
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=ctx.rangeStart != null。 -->
         <if test="ctx.rangeStart != null">
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND EXISTS (SELECT 1 FROM execution_segment s WHERE s.execution_id=e.id
-                AND s.started_at&lt;#{ctx.rangeEnd} AND <include refid="effectiveEnd"/>&gt;#{ctx.rangeStart})
+                <!-- 再增加一个必须同时满足的筛选条件。 -->
+                AND s.started_at&lt;#{ctx.rangeEnd} AND <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/>&gt;#{ctx.rangeStart})
         </if>
     </sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=viewColumns。 -->
     <sql id="viewColumns">
+        <!-- 继续列出本次使用的字段：t名称作为任务名称（t.name AS task_name）、捕获到的异常中的状态（e.status）、捕获到的异常中的开始时at（e.started_at）、捕获到的异常中的finishedat（e.finished_at）。 -->
         e.id::text AS id,e.task_id::text AS task_id,t.name AS task_name,e.status,e.started_at,e.finished_at,
+        <!-- 继续列出本次使用的字段：捕获到的异常中的finish原因（e.finish_reason）、捕获到的异常中的版本号（e.version）、t版本号作为任务版本号（t.version AS task_version）。 -->
         e.finish_reason,e.version,t.version AS task_version,
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：floor(COALESCE(duration.total_seconds,0))::bigint AS actual_seconds,。 -->
         floor(COALESCE(duration.total_seconds,0))::bigint AS actual_seconds,
+        <!-- 根据后续 WHEN 条件选择本字段最终使用的值。 -->
         CASE WHEN #{ctx.rangeStart}::timestamptz IS NULL THEN NULL::bigint
+             <!-- 前面条件都不成立时，采用这里的备用值。 -->
              ELSE floor(COALESCE(duration.range_seconds,0))::bigint END AS range_actual_seconds,
+        <!-- 继续列出本次使用的字段：捕获到的异常中的最后一次心跳at（e.last_heartbeat_at）、os开始时at作为当前有效连续计时段开始时at（os.started_at AS active_segment_started_at）。 -->
         e.last_heartbeat_at,os.id::text AS active_segment_id,os.started_at AS active_segment_started_at,
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{ctx.now}::timestamptz AS server_now,。 -->
         #{ctx.now}::timestamptz AS server_now,
+        <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
         e.last_heartbeat_at+make_interval(secs =&gt; os.heartbeat_timeout_seconds) AS heartbeat_deadline,
+        <!-- 继续列出本次使用的字段：os中的eligibleuntil（os.eligible_until）。 -->
         os.eligible_until,
+        <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
         COALESCE(e.status='RUNNING' AND e.controller_session_id=#{ctx.sessionId} AND os.id IS NOT NULL
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND LEAST(os.eligible_until,e.last_heartbeat_at+make_interval(secs =&gt; os.heartbeat_timeout_seconds))&gt;#{ctx.now},false) AS can_heartbeat,
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{ctx.heartbeatIntervalSeconds}::integer AS heartbeat_interval_seconds。 -->
         #{ctx.heartbeatIntervalSeconds}::integer AS heartbeat_interval_seconds
     </sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=viewJoins。 -->
     <sql id="viewJoins">
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN execution_segment os ON os.execution_id=e.id AND os.ended_at IS NULL
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN LATERAL (
-            SELECT SUM(EXTRACT(EPOCH FROM <include refid="effectiveEnd"/>-s.started_at)) AS total_seconds,
-                   SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(<include refid="effectiveEnd"/>,#{ctx.rangeEnd}::timestamptz)
+            <!-- 读取后面列出的字段或计算结果。 -->
+            SELECT SUM(EXTRACT(EPOCH FROM <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/>-s.started_at)) AS total_seconds,
+                   <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
+                   SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(<!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/>,#{ctx.rangeEnd}::timestamptz)
+                       <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：-GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0)) AS range_seconds。 -->
                        -GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0)) AS range_seconds
+            <!-- 指定本次查询主要读取的表或子查询。 -->
             FROM execution_segment s WHERE s.execution_id=e.id
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：) duration ON true。 -->
         ) duration ON true
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=view，resultType=com.asterway.execution.vo.ExecutionSessionVO。 -->
     <select id="view" resultType="com.asterway.execution.vo.ExecutionSessionVO">
-        SELECT <include refid="viewColumns"/> <include refid="historyFrom"/> <include refid="viewJoins"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewColumns。 --><include refid="viewColumns"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewJoins。 --><include refid="viewJoins"/>
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE e.user_id=#{ctx.userId} AND e.id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.execution.vo.ExecutionSessionVO。 -->
     <select id="page" resultType="com.asterway.execution.vo.ExecutionSessionVO">
-        SELECT <include refid="viewColumns"/> <include refid="historyFrom"/> <include refid="viewJoins"/>
-        WHERE <include refid="resourceFilters"/> <include refid="dateFilter"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewColumns。 --><include refid="viewColumns"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewJoins。 --><include refid="viewJoins"/>
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
+        WHERE <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=resourceFilters。 --><include refid="resourceFilters"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=dateFilter。 --><include refid="dateFilter"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY e.started_at DESC,e.id DESC LIMIT #{q.size} OFFSET #{offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
-        SELECT count(*) <include refid="historyFrom"/>
-        WHERE <include refid="resourceFilters"/> <include refid="dateFilter"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT count(*) <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/>
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
+        WHERE <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=resourceFilters。 --><include refid="resourceFilters"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=dateFilter。 --><include refid="dateFilter"/>
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=summary，resultType=com.asterway.execution.vo.ExecutionSummaryVO。 -->
     <select id="summary" resultType="com.asterway.execution.vo.ExecutionSummaryVO">
+        <!-- 先定义可复用的临时查询结果，后续语句继续引用它。 -->
         WITH scoped_session AS (
-            SELECT e.id,e.status,e.last_heartbeat_at <include refid="historyFrom"/>
-            WHERE <include refid="resourceFilters"/>
+            <!-- 读取后面列出的字段或计算结果。 -->
+            SELECT e.id,e.status,e.last_heartbeat_at <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=historyFrom。 --><include refid="historyFrom"/>
+            <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
+            WHERE <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=resourceFilters。 --><include refid="resourceFilters"/>
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：), effective_segment AS (。 -->
         ), effective_segment AS (
-            SELECT e.id AS execution_id,s.started_at,<include refid="effectiveEnd"/> AS effective_end
+            <!-- 读取后面列出的字段或计算结果。 -->
+            SELECT e.id AS execution_id,s.started_at,<!-- 把 refid 对应的公共 SQL 片段放到这里；refid=effectiveEnd。 --><include refid="effectiveEnd"/> AS effective_end
+            <!-- 指定本次查询主要读取的表或子查询。 -->
             FROM scoped_session e JOIN execution_segment s ON s.execution_id=e.id
+        <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：), per_session AS (。 -->
         ), per_session AS (
+            <!-- 读取后面列出的字段或计算结果。 -->
             SELECT e.id,e.status,
+                <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(SUM(EXTRACT(EPOCH FROM s.effective_end-s.started_at)),0) AS total_seconds,。 -->
                 COALESCE(SUM(EXTRACT(EPOCH FROM s.effective_end-s.started_at)),0) AS total_seconds,
+                <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(s.effective_end,#{ctx.rangeEnd}::timestamptz)。 -->
                 COALESCE(SUM(GREATEST(EXTRACT(EPOCH FROM LEAST(s.effective_end,#{ctx.rangeEnd}::timestamptz)
+                    <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：-GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0))。 -->
                     -GREATEST(s.started_at,#{ctx.rangeStart}::timestamptz)),0))
+                    <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：FILTER (WHERE s.execution_id IS NOT NULL),0) AS range_seconds,。 -->
                     FILTER (WHERE s.execution_id IS NOT NULL),0) AS range_seconds,
+                <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(bool_or(s.started_at&lt;#{ctx.rangeEnd} AND s.effective_end&gt;#{ctx.rangeStart}),false) AS in_range,。 -->
                 COALESCE(bool_or(s.started_at&lt;#{ctx.rangeEnd} AND s.effective_end&gt;#{ctx.rangeStart}),false) AS in_range,
+                <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：MAX(s.started_at) AS latest_execution_at。 -->
                 MAX(s.started_at) AS latest_execution_at
+            <!-- 指定本次查询主要读取的表或子查询。 -->
             FROM scoped_session e LEFT JOIN effective_segment s ON s.execution_id=e.id GROUP BY e.id,e.status
         )
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT COALESCE(floor(SUM(total_seconds)),0)::bigint AS total_actual_seconds,
+               <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：COALESCE(floor(SUM(range_seconds)),0)::bigint AS range_actual_seconds,。 -->
                COALESCE(floor(SUM(range_seconds)),0)::bigint AS range_actual_seconds,
+               <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：count(*) AS total_sessions,count(*) FILTER (WHERE in_range) AS range_sessions,。 -->
                count(*) AS total_sessions,count(*) FILTER (WHERE in_range) AS range_sessions,
+               <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
                count(*) FILTER (WHERE status='FINISHED') AS finished_sessions,
+               <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
                count(*) FILTER (WHERE status='RUNNING') AS running_sessions,
+               <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
                count(*) FILTER (WHERE status='PAUSED') AS paused_sessions,
+               <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：MAX(latest_execution_at) AS latest_execution_at。 -->
                MAX(latest_execution_at) AS latest_execution_at
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM per_session
     </select>
 </mapper>

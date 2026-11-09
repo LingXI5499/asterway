@@ -1,31 +1,47 @@
+# 列出不进入版本管理的本地文件，避免提交依赖、缓存、构建产物或私密配置。
 
 # Python
+# 不把匹配 __pycache__/ 的本地文件加入版本管理。
 __pycache__/
+# 不把匹配 *.py[cod] 的本地文件加入版本管理。
 *.py[cod]
+# 不把匹配 *.pyo 的本地文件加入版本管理。
 *.pyo
 
 # Virtual Environment
+# 不把匹配 .venv/ 的本地文件加入版本管理。
 .venv/
+# 不把匹配 venv/ 的本地文件加入版本管理。
 venv/
 
 # Environment Variables
+# 不把匹配 .env 的本地文件加入版本管理。
 .env
+# 不把匹配 .env.* 的本地文件加入版本管理。
 .env.*
 
 # Keep example configuration
+# 即使被前面的规则忽略，也保留这个必要文件。
 !.env.example
 
 # Test
+# 不把匹配 .pytest_cache/ 的本地文件加入版本管理。
 .pytest_cache/
+# 不把匹配 .coverage 的本地文件加入版本管理。
 .coverage
 
 # Lint
+# 不把匹配 .ruff_cache/ 的本地文件加入版本管理。
 .ruff_cache/
 
 # Build
+# 不把匹配 build/ 的本地文件加入版本管理。
 build/
+# 不把匹配 dist/ 的本地文件加入版本管理。
 dist/
+# 不把匹配 *.egg-info/ 的本地文件加入版本管理。
 *.egg-info/
 
 # IDE
+# 不把匹配 .idea/ 的本地文件加入版本管理。
 .idea/

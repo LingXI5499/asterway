@@ -1,20 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.habit.mapper.HabitRevisionMapper。 -->
 <mapper namespace="com.asterway.habit.mapper.HabitRevisionMapper">
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 habit_revision 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO habit_revision(user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{habitId},#{revisionNo},#{actionType},#{name},#{description},#{completionCriteria},#{categoryId},#{cycleType},#{weekdayMask},#{startDate},#{expectedTime},#{statusSnapshot},#{deletedSnapshot},#{effectiveDate},#{changedAt},#{timeZone},#{createdAt})
     </insert>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=current，resultType=com.asterway.habit.entity.HabitRevisionEntity。 -->
     <select id="current" resultType="com.asterway.habit.entity.HabitRevisionEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at FROM habit_revision
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND habit_id=#{habitId} AND revision_no=#{revisionNo}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FROM habit_revision WHERE user_id=#{userId} AND habit_id=#{habitId}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.habit.entity.HabitRevisionEntity。 -->
     <select id="page" resultType="com.asterway.habit.entity.HabitRevisionEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,habit_id,revision_no,action_type,name,description,completion_criteria,category_id,cycle_type,weekday_mask,start_date,expected_time,status_snapshot,deleted_snapshot,effective_date,changed_at,time_zone,created_at FROM habit_revision
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND habit_id=#{habitId}
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY revision_no DESC LIMIT #{size} OFFSET #{offset}
     </select>
 </mapper>

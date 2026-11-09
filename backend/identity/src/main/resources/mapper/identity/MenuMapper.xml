@@ -1,100 +1,187 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.MenuMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.MenuMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.MenuEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.MenuEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 code，对象属性 code。 -->
         <result column="code" property="code"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 parent_id，对象属性 parentId。 -->
         <result column="parent_id" property="parentId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 name，对象属性 name。 -->
         <result column="name" property="name"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 menu_type，对象属性 menuType。 -->
         <result column="menu_type" property="menuType"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 route_path，对象属性 routePath。 -->
         <result column="route_path" property="routePath"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 component_key，对象属性 componentKey。 -->
         <result column="component_key" property="componentKey"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 permission_id，对象属性 permissionId。 -->
         <result column="permission_id" property="permissionId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 icon，对象属性 icon。 -->
         <result column="icon" property="icon"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 sort_order，对象属性 sortOrder。 -->
         <result column="sort_order" property="sortOrder"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_visible，对象属性 visible。 -->
         <result column="is_visible" property="visible"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_builtin，对象属性 builtin。 -->
         <result column="is_builtin" property="builtin"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_enabled，对象属性 enabled。 -->
         <result column="is_enabled" property="enabled"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_by，对象属性 createdBy。 -->
         <result column="created_by" property="createdBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_by，对象属性 updatedBy。 -->
         <result column="updated_by" property="updatedBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 deleted_at，对象属性 deletedAt。 -->
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：编号（id）。 -->
         id,
+        <!-- 继续列出本次使用的字段：编码（code）。 -->
         code,
+        <!-- 继续列出本次使用的字段：上级编号（parent_id）。 -->
         parent_id,
+        <!-- 继续列出本次使用的字段：名称（name）。 -->
         name,
+        <!-- 继续列出本次使用的字段：菜单类型（menu_type）。 -->
         menu_type,
+        <!-- 继续列出本次使用的字段：route路径（route_path）。 -->
         route_path,
+        <!-- 继续列出本次使用的字段：component键（component_key）。 -->
         component_key,
+        <!-- 继续列出本次使用的字段：权限编号（permission_id）。 -->
         permission_id,
+        <!-- 继续列出本次使用的字段：icon。 -->
         icon,
+        <!-- 继续列出本次使用的字段：排序顺序（sort_order）。 -->
         sort_order,
+        <!-- 继续列出本次使用的字段：是否是否显示（is_visible）。 -->
         is_visible,
+        <!-- 继续列出本次使用的字段：是否builtin（is_builtin）。 -->
         is_builtin,
+        <!-- 继续列出本次使用的字段：是否是否启用（is_enabled）。 -->
         is_enabled,
+        <!-- 继续列出本次使用的字段：版本号（version）。 -->
         version,
+        <!-- 继续列出本次使用的字段：创建时at（created_at）。 -->
         created_at,
+        <!-- 继续列出本次使用的字段：更新时at（updated_at）。 -->
         updated_at,
+        <!-- 继续列出本次使用的字段：创建时按（created_by）。 -->
         created_by,
+        <!-- 继续列出本次使用的字段：更新时按（updated_by）。 -->
         updated_by,
+        <!-- 继续列出本次使用的字段：删除标记at（deleted_at）。 -->
         deleted_at
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findAll，resultMap=entityMap。 -->
     <select id="findAll" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_menu WHERE deleted_at IS NULL ORDER BY sort_order, id
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_menu WHERE deleted_at IS NULL ORDER BY sort_order, id
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entityMap。 -->
     <select id="findById" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_menu WHERE id = #{id} AND deleted_at IS NULL
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_menu WHERE id = #{id} AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findGrantedIds，resultType=long。 -->
     <select id="findGrantedIds" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT DISTINCT rm.menu_id FROM identity_role_menu rm JOIN identity_role r ON r.id = rm.role_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN identity_user_role ur ON ur.role_id = r.id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE ur.user_id = #{userId} AND r.is_enabled AND r.deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=countReferences，resultType=long。 -->
     <select id="countReferences" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT (SELECT count(*) FROM identity_role_menu WHERE menu_id = #{id})
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             + (SELECT count(*) FROM identity_menu WHERE parent_id = #{id} AND deleted_at IS NULL)
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        <!-- 向 identity_menu 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO identity_menu (code,
+            <!-- 继续列出本次使用的字段：上级编号（parent_id）。 -->
             parent_id,
+            <!-- 继续列出本次使用的字段：名称（name）。 -->
             name,
+            <!-- 继续列出本次使用的字段：菜单类型（menu_type）。 -->
             menu_type,
+            <!-- 继续列出本次使用的字段：route路径（route_path）。 -->
             route_path,
+            <!-- 继续列出本次使用的字段：component键（component_key）。 -->
             component_key,
+            <!-- 继续列出本次使用的字段：权限编号（permission_id）。 -->
             permission_id,
+            <!-- 继续列出本次使用的字段：icon。 -->
             icon,
+            <!-- 继续列出本次使用的字段：排序顺序（sort_order）。 -->
             sort_order,
+            <!-- 继续列出本次使用的字段：是否是否显示（is_visible）。 -->
             is_visible,
+            <!-- 继续列出本次使用的字段：是否是否启用（is_enabled）。 -->
             is_enabled,
+            <!-- 继续列出本次使用的字段：创建时按（created_by）。 -->
             created_by,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：updated_by)。 -->
             updated_by)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{code},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{parentId},。 -->
             #{parentId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{name},。 -->
             #{name},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{menuType},。 -->
             #{menuType},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{routePath},。 -->
             #{routePath},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{componentKey},。 -->
             #{componentKey},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{permissionId},。 -->
             #{permissionId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{icon},。 -->
             #{icon},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{sortOrder},。 -->
             #{sortOrder},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{visible},。 -->
             #{visible},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{enabled},。 -->
             #{enabled},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{createdBy},。 -->
             #{createdBy},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{updatedBy})。 -->
             #{updatedBy})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_menu SET code=#{code},parent_id=#{parentId},name=#{name},menu_type=#{menuType},route_path=#{routePath},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             component_key=#{componentKey},permission_id=#{permissionId},icon=#{icon},sort_order=#{sortOrder},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             is_visible=#{visible},is_enabled=#{enabled},version=version+1,updated_by=#{updatedBy},updated_at=now()
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=softDelete。 -->
     <update id="softDelete">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_menu SET is_enabled=false,deleted_at=now(),version=version+1,updated_by=#{updatedBy},updated_at=now()
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
 </mapper>
