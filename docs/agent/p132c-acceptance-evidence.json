@@ -1,0 +1,300 @@
+{
+  "stage": "P1.3.2c",
+  "recordedAt": "2026-11-05T23:05:00+08:00",
+  "scope": "当前执行、执行历史、执行详情与时间段、执行耗时汇总的 5 个只读工具；复用既有 Java GET 接口，未新增或修改 Java/SQL/权限，未改前端；工具不开始、暂停、继续、结束或补写执行记录。",
+  "runtime": {
+    "pythonHealth": {
+      "success": true,
+      "service": "asterway-agent",
+      "status": "running",
+      "phase": "P1.3",
+      "capabilities": [
+        "chat",
+        "sse",
+        "conversation",
+        "tools"
+      ]
+    },
+    "pythonProcess": {
+      "path": "[local path omitted]",
+      "pid": 59756,
+      "startTime": "2026-11-05T22:57:43.5044528+08:00"
+    },
+    "javaProcess": {
+      "startTime": "2026-11-05T19:07:45.8338722+08:00",
+      "pid": 39916
+    },
+    "frontendProcess": {
+      "startTime": "2026-11-05T19:47:16.9798923+08:00",
+      "pid": 18988
+    },
+    "toolCount": 18,
+    "branch": "feature/LingXI-develop",
+    "head": "964e350a429ff78ceff902de7bb85427302093e0"
+  },
+  "validations": {
+    "pythonRuff": "PASS",
+    "pythonCompile": "PASS",
+    "pythonImportAndToolSchemas": "PASS（18 个工具；新增 5 个执行类工具）",
+    "frontendBuild": "PASS（npm run build，1.38 秒；前端未改动，保留既有大分块提示）",
+    "pythonRestartAndHealth": "PASS（重启后运行进程加载最终源码）",
+    "javaBuild": "未执行（本阶段未修改 Java 源码）",
+    "sqlChanged": false,
+    "permissionsChanged": false,
+    "executionFactsIntegrity": "PASS（无 RUNNING 会话、无未结束时间段、无时间约束违反）",
+    "strictTestFrameworksAdded": false,
+    "browserUiExecutedByDeveloper": false
+  },
+  "toolDeterministicChecks": {
+    "list_executions_all": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "idsMatch": "PASS",
+      "labelsPresent": "PASS",
+      "rangeSecondsHiddenWhenAll": "PASS"
+    },
+    "list_executions_today": {
+      "totalMatches": "PASS",
+      "dateRangeToday": "PASS",
+      "rangeSecondsPresent": "PASS"
+    },
+    "list_executions_status": {
+      "totalMatches": "PASS",
+      "allFinished": "PASS"
+    },
+    "list_executions_task_filter": {
+      "totalMatches": "PASS",
+      "allTask": "PASS"
+    },
+    "list_executions_last_week_empty": {
+      "totalMatches": "PASS",
+      "notError": "PASS"
+    },
+    "get_execution": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "statusMatches": "PASS",
+      "actualSecondsMatches": "PASS",
+      "segmentTotalMatches": "PASS",
+      "segmentItemsReturned": "PASS",
+      "finishReasonLabel": "PASS"
+    },
+    "list_execution_segments": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "segmentNosMatch": "PASS",
+      "actualSecondsMatch": "PASS",
+      "reasonsMatch": "PASS",
+      "reasonLabelsPresent": "PASS",
+      "userPauseMultipleSegments": "PASS"
+    },
+    "list_execution_segments_pagination": {
+      "returnedOne": "PASS",
+      "totalTwo": "PASS",
+      "hasMore": "PASS"
+    },
+    "summary_today": {
+      "notError": "PASS",
+      "totalSecondsMatch": "PASS",
+      "rangeSecondsMatch": "PASS",
+      "totalSessionsMatch": "PASS",
+      "rangeSessionsMatch": "PASS",
+      "statusCountsMatch": "PASS",
+      "minutesDerived": "PASS",
+      "dateRangeToday": "PASS",
+      "hasNote": "PASS"
+    },
+    "summary_task_scope": {
+      "totalSecondsMatch": "PASS",
+      "rangeSessionsMatch": "PASS",
+      "scopePresent": "PASS",
+      "scopeIdPresent": "PASS"
+    },
+    "summary_goal_scope": {
+      "totalSecondsMatch": "PASS",
+      "scopePresent": "PASS"
+    },
+    "summary_last_week_empty": {
+      "rangeSecondsZero": "PASS",
+      "rangeSessionsZero": "PASS",
+      "totalSecondsSameAsJava": "PASS"
+    },
+    "invalid_summary_scope_without_id": {
+      "isError": "PASS"
+    },
+    "invalid_summary_custom_no_dates": {
+      "isError": "PASS"
+    },
+    "invalid_list_custom_no_dates": {
+      "isError": "PASS"
+    },
+    "invalid_list_dates_without_custom": {
+      "isError": "PASS"
+    },
+    "invalid_status": {
+      "isError": "PASS"
+    },
+    "unknown_execution": {
+      "isError": "PASS"
+    },
+    "unknown_execution_segments": {
+      "isError": "PASS"
+    },
+    "current_execution_none": {
+      "notError": "PASS",
+      "currentNull": "PASS",
+      "rawAlsoNull": "PASS",
+      "hasNote": "PASS"
+    },
+    "current_execution_running": {
+      "notError": "PASS",
+      "idMatches": "PASS",
+      "taskNameMatches": "PASS",
+      "statusRunning": "PASS",
+      "labelPresent": "PASS",
+      "actualSecondsMatches": "PASS",
+      "hasActiveSegment": "PASS"
+    },
+    "current_execution_after_finish": {
+      "currentNull": "PASS",
+      "rawAlsoNull": "PASS"
+    },
+    "path_guard": {
+      "allowedAccepted": "PASS",
+      "allRejected": "PASS"
+    },
+    "execution_read_permission": {
+      "revokedIsError": "PASS",
+      "mentionsPermission": "PASS",
+      "restoredNotError": "PASS",
+      "grantRestored": "PASS"
+    },
+    "cross_user_isolation": {
+      "detail404": "PASS",
+      "segments404": "PASS",
+      "bListEmpty": "PASS",
+      "bSummaryNoLeak": "PASS"
+    },
+    "registry": {
+      "eighteenTools": "PASS",
+      "hasExecutionTools": "PASS",
+      "hasSchemas": "PASS"
+    }
+  },
+  "endToEnd": {
+    "real_model_used_new_execution_tools": "PASS",
+    "at_least_four_execution_tools_used": "PASS",
+    "history_round_uses_execution_list": "PASS",
+    "history_today_total_matches_java": "PASS",
+    "history_today_names_match_java": "PASS",
+    "segments_round_uses_segments_tool": "PASS",
+    "segments_reply_mentions_pause": "PASS",
+    "segments_payload_has_user_pause": "PASS",
+    "current_round_uses_current_tool": "PASS",
+    "current_payload_is_running": "PASS",
+    "current_reply_mentions_task": "PASS",
+    "summary_today_matches_java": "PASS",
+    "summary_today_date_range": "PASS",
+    "summary_task_matches_java": "PASS",
+    "summary_goal_matches_java": "PASS",
+    "summary_today_reply_mentions_duration": "PASS",
+    "summary_task_reply_mentions_pause": "PASS",
+    "last_week_reply_says_none": "PASS",
+    "detail_round_uses_detail_or_segments": "PASS",
+    "execution_a_segments_two": "PASS",
+    "tool_chain_paired": "PASS",
+    "public_refresh_hides_tools": "PASS",
+    "context_rebuild_contains_tool_chain": "PASS",
+    "turn_count_matches_rounds": "PASS",
+    "no_internal_ids_in_replies": "PASS"
+  },
+  "regressions": {
+    "P1.3.1EndToEnd": {
+      "real_model_calls_two_tools": "PASS",
+      "tool_chain_persisted_and_paired": "PASS",
+      "final_reply_saved_complete": "PASS",
+      "overview_matches_java": "PASS",
+      "task_tool_uses_real_data": "PASS",
+      "continuity_answer_names_high_priority_task": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "refresh_hides_internal_tool_messages": "PASS",
+      "refresh_user_message_count_matches_turns": "PASS",
+      "replay_same_request_no_new_turn": "PASS",
+      "empty_result_not_fabricated": "PASS",
+      "cancel_marks_turn_cancelled": "PASS",
+      "cancel_stream_terminates": "PASS",
+      "cancel_preserves_partial_text": "PASS",
+      "after_cancel_new_question_completes": "PASS",
+      "disconnect_turn_not_stuck_running": "PASS",
+      "disconnect_detail_has_no_running_turn": "PASS",
+      "disconnect_followup_works": "PASS",
+      "stale_login_rejected": "PASS",
+      "runtime_health_p1_3": "PASS",
+      "final_source_loaded": "PASS"
+    },
+    "P1.3.2aEndToEnd": {
+      "real_model_called_new_tools": "PASS",
+      "goal_round_used_goal_tool": "PASS",
+      "stage_round_used_stage_tool": "PASS",
+      "task_round_used_task_or_stage_tool": "PASS",
+      "task_detail_round_used_task_tool": "PASS",
+      "goals_answer_mentions_both_goals": "PASS",
+      "stages_answer_mentions_both_stages": "PASS",
+      "tasks_answer_mentions_task_names": "PASS",
+      "task_detail_answer_mentions_30_min": "PASS",
+      "empty_goal_answer_says_none": "PASS",
+      "goal_count_answer_is_two": "PASS",
+      "tool_chain_paired": "PASS",
+      "public_refresh_hides_tools": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "turn_count_matches_rounds": "PASS",
+      "no_internal_ids_in_replies": "PASS",
+      "list_goals_payload_total_two": "PASS"
+    },
+    "P1.3.2bEndToEnd": {
+      "real_model_used_new_planning_tools": "PASS",
+      "all_six_planning_tools_used": "PASS",
+      "list_weekly_plans_used": "PASS",
+      "week_round_uses_weekly_plan": "PASS",
+      "week_exists_mentions_week_start": "PASS",
+      "week_tasks_mentions_both_tasks": "PASS",
+      "today_daily_mentions_daily_plan_and_task": "PASS",
+      "previous_week_mentions_pending_task": "PASS",
+      "pending_mentions_pending_task": "PASS",
+      "assignment_week_mentions_week": "PASS",
+      "assignment_pool_mentions_unassigned": "PASS",
+      "assignment_date_mentions_previous_day": "PASS",
+      "tool_chain_paired": "PASS",
+      "public_refresh_hides_tools": "PASS",
+      "context_rebuild_contains_tool_chain": "PASS",
+      "turn_count_matches_rounds": "PASS",
+      "no_internal_ids_in_replies": "PASS",
+      "planning_tasks_payload_has_real_tasks": "PASS",
+      "pending_payload_matches_fixture": "PASS"
+    }
+  },
+  "newTools": [
+    "get_current_execution",
+    "list_executions",
+    "get_execution",
+    "list_execution_segments",
+    "get_execution_summary"
+  ],
+  "dataFixtureNote": "执行验收数据全部通过正常 Java 执行接口创建：一次 开始→暂停→恢复→结束 的多段执行、一次开始→结束的单段执行；确定性验收中为验证当前执行另开始并结束了 1 次执行。未使用直接 SQL 写入执行表。",
+  "e2eCoverageNote": "真实模型在同一会话中使用了 get_current_execution、list_executions、list_execution_segments、get_execution_summary 四个工具；get_execution 由确定性验收 4 组检查覆盖，并在回归会话中可观察。模型选择哪个工具取决于问题，不影响工具能力结论。",
+  "evidence": {
+    "deterministicCheckGroups": 26,
+    "endToEndAssertions": 25,
+    "P1.3.1RegressionAssertions": 21,
+    "P1.3.2aRegressionAssertions": 17,
+    "P1.3.2bRegressionAssertions": 19
+  },
+  "conclusion": "P1.3.2c 编码与开发侧真实验收完成：5 个执行查询工具与真实 Java 执行事实逐项一致，模型能解释当前执行、今日执行记录、多段暂停历史、区间/累计耗时与任务/目标维度投入；参数校验、空结果、权限撤销与恢复、跨用户隔离、落库配对均取得真实证据；P1.3.1、P1.3.2a、P1.3.2b 回归全部通过。",
+  "notVerified": [
+    "浏览器页面上的实际问答体验与工具状态展示由用户人工验收",
+    "开始/暂停/继续/结束计时只能由业务页面或已有写入接口发起；本阶段工具不提供写入",
+    "超过 20 条执行记录或时间段的翻页：工具只返回第一页并给出 total/hasMore",
+    "跨多周历史耗时：已验证今天/昨天/本周/上周/自定义日期区间与上周空结果，未验证多月跨度",
+    "Java 真实网络超时沿用 P1.3.1 本地模拟结论"
+  ]
+}

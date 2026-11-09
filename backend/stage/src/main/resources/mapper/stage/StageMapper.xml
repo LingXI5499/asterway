@@ -1,107 +1,209 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.stage.mapper.StageMapper。 -->
 <mapper namespace="com.asterway.stage.mapper.StageMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entity，type=com.asterway.stage.entity.StageEntity。 -->
     <resultMap id="entity" type="com.asterway.stage.entity.StageEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 user_id，对象属性 userId。 -->
         <result column="user_id" property="userId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 goal_id，对象属性 goalId。 -->
         <result column="goal_id" property="goalId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 name，对象属性 name。 -->
         <result column="name" property="name"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 description，对象属性 description。 -->
         <result column="description" property="description"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 completion_criteria，对象属性 completionCriteria。 -->
         <result column="completion_criteria" property="completionCriteria"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 start_date，对象属性 startDate。 -->
         <result column="start_date" property="startDate"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 end_date，对象属性 endDate。 -->
         <result column="end_date" property="endDate"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 sort_order，对象属性 sortOrder。 -->
         <result column="sort_order" property="sortOrder"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 status，对象属性 status。 -->
         <result column="status" property="status"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 deleted_at，对象属性 deletedAt。 -->
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">r.id,
+            <!-- 继续列出本次使用的字段：r中的用户编号（r.user_id）。 -->
             r.user_id,
+            <!-- 继续列出本次使用的字段：r中的目标编号（r.goal_id）。 -->
             r.goal_id,
+            <!-- 继续列出本次使用的字段：r中的名称（r.name）。 -->
             r.name,
+            <!-- 继续列出本次使用的字段：r中的说明（r.description）。 -->
             r.description,
+            <!-- 继续列出本次使用的字段：r中的完成情况判断标准（r.completion_criteria）。 -->
             r.completion_criteria,
+            <!-- 继续列出本次使用的字段：r中的开始日期（r.start_date）。 -->
             r.start_date,
+            <!-- 继续列出本次使用的字段：r中的结束日期（r.end_date）。 -->
             r.end_date,
+            <!-- 继续列出本次使用的字段：r中的排序顺序（r.sort_order）。 -->
             r.sort_order,
+            <!-- 继续列出本次使用的字段：r中的状态（r.status）。 -->
             r.status,
+            <!-- 继续列出本次使用的字段：r中的版本号（r.version）。 -->
             r.version,
+            <!-- 继续列出本次使用的字段：r中的创建时at（r.created_at）。 -->
             r.created_at,
+            <!-- 继续列出本次使用的字段：r中的更新时at（r.updated_at）。 -->
             r.updated_at,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：r.deleted_at</sql>。 -->
             r.deleted_at</sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.deleted_at IS NULL
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.keyword != null and q.keyword !=。 -->
         <if test="q.keyword != null and q.keyword != ''">AND r.name ILIKE '%' || #{q.keyword} || '%'</if>
-        <if test="q.status != null and q.status != ''">AND r.status=#{q.status}</if><if test="q.goalId != null">AND r.goal_id=#{q.goalId}</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.status != null and q.status !=。 -->
+        <if test="q.status != null and q.status != ''">AND r.status=#{q.status}</if><!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.goalId != null。 --><if test="q.goalId != null">AND r.goal_id=#{q.goalId}</if>
     </sql>
-    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entity。 -->
+    <select id="findById" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=r.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=r.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.deleted_at IS NULL</select>
-    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultMap=entity。 -->
+    <select id="page" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=r.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=r.user_id
-          AND g.deleted_at IS NULL <include refid="filters"/>
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
+          AND g.deleted_at IS NULL <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY r.sort_order,r.id
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT #{q.size}
+        <!-- 先跳过指定数量的记录，再取当前页内容。 -->
         OFFSET #{q.offset}</select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">SELECT count(*)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage r
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN goal g ON g.id=r.goal_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND g.user_id=r.user_id
-          AND g.deleted_at IS NULL <include refid="filters"/></select>
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
+          AND g.deleted_at IS NULL <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/></select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO stage (user_id,
+            <!-- 继续列出本次使用的字段：目标编号（goal_id）。 -->
             goal_id,
+            <!-- 继续列出本次使用的字段：名称（name）。 -->
             name,
+            <!-- 继续列出本次使用的字段：说明（description）。 -->
             description,
+            <!-- 继续列出本次使用的字段：完成情况判断标准（completion_criteria）。 -->
             completion_criteria,
+            <!-- 继续列出本次使用的字段：开始日期（start_date）。 -->
             start_date,
+            <!-- 结束前面的条件表达式、循环或数据库程序块。 -->
             end_date,
+            <!-- 继续列出本次使用的字段：排序顺序（sort_order）。 -->
             sort_order,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：status)。 -->
             status)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{userId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{goalId},。 -->
             #{goalId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{name},。 -->
             #{name},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{description},。 -->
             #{description},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{completionCriteria},。 -->
             #{completionCriteria},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{startDate},。 -->
             #{startDate},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{endDate},。 -->
             #{endDate},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{sortOrder},。 -->
             #{sortOrder},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{status})</insert>。 -->
             #{status})</insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">UPDATE stage
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET goal_id=#{goalId},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             name=#{name},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             description=#{description},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             completion_criteria=#{completionCriteria},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             start_date=#{startDate},
+            <!-- 结束前面的条件表达式、循环或数据库程序块。 -->
             end_date=#{endDate},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             sort_order=#{sortOrder},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             status=#{status},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             version=version+1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=CURRENT_TIMESTAMP
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL</update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=softDelete。 -->
     <update id="softDelete">UPDATE stage
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET deleted_at=CURRENT_TIMESTAMP,version=version+1,updated_at=CURRENT_TIMESTAMP
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND deleted_at IS NULL</update>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=progress，resultType=java.math.BigDecimal。 -->
     <select id="progress" resultType="java.math.BigDecimal">SELECT ROUND(100.0 * COALESCE(SUM(t.weight::numeric) FILTER (WHERE t.status='COMPLETED'),0)/NULLIF(SUM(t.weight::numeric),0),2)
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stage s
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN task t ON t.stage_id=s.id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.user_id=s.user_id
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND t.deleted_at IS NULL
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE s.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND s.deleted_at IS NULL</select>
 </mapper>

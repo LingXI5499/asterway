@@ -1,0 +1,380 @@
+{
+  "recordedAt": "2026-11-06T10:13:00.149277+08:00",
+  "scope": "Phase 2 P1.3-P1.5 progress review, targeted verification and fixes",
+  "overallPhaseAcceptance": "NOT_ACCEPTED",
+  "targetedScenariosPassed": 55,
+  "scenarioGroups": {
+    "java-smoke.json": {
+      "passed": 16,
+      "cases": [
+        {
+          "name": "java.dto_validation",
+          "status": "PASS"
+        },
+        {
+          "name": "java.atomic_create",
+          "status": "PASS"
+        },
+        {
+          "name": "java.idempotent_replay",
+          "status": "PASS"
+        },
+        {
+          "name": "java.confirmed_snapshot_tamper",
+          "status": "PASS"
+        },
+        {
+          "name": "java.cross_user",
+          "status": "PASS"
+        },
+        {
+          "name": "java.manager_forbidden",
+          "status": "PASS"
+        },
+        {
+          "name": "java.unconfirmed_forbidden",
+          "status": "PASS"
+        },
+        {
+          "name": "java.cancelled_forbidden",
+          "status": "PASS"
+        },
+        {
+          "name": "java.expired_forbidden",
+          "status": "PASS"
+        },
+        {
+          "name": "java.failure_rollback_and_retry",
+          "status": "PASS"
+        },
+        {
+          "name": "java.concurrent_same_commit",
+          "status": "PASS"
+        },
+        {
+          "name": "java.weekly_existing_task_without_copy",
+          "status": "PASS"
+        },
+        {
+          "name": "java.daily_promotes_same_week_assignment",
+          "status": "PASS"
+        },
+        {
+          "name": "java.existing_stage_without_goal_copy",
+          "status": "PASS"
+        },
+        {
+          "name": "java.independent_habit",
+          "status": "PASS"
+        },
+        {
+          "name": "java.real_model_snapshot_interoperability",
+          "status": "PASS"
+        }
+      ]
+    },
+    "python-final.json": {
+      "passed": 15,
+      "cases": [
+        {
+          "name": "memory.confirm_and_context",
+          "status": "PASS"
+        },
+        {
+          "name": "memory.duplicate_update_is_409",
+          "status": "PASS"
+        },
+        {
+          "name": "memory.source_ownership",
+          "status": "PASS"
+        },
+        {
+          "name": "memory.confirm_enqueues_embedding",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.deleted_document_excluded",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.reject_unsupported_extension",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.no_silent_chunk_loss",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.embedding_all_batches",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.cosine_similarity",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.reject_empty_plan",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.existing_task_reference",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.preserve_completion_criteria",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.confirm_and_isolation",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.revise_requires_reconfirmation",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.commit_replay_and_single_attempt",
+          "status": "PASS"
+        }
+      ]
+    },
+    "edge-smoke.json": {
+      "passed": 12,
+      "cases": [
+        {
+          "name": "parsers.real_pdf_and_docx",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.malformed_document_terminates",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.cancel_fences_late_embedding",
+          "status": "PASS"
+        },
+        {
+          "name": "background.old_claim_cannot_commit",
+          "status": "PASS"
+        },
+        {
+          "name": "background.parse_timeout_terminal_state",
+          "status": "PASS"
+        },
+        {
+          "name": "embedding.index_order_dimensions_finite",
+          "status": "PASS"
+        },
+        {
+          "name": "planning.real_habit_shape",
+          "status": "PASS"
+        },
+        {
+          "name": "planning.calendar_keeps_auth_failure",
+          "status": "PASS"
+        },
+        {
+          "name": "planning.truncated_generation_not_accepted",
+          "status": "PASS"
+        },
+        {
+          "name": "knowledge.retrieval_beyond_200_chunks",
+          "status": "PASS"
+        },
+        {
+          "name": "workflow.unknown_result_and_late_receipt",
+          "status": "PASS"
+        },
+        {
+          "name": "api.readiness_and_memory_contract",
+          "status": "PASS"
+        }
+      ]
+    },
+    "sql-constraints-final.json": {
+      "passed": 10,
+      "cases": [
+        {
+          "name": "sql.memory_status_time",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.empty_memory_vector",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.multidimensional_memory_vector",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.empty_document_vector",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.partial_document_vector",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.background_terminal_time",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.plan_confirm_token",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.commit_status_time",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.invalid_time_order",
+          "status": "PASS"
+        },
+        {
+          "name": "sql.active_job_unique",
+          "status": "PASS"
+        }
+      ]
+    },
+    "model-smoke.json": {
+      "passed": 2,
+      "cases": [
+        {
+          "name": "live_model.valid_goal_stage_task_snapshot",
+          "status": "PASS"
+        },
+        {
+          "name": "live_model.references_existing_task_without_copy",
+          "status": "PASS"
+        }
+      ]
+    }
+  },
+  "validation": {
+    "sqlInitialization": {
+      "status": "PASS",
+      "sqlFiles": 11,
+      "agentTables": 12,
+      "isolatedDatabase": true
+    },
+    "pythonRuff": "PASS",
+    "pythonCompile": "PASS",
+    "pythonImportAndOpenApi": "PASS",
+    "registeredReadOnlyTools": 29,
+    "dependencyCheck": "PASS",
+    "frontendBuild": "PASS",
+    "javaCompile": "PASS",
+    "javaPackage": {
+      "status": "PASS",
+      "mode": "isolated-source-copy",
+      "originalOutput": "Locked by previously running JAR; not overwritten"
+    },
+    "pythonRuntime": {
+      "status": "PASS",
+      "scope": "Real Uvicorn TCP startup against disposable PostgreSQL, health, missing internal authentication",
+      "port": 8002,
+      "health": {
+        "success": true,
+        "service": "asterway-agent",
+        "status": "running",
+        "phase": "P1.5",
+        "capabilities": [
+          "chat",
+          "sse",
+          "tools",
+          "conversation",
+          "memory",
+          "knowledge",
+          "planning-workflow",
+          "background-tasks"
+        ],
+        "storageReady": {
+          "conversation": true,
+          "memory": true,
+          "knowledge": true,
+          "planning-workflow": true
+        },
+        "embeddingConfigured": false
+      },
+      "unauthenticatedStatus": 401
+    },
+    "javaRuntime": {
+      "status": "PASS",
+      "mode": "Real Spring Boot with isolated PostgreSQL and isolated Redis; Service-level identity"
+    },
+    "scopedDiffCheck": "PASS",
+    "developmentListenersAtFinalCheck": {
+      "8001": false,
+      "8089": false,
+      "5175": false
+    }
+  },
+  "verificationBoundaries": {
+    "strictTestFrameworkAdded": false,
+    "liveChatProviderCalls": 2,
+    "providerInput": "Synthetic review data only",
+    "liveCloudEmbedding": "NOT_VERIFIED_NO_KEY_CONFIGURED",
+    "embeddingContract": "Controlled local transport and synthetic vectors",
+    "browserThroughJavaEndToEnd": "NOT_VERIFIED",
+    "javaServiceIdentity": "Controlled review identity; not a real login flow",
+    "pythonInternalHttpIdentity": "Controlled dependency injection",
+    "developmentDatabaseChanged": false
+  },
+  "remainingGaps": [
+    "LangGraph integration",
+    "pgvector and complete document revisions/citations",
+    "Cloud embedding credentials and retrieval quality",
+    "Java public proxies and frontend workflow integration",
+    "Neutral cross-module contracts"
+  ],
+  "git": {
+    "branch": "feature/LingXI-develop",
+    "head": "964e350a429ff78ceff902de7bb85427302093e0",
+    "indexPreserved": true,
+    "stashPreserved": true,
+    "commitCreated": false,
+    "pushedOrMerged": false
+  },
+  "cleanup": {
+    "status": "PASS",
+    "temporaryDatabaseRemoved": true,
+    "temporaryRoleRemoved": true,
+    "isolatedRedisStopped": true,
+    "developmentDataChanged": false
+  },
+  "privacy": {
+    "publicExampleSecretsBlank": true,
+    "knownPrivateValuesAbsent": true
+  },
+  "changedFileSha256": {
+    "README.md": "8d6b5a28efed91638d77126cbc84594ec07414bdfd0621c296c1db88dc2c7d93",
+    "agent/.env.example": "36a7f11f674422e836366d240b9cbcda06cd859f782743dc941864cd0bb62061",
+    "agent/README.md": "38b3933353d362bb6e72a35f5c0e568e159ce430dcc7a5f740ca3a349a41981d",
+    "agent/app/api/routes/knowledge.py": "aa58d04dfc13795dd29cb148b403f52ffc6a348ae6c715008df39bdb10b77062",
+    "agent/app/api/routes/workflows.py": "46dca6aa8d6eeeb2693ea001dcea8d375ffc3344df2de199f1c98e8895c379ad",
+    "agent/app/core/config.py": "7769937ecd306c3af2f6344629b8376f5e15ac657e7c1b2162eee7b67dd8858f",
+    "agent/app/db/time.py": "b93881c6772591703a79f229b73f8f127bbffa40394180ef09d867aa1d1d9d50",
+    "agent/app/main.py": "132b2d87991658ffbc8d7537c0edc7c6081078780e3f0ae64fed7328455d5ac1",
+    "agent/app/repositories/background_task_repository.py": "6efff9190b29ea9deef0c02d3e0f1df5ecb3e1a1bb74dfed942c511d976c1d60",
+    "agent/app/repositories/knowledge_repository.py": "38f9ce9e389e7d035c177267a0815bce21a2c8f9fbdb12d29cf91dfa6c5eed2c",
+    "agent/app/schemas/planning.py": "9e2f60e1ed2318444a3d5fdf628bc1a2e1a27a96d5001ede41d3249a183ef0c6",
+    "agent/app/services/background_worker.py": "679033828e146f0ff82d132c8429589c745bc7630034f1710b50c731c50c7af3",
+    "agent/app/services/embedding_service.py": "cf2fa184cc6d6b559eee3f1614ab7fbf6033bd9266b9e988e2853116dadb272a",
+    "agent/app/services/knowledge_service.py": "46e59dce7c6de05cfaaf991a3bfed279c7573b13042d2cfc45e1ecf5eebae839",
+    "agent/app/services/memory_service.py": "5221acbdb90b8d6511ac8110ee20b1d944feacd84ca34af86a4cc02ffbb90782",
+    "agent/app/services/planning_context_service.py": "75810fa9b75549373dd95d2fcfa9d2f4bc5f5dc5c8c9a8521e8bc84ee3f9b140",
+    "agent/app/services/planning_service.py": "baffaa133261ab9f8e78f0660f471a4aca7dd3e62a10bddc3f11698484f9424e",
+    "agent/app/services/retrieval_service.py": "c9c5e39eb0c8aea46d76fed3bd8e02315387a04bd09a634329a10a275d80448a",
+    "agent/app/services/workflow_service.py": "ae1fbf8f996ea7ad323bf9f68d191291d3a91ad47c881317b719eda032643ec1",
+    "agent/pyproject.toml": "362ca44430af84ec12d881f449441187fbd415e3ff6af6f7eac3654fad907614",
+    "backend/AGENTS.md": "16e1dfc97ab801230bf9b0e9f1e78ed97b9ba457abb0c38f973cc20d6a0f9084",
+    "backend/agent/src/main/java/com/asterway/agent/dto/AgentPlanCommitDTO.java": "84fa2d21120736a94cca37b85d6255faf674a9e393bd2795693f747420b2c122",
+    "backend/agent/src/main/java/com/asterway/agent/mapper/PlanCommitMapper.java": "51402ef338d7ba07d3cc3ec5add67fff2c0b22c37d261b562f0a3a16c9ad2016",
+    "backend/agent/src/main/java/com/asterway/agent/service/impl/AgentPlanCommitServiceImpl.java": "549a12b9372128f4ff8df935ceed979b57126a2c7bdae5a6de0dbd3bd09997ca",
+    "backend/agent/src/main/java/com/asterway/agent/service/impl/PlanCommitFailureRecorder.java": "70e3f95a04428f9e73d355790f8c50bf8716a53db79205468dee428089b39f35",
+    "backend/agent/src/main/resources/mapper/agent/PlanCommitMapper.xml": "d1a3dbcb5c79691949259d495823dcb8e1a314671890c0e883fd3d04e9824960",
+    "backend/app/src/main/resources/sql/agent.sql": "e02ef5c0e628c278b36e49d7540f6576f914554941625d3b55f2f1f4566f6ee0",
+    "backend/common/src/main/java/com/asterway/common/constant/GrowthPermissionConstants.java": "fb9b6246aec3cdc048edaa5a19155352925833688a14f3588035270cf905a10b",
+    "docs/agent/Phase2验收复核与修复_20261106.md": "017b361705e70e0be0ea5f08179f3d40bdd79a98fb5425bbf93b57ef340578af"
+  }
+}

@@ -1,0 +1,35 @@
+# 复制到 .asterway-private/local-runtime/config/application.yml 后填写。
+# 该文件作为 Java 的外部配置，代码内 application.yml 的其余设置继续生效。
+server:
+  port: 8089
+
+spring:
+  datasource:
+    # 按实际主机、端口和数据库名称修改。
+    url: jdbc:postgresql://127.0.0.1:5432/asterway_dev
+    username: asterway_dev
+    password: ''
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      password: ''
+      timeout: 3s
+  sql:
+    init:
+      # SQL 由维护者显式执行，应用启动不自动建表或迁移。
+      mode: never
+
+asterway:
+  security:
+    # 单独生成至少 32 字节的随机密钥，供 JWT 签名使用。
+    jwt-secret: ''
+    session-idle: 7d
+  agent:
+    base-url: http://127.0.0.1:8001
+    # 自己生成 32～128 位安全字符，与 agent/.env 的 AGENT_INTERNAL_KEY 一致。
+    # 模型供应商的 API Key 填在 agent/.env，不填写到这里。
+    internal-key: ''
+    connect-timeout-seconds: 5
+    request-timeout-seconds: 280

@@ -1,0 +1,71 @@
+/* 计划页沿用工作区主题，日历、卡片和弹窗共享同一套间距。 */
+.plans-workspace { display: grid; gap: 24px; min-width: 0; }
+.plan-calendar.card { padding: 24px; margin: 0; }
+.plan-page-heading, .plan-day-heading, .plan-manager-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.plan-page-heading h1, .plan-day-heading h2 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 600; }
+.plan-page-heading p, .plan-day-heading p, .plan-manager-heading p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
+.plan-header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.plan-header-actions .el-button + .el-button { margin-left: 0; }
+.plan-calendar-heading { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 24px 0 16px; }
+.plan-calendar-heading h3 { margin: 0; text-align: center; font-size: 16px; line-height: 24px; font-weight: 600; }
+.plan-calendar-heading > .el-date-editor { width: 160px; }
+.plan-week-strip { display: grid; grid-template-columns: repeat(7,minmax(80px,1fr)); gap: 8px; overflow-x: auto; padding: 4px; }
+.plan-date { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-width: 0; padding: 12px 8px; border: 1px solid transparent; border-radius: 8px; background: var(--aw-surface-muted); color: var(--aw-text); cursor: pointer; font: inherit; }
+.plan-date > span { font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
+.plan-date strong { font-size: 24px; line-height: 32px; font-weight: 600; }
+.plan-date small { font-size: 12px; line-height: 16px; color: var(--aw-text-secondary); }
+.plan-date:hover { border-color: var(--aw-border-strong); }
+.plan-date:active { transform: scale(.98); }
+.plan-date:focus-visible, .plan-task-name:focus-visible { outline: 2px solid var(--aw-brand); outline-offset: 2px; }
+.plan-date.today { border-color: var(--aw-brand); }
+.plan-date.selected { background: var(--aw-brand); color: var(--aw-on-brand); border-color: var(--aw-brand); }
+.plan-date.selected > span, .plan-date.selected small { color: inherit; }
+.plan-month-calendar { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+.plan-week-label { padding: 8px 0; text-align: center; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
+.plan-month-calendar .plan-date { padding: 8px 4px; }
+.plan-month-calendar .plan-date strong { font-size: 18px; line-height: 28px; }
+.plan-month-calendar .plan-date.selected-week:not(.selected) { background: var(--aw-brand-soft); }
+.plan-month-calendar .other-month:not(.selected) { color: var(--aw-text-tertiary); background: var(--aw-surface); }
+.plan-day-section { display: grid; gap: 16px; min-width: 0; }
+.plan-day-heading h2 { font-size: 20px; line-height: 28px; }
+.plan-day-heading h2 span { color: var(--aw-text-secondary); font-size: 16px; font-weight: 400; }
+.plan-readonly { margin: 0; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
+.plan-task-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: stretch; gap: 16px; min-width: 0; }
+.plan-task-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 24px; border: 1px solid var(--aw-border); border-radius: 12px; background: var(--aw-surface); }
+.plan-task-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.plan-task-name { margin: 0; padding: 0; min-width: 0; border: 0; border-radius: 4px; background: transparent; color: var(--aw-text); font: inherit; font-size: 18px; line-height: 28px; font-weight: 600; text-align: left; overflow-wrap: anywhere; text-wrap: pretty; }
+button.plan-task-name { cursor: pointer; }
+button.plan-task-name:hover { color: var(--aw-brand); }
+.plan-task-origin { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
+.plan-task-origin span { padding: 0 4px; color: var(--aw-text-tertiary); }
+.plan-task-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.plan-task-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12px; line-height: 16px; color: var(--aw-text-secondary); }
+.plan-task-meta .urgent { color: var(--aw-danger); }
+.plan-task-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 4px; }
+.plan-task-actions .el-button + .el-button { margin-left: 0; }
+.plan-task-card.is-completed .plan-task-name { color: var(--aw-text-secondary); }
+.plan-rest-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 64px 24px; border: 1px solid var(--aw-border); border-radius: 12px; background: var(--aw-surface); color: var(--aw-text-secondary); text-align: center; }
+.plan-rest-state h3 { margin: 0; font-size: 18px; line-height: 28px; font-weight: 600; color: var(--aw-text); }
+.plan-rest-state p { margin: 0; font-size: 14px; line-height: 20px; }
+.plan-task-skeleton { padding: 24px; border: 1px solid var(--aw-border); border-radius: 12px; background: var(--aw-surface); }
+.plan-dialog .el-dialog__body { max-height: 72dvh; overflow: auto; overscroll-behavior: contain; }
+.plan-detail-tabs { margin-top: 16px; }
+.plan-manager-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 8px 0 16px; }
+.plan-manager-filters > .el-input, .plan-manager-filters > .el-select { flex: 1 1 160px; width: auto; min-width: 0; }
+.plan-manager-filters > .el-date-editor { max-width: 100%; }
+.plan-filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.plan-filter-buttons .el-button + .el-button { margin-left: 0; }
+.plan-tasks-enter { animation: plan-task-appear 160ms var(--aw-motion); }
+@keyframes plan-task-appear { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 899px) {
+  .plan-task-grid { grid-template-columns: minmax(0,1fr); }
+  .plan-calendar.card, .plan-task-card { padding: 16px; }
+  .plan-week-strip { grid-template-columns: repeat(7,minmax(64px,1fr)); }
+  .plan-calendar-heading { gap: 8px; margin-top: 16px; }
+  .plan-calendar-heading h3 { font-size: 14px; line-height: 20px; }
+  .plan-header-actions { width: 100%; }
+  .plan-day-heading h2 { font-size: 18px; line-height: 28px; }
+  .plan-manager-filters > .el-input, .plan-manager-filters > .el-select { flex-basis: 120px; }
+  .plans-workspace .el-pagination, .plan-dialog .el-pagination { max-width: 100%; flex-wrap: wrap; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .plan-tasks-enter { animation: none; } .plan-date:active { transform: none; } }

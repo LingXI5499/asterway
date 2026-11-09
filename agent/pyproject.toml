@@ -1,47 +1,87 @@
+# 声明pyproject运行或构建配置。
+# 下面一组配置属于 build-system。
 [build-system]
+# 打包时需要的工具；当前示例值为 ["setuptools>=68"]。
 requires = ["setuptools>=68"]
+# 实际负责构建 Python 包的后端；当前示例值为 "setuptools.build_meta"。
 build-backend = "setuptools.build_meta"
 
+# 下面一组配置属于 project。
 [project]
+# 工程或应用名称；当前示例值为 "asterway-agent"。
 name = "asterway-agent"
+# 当前工程版本；当前示例值为 "0.1.0"。
 version = "0.1.0"
+# 工程用途说明；当前示例值为 "Asterway AI Agent Service"。
 description = "Asterway AI Agent Service"
+# 允许使用的 Python 版本范围；当前示例值为 ">=3.12,<3.13"。
 requires-python = ">=3.12,<3.13"
 
+# 运行需要的依赖包；当前示例值为 [。
 dependencies = [
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "fastapi",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "uvicorn[standard]",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pydantic",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pydantic-settings",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "python-dotenv",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "httpx",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "openai",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "sqlalchemy[asyncio]>=2.0,<2.1",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "asyncpg>=0.29,<0.31",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pypdf==6.21.4",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "python-docx==1.2.0",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "tzdata==2026.6",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "langgraph==1.2.20",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "langgraph-checkpoint-postgres==3.2.0",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pgvector==0.5.1",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "psycopg[binary,pool]==3.3.8"
 ]
 
+# 下面一组配置属于 project.optional-dependencies。
 [project.optional-dependencies]
+# 仅用于本地开发或检查的依赖；当前示例值为 [。
 dev = [
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pytest",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "pytest-asyncio",
+    # 声明这一项依赖及其版本范围；安装时按这里的约束选择版本。
     "ruff"
 ]
 
+# 下面一组配置属于 tool.setuptools.packages.find。
 [tool.setuptools.packages.find]
+# where配置；当前示例值为 ["."]。
 where = ["."]
+# include配置；当前示例值为 ["app*"]。
 include = ["app*"]
 
+# 下面一组配置属于 tool.pytest.ini_options。
 [tool.pytest.ini_options]
+# 已有测试文件的目录；当前示例值为 ["tests"]。
 testpaths = ["tests"]
+# 异步测试的运行模式；当前示例值为 "auto"。
 asyncio_mode = "auto"
 
+# 下面一组配置属于 tool.ruff。
 [tool.ruff]
+# 代码检查参考的每行长度；当前示例值为 100。
 line-length = 100
+# 代码检查采用的 Python 语法版本；当前示例值为 "py312"。
 target-version = "py312"

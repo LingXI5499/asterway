@@ -1,10 +1,21 @@
+# 列出不进入版本管理的本地文件，避免提交依赖、缓存、构建产物或私密配置。
+# 不把匹配 .asterway-private/ 的本地文件加入版本管理。
 .asterway-private/
+# 不把匹配 *.local.log 的本地文件加入版本管理。
 *.local.log
+# 不把匹配 .workbuddy/ 的本地文件加入版本管理。
 .workbuddy/
+# 不把匹配 工程证据/ 的本地文件加入版本管理。
 工程证据/
+# 不把匹配 __pycache__/ 的本地文件加入版本管理。
 __pycache__/
+# 不把匹配 *.py[cod] 的本地文件加入版本管理。
 *.py[cod]
 
-# Local uploads and editor metadata
+# 真实知识文件、私密配置和发布检查临时文件。
 agent/data/
-agent/.idea/
+**/.idea/
+**/*.iml
+config/*.local.yml
+config/*.local.yaml
+*.local.sql

@@ -1,1131 +1,1986 @@
+/* 定义global的页面样式，具体选择器说明哪些元素应用这些显示规则。 */
 /* 展示基础层：现有业务布局仍由原样式承担，新规范集中在此覆盖。 */
+/* 以下规则应用于 html 选中的元素。 */
 html {
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */
   background: var(--aw-bg);
 }
+/* 以下规则应用于 body 选中的元素。 */
 body {
+  /* 设置字体选择顺序；取值 var(—aw-font)。 */
   font-family: var(--aw-font);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */
   background: var(--aw-bg);
+  /* 设置每行文字的高度；取值 1.6。 */
   line-height: 1.6;
 }
+/* 以下规则应用于 body, #app 选中的元素。 */
 body,
 #app {
+  /* 限制最小宽度；取值 320px。 */
   min-width: 320px;
 }
+/* 以下规则应用于 .metric strong, .stat strong, .mini-clock, .el-table, .duration-block 选中的元素。 */
 .metric strong,
 .stat strong,
 .mini-clock,
 .el-table,
 .duration-block {
+  /* 设置 CSS 属性 font-variant-numeric；取值 tabular-nums。 */
   font-variant-numeric: tabular-nums;
 }
+/* 以下规则应用于 button, input, textarea 选中的元素。 */
 button,
 input,
 textarea {
+  /* 设置 CSS 属性 font；取值 inherit。 */
   font: inherit;
 }
+/* 以下规则应用于 h1, h2, h3 选中的元素。 */
 h1,
 h2,
 h3 {
+  /* 设置字重；取值 600。 */
   font-weight: 600;
+  /* 设置字符之间的间距；取值 -0.02em。 */
   letter-spacing: -0.02em;
 }
+/* 以下规则应用于 h1 选中的元素。 */
 h1 {
+  /* 设置字号；取值 24px。 */
   font-size: 24px;
+  /* 设置每行文字的高度；取值 32px。 */
   line-height: 32px;
 }
+/* 以下规则应用于 h2 选中的元素。 */
 h2 {
+  /* 设置字号；取值 18px。 */
   font-size: 18px;
+  /* 设置每行文字的高度；取值 26px。 */
   line-height: 26px;
 }
+/* 以下规则应用于 p 选中的元素。 */
 p {
+  /* 设置 CSS 属性 text-wrap；取值 pretty。 */
   text-wrap: pretty;
 }
+/* 以下规则应用于 .aw-icon 选中的元素。 */
 .aw-icon {
+  /* 设置空间不足时条目缩小的比例；取值 0。 */
   flex-shrink: 0;
+  /* 设置 CSS 属性 vertical-align；取值 middle。 */
   vertical-align: middle;
 }
+/* 以下规则应用于 .muted, .hint 选中的元素。 */
 .muted,
 .hint {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
+  /* 设置每行文字的高度；取值 22px。 */
   line-height: 22px;
 }
+/* 以下规则应用于 .eyebrow 选中的元素。 */
 .eyebrow {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 block。 */
   display: block;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置字符之间的间距；取值 0.08em。 */
   letter-spacing: 0.08em;
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .card, .auth-card 选中的元素。 */
 .card,
 .auth-card {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
+  /* 设置元素投影；取值 none。 */
   box-shadow: none;
 }
+/* 以下规则应用于 .card 选中的元素。 */
 .card {
+  /* 设置内容与边框之间的内侧留白；取值 24px。 */
   padding: 24px;
+  /* 设置下方外侧留白；取值 24px。 */
   margin-bottom: 24px;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .card > :last-child 选中的元素。 */
 .card > :last-child {
+  /* 设置下方外侧留白；取值 0。 */
   margin-bottom: 0;
 }
+/* 以下规则应用于 .personal-hero, .growth-hero 选中的元素。 */
 .personal-hero,
 .growth-hero {
+  /* 设置元素投影；取值 none。 */
   box-shadow: none;
 }
+/* 以下规则应用于 .personal-hero h2, .growth-hero h2 选中的元素。 */
 .personal-hero h2,
 .growth-hero h2 {
+  /* 设置元素外侧留白；取值 8px 0。 */
   margin: 8px 0;
+  /* 设置字号；取值 24px。 */
   font-size: 24px;
+  /* 设置每行文字的高度；取值 32px。 */
   line-height: 32px;
 }
+/* 以下规则应用于 .personal-hero p, .growth-hero p 选中的元素。 */
 .personal-hero p,
 .growth-hero p {
+  /* 设置元素外侧留白；取值 8px 0 0。 */
   margin: 8px 0 0;
+  /* 限制最大宽度；取值 680px。 */
   max-width: 680px;
 }
+/* 以下规则应用于 .section-heading 选中的元素。 */
 .section-heading {
+  /* 设置下方外侧留白；取值 16px。 */
   margin-bottom: 16px;
 }
+/* 以下规则应用于 .section-heading h2, .section-heading h3 选中的元素。 */
 .section-heading h2,
 .section-heading h3 {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .section-heading .toolbar 选中的元素。 */
 .section-heading .toolbar {
+  /* 设置下方外侧留白；取值 0。 */
   margin-bottom: 0;
 }
+/* 以下规则应用于 .toolbar 选中的元素。 */
 .toolbar {
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
 }
+/* 以下规则应用于 .toolbar .el-button + .el-button 选中的元素。 */
 .toolbar .el-button + .el-button {
+  /* 设置左侧外侧留白；取值 0。 */
   margin-left: 0;
 }
+/* 以下规则应用于 .el-button .aw-icon + span 选中的元素。 */
 .el-button .aw-icon + span {
+  /* 设置左侧外侧留白；取值 8px。 */
   margin-left: 8px;
 }
+/* 以下规则应用于 .aw-page-header 选中的元素。 */
 .aw-page-header {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-end。 */
   align-items: flex-end;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
   justify-content: space-between;
+  /* 设置相邻布局条目之间的间隔；取值 24px。 */
   gap: 24px;
 }
+/* 以下规则应用于 .aw-page-header .toolbar 选中的元素。 */
 .aw-page-header .toolbar {
+  /* 设置下方外侧留白；取值 0。 */
   margin-bottom: 0;
 }
+/* 以下规则应用于 .aw-page-header p 选中的元素。 */
 .aw-page-header p {
+  /* 设置元素外侧留白；取值 8px 0 0。 */
   margin: 8px 0 0;
 }
+/* 以下规则应用于 .aw-page-header .eyebrow 选中的元素。 */
 .aw-page-header .eyebrow {
+  /* 设置下方外侧留白；取值 8px。 */
   margin-bottom: 8px;
 }
+/* 以下规则应用于 .page-heading 选中的元素。 */
 .page-heading {
+  /* 设置下方外侧留白；取值 24px。 */
   margin-bottom: 24px;
 }
+/* 以下规则应用于 .metrics-grid, .stats 选中的元素。 */
 .metrics-grid,
 .stats {
+  /* 设置相邻布局条目之间的间隔；取值 16px。 */
   gap: 16px;
 }
+/* 以下规则应用于 .metric.card, .stat.card 选中的元素。 */
 .metric.card,
 .stat.card {
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
+  /* 设置内容与边框之间的内侧留白；取值 20px。 */
   padding: 20px;
 }
+/* 以下规则应用于 .metric.card:hover, .stat.card:hover 选中的元素。 */
 .metric.card:hover,
 .stat.card:hover {
+  /* 对显示位置、角度或缩放做变换；取值 none。 */
   transform: none;
+  /* 设置元素投影；取值 none。 */
   box-shadow: none;
 }
+/* 以下规则应用于 .metric > span, .stat > span 选中的元素。 */
 .metric > span,
 .stat > span {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
 }
+/* 以下规则应用于 .metric > strong, .stat > strong 选中的元素。 */
 .metric > strong,
 .stat > strong {
+  /* 设置字号；取值 30px。 */
   font-size: 30px;
+  /* 设置每行文字的高度；取值 40px。 */
   line-height: 40px;
+  /* 设置字符之间的间距；取值 -0.03em。 */
   letter-spacing: -0.03em;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .metric strong small 选中的元素。 */
 .metric strong small {
+  /* 设置字号；取值 16px。 */
   font-size: 16px;
+  /* 设置每行文字的高度；取值 24px。 */
   line-height: 24px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .metric p 选中的元素。 */
 .metric p {
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
 }
+/* 以下规则应用于 .metric .metric-duration 选中的元素。 */
 .metric .metric-duration {
+  /* 设置字号；取值 24px。 */
   font-size: 24px;
 }
+/* 以下规则应用于 .metric-icon 选中的元素。 */
 .metric-icon {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
   justify-content: space-between;
 }
+/* 以下规则应用于 .metric-icon .aw-icon 选中的元素。 */
 .metric-icon .aw-icon {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
 }
+/* 以下规则应用于 .aw-empty 选中的元素。 */
 .aw-empty {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 center。 */
   justify-content: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置内容与边框之间的内侧留白；取值 40px 16px。 */
   padding: 40px 16px;
+  /* 设置文字横向对齐方式；取值 center。 */
   text-align: center;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .aw-empty-icon 选中的元素。 */
 .aw-empty-icon {
+  /* 设置宽度；取值 52px。 */
   width: 52px;
+  /* 设置高度；取值 52px。 */
   height: 52px;
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置边角圆弧大小；取值 16px。 */
   border-radius: 16px;
+  /* 设置下方外侧留白；取值 8px。 */
   margin-bottom: 8px;
 }
+/* 以下规则应用于 .aw-empty strong 选中的元素。 */
 .aw-empty strong {
+  /* 设置字重；取值 500。 */
   font-weight: 500;
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
+  /* 设置每行文字的高度；取值 22px。 */
   line-height: 22px;
 }
+/* 以下规则应用于 .aw-empty p 选中的元素。 */
 .aw-empty p {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 20px。 */
   line-height: 20px;
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
+  /* 限制最大宽度；取值 380px。 */
   max-width: 380px;
 }
+/* 以下规则应用于 .aw-empty-actions 选中的元素。 */
 .aw-empty-actions {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 center。 */
   justify-content: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
+  /* 设置上方外侧留白；取值 8px。 */
   margin-top: 8px;
 }
+/* 以下规则应用于 .aw-status 选中的元素。 */
 .aw-status {
+  /* 设置相邻布局条目之间的间隔；取值 6px。 */
   gap: 6px;
 }
+/* 以下规则应用于 .aw-status, .el-tag 选中的元素。 */
 .aw-status,
 .el-tag {
+  /* 决定空白和换行如何保留；取值 nowrap。 */
   white-space: nowrap;
 }
+/* 以下规则应用于 .aw-status .el-tag__content 选中的元素。 */
 .aw-status .el-tag__content {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */
   display: inline-flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 6px。 */
   gap: 6px;
 }
+/* 以下规则应用于 .theme-switch 选中的元素。 */
 .theme-switch {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */
   display: inline-flex;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
 }
+/* 以下规则应用于 .theme-option 选中的元素。 */
 .theme-option {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
+  /* 限制最小宽度；取值 128px。 */
   min-width: 128px;
+  /* 设置内容与边框之间的内侧留白；取值 4px 0。 */
   padding: 4px 0;
 }
+/* 以下规则应用于 .theme-option > :last-child:not(:nth-child(2)) 选中的元素。 */
 .theme-option > :last-child:not(:nth-child(2)) {
+  /* 设置左侧外侧留白；取值 auto。 */
   margin-left: auto;
 }
+/* 以下规则应用于 .shell 选中的元素。 */
 .shell {
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
   align-items: flex-start;
 }
+/* 以下规则应用于 .sidebar 选中的元素。 */
 .sidebar {
+  /* 设置宽度；取值 var(—aw-sidebar-width)。 */
   width: var(--aw-sidebar-width);
+  /* 设置高度；取值 100dvh。 */
   height: 100dvh;
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 sticky。 */
   position: sticky;
+  /* 设置上侧定位距离；取值 0。 */
   top: 0;
+  /* 设置内容与边框之间的内侧留白；取值 20px 12px。 */
   padding: 20px 12px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置右侧边框；取值 1px solid var(—aw-border)。 */
   border-right: 1px solid var(--aw-border);
+  /* 决定纵向超出时的处理；取值 auto。 */
   overflow-y: auto;
+  /* 决定横向超出时的处理；取值 hidden。 */
   overflow-x: hidden;
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
 }
+/* 以下规则应用于 .sidebar.collapsed 选中的元素。 */
 .sidebar.collapsed {
+  /* 设置宽度；取值 var(—aw-sidebar-collapsed)。 */
   width: var(--aw-sidebar-collapsed);
 }
+/* 以下规则应用于 .logo, .sidebar.collapsed .logo 选中的元素。 */
 .logo,
 .sidebar.collapsed .logo {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
+  /* 设置内容与边框之间的内侧留白；取值 0 8px 24px。 */
   padding: 0 8px 24px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置字号；取值 18px。 */
   font-size: 18px;
+  /* 设置每行文字的高度；取值 32px。 */
   line-height: 32px;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
+  /* 决定空白和换行如何保留；取值 nowrap。 */
   white-space: nowrap;
 }
+/* 以下规则应用于 .brand-symbol 选中的元素。 */
 .brand-symbol {
+  /* 设置宽度；取值 32px。 */
   width: 32px;
+  /* 设置高度；取值 32px。 */
   height: 32px;
+  /* 设置空间不足时条目缩小的比例；取值 0。 */
   flex-shrink: 0;
+  /* 设置边角圆弧大小；取值 var(—aw-radius-input)。 */
   border-radius: var(--aw-radius-input);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand)。 */
   background: var(--aw-brand);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-on-brand)。 */
   color: var(--aw-on-brand);
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
+  /* 设置字号；取值 18px。 */
   font-size: 18px;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .sidebar > .logo, .sidebar > .el-menu, .sidebar-footer 选中的元素。 */
 .sidebar > .logo,
 .sidebar > .el-menu,
 .sidebar-footer {
+  /* 设置空间不足时条目缩小的比例；取值 0。 */
   flex-shrink: 0;
 }
+/* 以下规则应用于 .brand-copy 选中的元素。 */
 .brand-copy {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置每行文字的高度；取值 22px。 */
   line-height: 22px;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .brand-copy small 选中的元素。 */
 .brand-copy small {
+  /* 设置字号；取值 11px。 */
   font-size: 11px;
+  /* 设置每行文字的高度；取值 16px。 */
   line-height: 16px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字重；取值 400。 */
   font-weight: 400;
+  /* 设置字符之间的间距；取值 0.08em。 */
   letter-spacing: 0.08em;
 }
+/* 以下规则应用于 .sidebar .el-menu 选中的元素。 */
 .sidebar .el-menu {
+  /* 设置背景颜色、图片或渐变；取值 transparent。 */
   background: transparent;
+  /* 设置宽度；取值 100%。 */
   width: 100%;
 }
+/* 以下规则应用于 .sidebar .el-sub-menu .el-menu 选中的元素。 */
 .sidebar .el-sub-menu .el-menu {
+  /* 设置背景颜色、图片或渐变；取值 transparent。 */
   background: transparent;
 }
+/* 以下规则应用于 .sidebar .el-menu-item, .sidebar .el-sub-menu__title 选中的元素。 */
 .sidebar .el-menu-item,
 .sidebar .el-sub-menu__title {
+  /* 设置高度；取值 40px。 */
   height: 40px;
+  /* 设置每行文字的高度；取值 40px。 */
   line-height: 40px;
+  /* 设置元素外侧留白；取值 4px 0。 */
   margin: 4px 0;
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
+  /* 设置相邻布局条目之间的间隔；取值 10px。 */
   gap: 10px;
+  /* 设置左侧内侧留白；取值 12px。 */
   padding-left: 12px !important;
 }
+/* 以下规则应用于 .sidebar .el-sub-menu .el-menu-item 选中的元素。 */
 .sidebar .el-sub-menu .el-menu-item {
+  /* 设置左侧内侧留白；取值 24px。 */
   padding-left: 24px !important;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .sidebar .el-sub-menu__title 选中的元素。 */
 .sidebar .el-sub-menu__title {
+  /* 设置上方外侧留白；取值 16px。 */
   margin-top: 16px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
 }
+/* 以下规则应用于 .sidebar .el-menu-item:hover, .sidebar .el-sub-menu__title:hover 选中的元素。 */
 .sidebar .el-menu-item:hover,
 .sidebar .el-sub-menu__title:hover {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface-muted)。 */
   background: var(--aw-surface-muted);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .sidebar .el-menu-item.is-active 选中的元素。 */
 .sidebar .el-menu-item.is-active {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .sidebar .el-menu-item .el-icon, .sidebar .el-sub-menu__title .el-icon 选中的元素。 */
 .sidebar .el-menu-item .el-icon,
 .sidebar .el-sub-menu__title .el-icon {
+  /* 设置右侧外侧留白；取值 0。 */
   margin-right: 0;
 }
+/* 以下规则应用于 .sidebar .el-menu—collapse .el-menu-item, .sidebar .el-menu—collapse .el-sub-menu__title 选中的元素。 */
 .sidebar .el-menu--collapse .el-menu-item,
 .sidebar .el-menu--collapse .el-sub-menu__title {
+  /* 设置内容与边框之间的内侧留白；取值 0 12px。 */
   padding: 0 12px !important;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 center。 */
   justify-content: center;
 }
+/* 以下规则应用于 .sidebar-footer 选中的元素。 */
 .sidebar-footer {
+  /* 设置上方外侧留白；取值 auto。 */
   margin-top: auto;
+  /* 设置内容与边框之间的内侧留白；取值 24px 12px 0。 */
   padding: 24px 12px 0;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 11px。 */
   font-size: 11px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
 }
+/* 以下规则应用于 .workspace 选中的元素。 */
 .workspace {
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
+  /* 设置宽度；取值 calc(100% - var(—aw-sidebar-width))。 */
   width: calc(100% - var(--aw-sidebar-width));
 }
+/* 以下规则应用于 .topbar 选中的元素。 */
 .topbar {
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 sticky。 */
   position: sticky;
+  /* 设置上侧定位距离；取值 0。 */
   top: 0;
+  /* 设置重叠时的前后层级；取值 100。 */
   z-index: 100;
+  /* 设置高度；取值 var(—aw-topbar-height)。 */
   height: var(--aw-topbar-height);
+  /* 设置内容与边框之间的内侧留白；取值 0 28px。 */
   padding: 0 28px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置底部边框；取值 1px solid var(—aw-border)。 */
   border-bottom: 1px solid var(--aw-border);
+  /* 设置相邻布局条目之间的间隔；取值 16px。 */
   gap: 16px;
+  /* 决定一行放不下时是否换行；取值 nowrap。 */
   flex-wrap: nowrap;
 }
+/* 以下规则应用于 .topbar .el-breadcrumb 选中的元素。 */
 .topbar .el-breadcrumb {
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
+  /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */
   flex: 1;
+  /* 设置字号；取值 13px。 */
   font-size: 13px;
+  /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */
   overflow: hidden;
+  /* 决定空白和换行如何保留；取值 nowrap。 */
   white-space: nowrap;
 }
+/* 以下规则应用于 .el-breadcrumb__item:last-child .el-breadcrumb__inner 选中的元素。 */
 .el-breadcrumb__item:last-child .el-breadcrumb__inner {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置字重；取值 500。 */
   font-weight: 500;
 }
+/* 以下规则应用于 .top-actions 选中的元素。 */
 .top-actions {
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
+  /* 设置空间不足时条目缩小的比例；取值 0。 */
   flex-shrink: 0;
+  /* 设置左侧外侧留白；取值 auto。 */
   margin-left: auto;
 }
+/* 以下规则应用于 .icon-button 选中的元素。 */
 .icon-button {
+  /* 设置宽度；取值 36px。 */
   width: 36px;
+  /* 设置高度；取值 36px。 */
   height: 36px;
+  /* 设置内容与边框之间的内侧留白；取值 8px。 */
   padding: 8px;
 }
+/* 以下规则应用于 .user-trigger 选中的元素。 */
 .user-trigger {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
+  /* 设置边框宽度、线型与颜色；取值 0。 */
   border: 0;
+  /* 设置背景颜色、图片或渐变；取值 transparent。 */
   background: transparent;
+  /* 设置鼠标移上来时的指针形状；取值 pointer。 */
   cursor: pointer;
+  /* 设置内容与边框之间的内侧留白；取值 4px。 */
   padding: 4px;
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 .avatar 选中的元素。 */
 .avatar {
+  /* 设置宽度；取值 32px。 */
   width: 32px;
+  /* 设置高度；取值 32px。 */
   height: 32px;
+  /* 设置边角圆弧大小；取值 50%。 */
   border-radius: 50%;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
+  /* 设置字号；取值 13px。 */
   font-size: 13px;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
 }
+/* 以下规则应用于 .user-trigger > span:last-child 选中的元素。 */
 .user-trigger > span:last-child {
+  /* 限制最大宽度；取值 120px。 */
   max-width: 120px;
+  /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */
   overflow: hidden;
+  /* 决定文字被截断时是否显示省略号；取值 ellipsis。 */
   text-overflow: ellipsis;
+  /* 决定空白和换行如何保留；取值 nowrap。 */
   white-space: nowrap;
+  /* 设置字号；取值 13px。 */
   font-size: 13px;
 }
+/* 以下规则应用于 .user-menu-item 选中的元素。 */
 .user-menu-item {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */
   display: inline-flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
 }
+/* 以下规则应用于 .content 选中的元素。 */
 .content {
+  /* 设置宽度；取值 100%。 */
   width: 100%;
+  /* 限制最大宽度；取值 1440px。 */
   max-width: 1440px;
+  /* 设置元素外侧留白；取值 0 auto。 */
   margin: 0 auto;
+  /* 设置内容与边框之间的内侧留白；取值 28px。 */
   padding: 28px;
 }
+/* 以下规则应用于 .sidebar-backdrop 选中的元素。 */
 .sidebar-backdrop {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-overlay)。 */
   background: var(--aw-overlay);
 }
+/* 以下规则应用于 .skip-link 选中的元素。 */
 .skip-link {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-brand)。 */
   border: 1px solid var(--aw-brand);
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 :where(a, button, input, textarea, select, [tabindex]):focus-visible 选中的元素。 */
 :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  /* 设置不占布局尺寸的轮廓线；取值 2px solid var(—aw-brand)。 */
   outline: 2px solid var(--aw-brand);
+  /* 设置轮廓线与边界的距离；取值 3px。 */
   outline-offset: 3px;
 }
+/* 以下规则应用于 .auth-page 选中的元素。 */
 .auth-page {
+  /* 限制最小高度；取值 100dvh。 */
   min-height: 100dvh;
+  /* 设置内容与边框之间的内侧留白；取值 32px。 */
   padding: 32px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */
   background: var(--aw-bg);
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 relative。 */
   position: relative;
 }
+/* 以下规则应用于 .auth-theme 选中的元素。 */
 .auth-theme {
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 absolute。 */
   position: absolute;
+  /* 设置右侧定位距离；取值 24px。 */
   right: 24px;
+  /* 设置上侧定位距离；取值 24px。 */
   top: 24px;
 }
+/* 以下规则应用于 .auth-layout 选中的元素。 */
 .auth-layout {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置网格列数和各列宽度；取值 minmax(0, 1fr) 440px。 */
   grid-template-columns: minmax(0, 1fr) 440px;
+  /* 设置宽度；取值 min(100%, 1040px)。 */
   width: min(100%, 1040px);
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 80px。 */
   gap: 80px;
 }
+/* 以下规则应用于 .auth-intro 选中的元素。 */
 .auth-intro {
+  /* 限制最大宽度；取值 460px。 */
   max-width: 460px;
 }
+/* 以下规则应用于 .auth-intro h2 选中的元素。 */
 .auth-intro h2 {
+  /* 设置字号；取值 36px。 */
   font-size: 36px;
+  /* 设置每行文字的高度；取值 48px。 */
   line-height: 48px;
+  /* 设置元素外侧留白；取值 24px 0。 */
   margin: 24px 0;
+  /* 设置字符之间的间距；取值 -0.04em。 */
   letter-spacing: -0.04em;
 }
+/* 以下规则应用于 .auth-intro p 选中的元素。 */
 .auth-intro p {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置每行文字的高度；取值 28px。 */
   line-height: 28px;
+  /* 设置字号；取值 16px。 */
   font-size: 16px;
 }
+/* 以下规则应用于 .auth-steps 选中的元素。 */
 .auth-steps {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
+  /* 设置上方外侧留白；取值 32px。 */
   margin-top: 32px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
 }
+/* 以下规则应用于 .auth-steps span 选中的元素。 */
 .auth-steps span {
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border-strong)。 */
   border: 1px solid var(--aw-border-strong);
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
+  /* 设置内容与边框之间的内侧留白；取值 8px 12px。 */
   padding: 8px 12px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
 }
+/* 以下规则应用于 .auth-card 选中的元素。 */
 .auth-card {
+  /* 设置内容与边框之间的内侧留白；取值 32px。 */
   padding: 32px;
+  /* 设置宽度；取值 min(100%, 440px)。 */
   width: min(100%, 440px);
+  /* 设置元素投影；取值 var(—aw-shadow)。 */
   box-shadow: var(--aw-shadow);
+  /* 设置边角圆弧大小；取值 16px。 */
   border-radius: 16px;
 }
+/* 以下规则应用于 .auth-card h1 选中的元素。 */
 .auth-card h1 {
+  /* 设置字号；取值 24px。 */
   font-size: 24px;
 }
+/* 以下规则应用于 .auth-card .brand-mark 选中的元素。 */
 .auth-card .brand-mark {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */
   display: none;
 }
+/* 以下规则应用于 .brand-mark 选中的元素。 */
 .brand-mark {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand)。 */
   background: var(--aw-brand);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-on-brand)。 */
   color: var(--aw-on-brand);
 }
+/* 以下规则应用于 .auth-card .submit 选中的元素。 */
 .auth-card .submit {
+  /* 设置高度；取值 40px。 */
   height: 40px;
 }
+/* 以下规则应用于 .auth-link 选中的元素。 */
 .auth-link {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置下方外侧留白；取值 0。 */
   margin-bottom: 0;
 }
+/* 以下规则应用于 .auth-card .el-form 选中的元素。 */
 .auth-card .el-form {
+  /* 设置上方外侧留白；取值 24px。 */
   margin-top: 24px;
 }
+/* 以下规则应用于 .auth-footer 选中的元素。 */
 .auth-footer {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置文字横向对齐方式；取值 center。 */
   text-align: center;
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置上方外侧留白；取值 24px。 */
   margin-top: 24px;
 }
+/* 以下规则应用于 .running-summary 选中的元素。 */
 .running-summary {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置边框颜色；取值 var(—aw-border-strong)。 */
   border-color: var(--aw-border-strong);
 }
+/* 以下规则应用于 .dashboard-focus 选中的元素。 */
 .dashboard-focus {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
   justify-content: space-between;
+  /* 设置相邻布局条目之间的间隔；取值 24px。 */
   gap: 24px;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
 }
+/* 以下规则应用于 .dashboard-focus-copy 选中的元素。 */
 .dashboard-focus-copy {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
   align-items: flex-start;
+  /* 设置相邻布局条目之间的间隔；取值 16px。 */
   gap: 16px;
 }
+/* 以下规则应用于 .dashboard-focus-icon 选中的元素。 */
 .dashboard-focus-icon {
+  /* 设置宽度；取值 48px。 */
   width: 48px;
+  /* 设置高度；取值 48px。 */
   height: 48px;
+  /* 设置空间不足时条目缩小的比例；取值 0。 */
   flex-shrink: 0;
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
 }
+/* 以下规则应用于 .dashboard-focus h2 选中的元素。 */
 .dashboard-focus h2 {
+  /* 设置元素外侧留白；取值 0 0 4px。 */
   margin: 0 0 4px;
 }
+/* 以下规则应用于 .dashboard-focus p 选中的元素。 */
 .dashboard-focus p {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .dashboard-focus .toolbar 选中的元素。 */
 .dashboard-focus .toolbar {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .dashboard-grid 选中的元素。 */
 .dashboard-grid {
+  /* 设置网格列数和各列宽度；取值 minmax(0, 1.3fr) minmax(0, 1fr)。 */
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
 }
+/* 以下规则应用于 .goal-grid 选中的元素。 */
 .goal-grid {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置网格列数和各列宽度；取值 repeat(3, minmax(0, 1fr))。 */
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* 设置相邻布局条目之间的间隔；取值 16px。 */
   gap: 16px;
 }
+/* 以下规则应用于 .goal-card 选中的元素。 */
 .goal-card {
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
+  /* 设置内容与边框之间的内侧留白；取值 20px。 */
   padding: 20px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .goal-card-heading 选中的元素。 */
 .goal-card-heading {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
   justify-content: space-between;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
   align-items: flex-start;
+  /* 设置下方外侧留白；取值 16px。 */
   margin-bottom: 16px;
 }
+/* 以下规则应用于 .goal-card-heading .el-button 选中的元素。 */
 .goal-card-heading .el-button {
+  /* 决定空白和换行如何保留；取值 normal。 */
   white-space: normal;
+  /* 设置文字横向对齐方式；取值 left。 */
   text-align: left;
+  /* 设置字号；取值 16px。 */
   font-size: 16px;
+  /* 设置每行文字的高度；取值 24px。 */
   line-height: 24px;
+  /* 设置高度；取值 auto。 */
   height: auto;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .goal-card-dates 选中的元素。 */
 .goal-card-dates {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置下方外侧留白；取值 20px。 */
   margin-bottom: 20px;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
 }
+/* 以下规则应用于 .goal-card .toolbar 选中的元素。 */
 .goal-card .toolbar {
+  /* 设置元素外侧留白；取值 16px 0 0。 */
   margin: 16px 0 0;
+  /* 设置顶部内侧留白；取值 16px。 */
   padding-top: 16px;
+  /* 设置顶部边框；取值 1px solid var(—aw-border)。 */
   border-top: 1px solid var(--aw-border);
 }
+/* 以下规则应用于 .view-density 选中的元素。 */
 .view-density {
+  /* 设置左侧外侧留白；取值 auto。 */
   margin-left: auto;
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 4px。 */
   gap: 4px;
+  /* 设置内容与边框之间的内侧留白；取值 4px。 */
   padding: 4px;
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 .view-density .el-button 选中的元素。 */
 .view-density .el-button {
+  /* 设置左侧外侧留白；取值 0。 */
   margin-left: 0;
+  /* 设置内容与边框之间的内侧留白；取值 6px。 */
   padding: 6px;
+  /* 限制最小高度；取值 28px。 */
   min-height: 28px;
 }
+/* 以下规则应用于 .week-strip 选中的元素。 */
 .week-strip {
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置元素外侧留白；取值 24px 0。 */
   margin: 24px 0;
 }
+/* 以下规则应用于 .day-tile 选中的元素。 */
 .day-tile {
+  /* 设置内容与边框之间的内侧留白；取值 16px 8px。 */
   padding: 16px 8px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置边框颜色；取值 var(—aw-border)。 */
   border-color: var(--aw-border);
+  /* 设置边角圆弧大小；取值 8px。 */
   border-radius: 8px;
 }
+/* 以下规则应用于 .day-tile.today 选中的元素。 */
 .day-tile.today {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置边框颜色；取值 var(—aw-brand)。 */
   border-color: var(--aw-brand);
 }
+/* 以下规则应用于 .day-tile:hover:not(:disabled) 选中的元素。 */
 .day-tile:hover:not(:disabled) {
+  /* 对显示位置、角度或缩放做变换；取值 translateY(-2px)。 */
   transform: translateY(-2px);
+  /* 设置元素投影；取值 none。 */
   box-shadow: none;
+  /* 设置边框颜色；取值 var(—aw-brand)。 */
   border-color: var(--aw-brand);
 }
+/* 以下规则应用于 .week-task-list 选中的元素。 */
 .week-task-list {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置上方外侧留白；取值 12px。 */
   margin-top: 12px;
 }
+/* 以下规则应用于 .day-tile-open 选中的元素。 */
 .day-tile-open {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置边框宽度、线型与颜色；取值 0。 */
   border: 0;
+  /* 设置背景颜色、图片或渐变；取值 transparent。 */
   background: transparent;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置鼠标移上来时的指针形状；取值 pointer。 */
   cursor: pointer;
+  /* 设置内容与边框之间的内侧留白；取值 0。 */
   padding: 0;
+  /* 设置宽度；取值 100%。 */
   width: 100%;
 }
+/* 以下规则应用于 .day-tile 选中的元素。 */
 .day-tile {
+  /* 设置鼠标移上来时的指针形状；取值 default。 */
   cursor: default;
 }
+/* 以下规则应用于 .week-strip > .day-tile 选中的元素。 */
 .week-strip > .day-tile {
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 stretch。 */
   align-items: stretch;
+  /* 设置条目在主方向上的对齐与空余空间分配；取值 flex-start。 */
   justify-content: flex-start;
 }
+/* 以下规则应用于 .week-undated 选中的元素。 */
 .week-undated {
+  /* 设置元素外侧留白；取值 16px 0 24px。 */
   margin: 16px 0 24px;
 }
+/* 以下规则应用于 .week-undated .plan-list-heading 选中的元素。 */
 .week-undated .plan-list-heading {
+  /* 设置元素外侧留白；取值 0 0 12px。 */
   margin: 0 0 12px;
 }
+/* 以下规则应用于 .week-undated .toolbar 选中的元素。 */
 .week-undated .toolbar {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .week-task-list 选中的元素。 */
 .week-task-list {
+  /* 限制最大高度；取值 360px。 */
   max-height: 360px;
+  /* 决定纵向超出时的处理；取值 auto。 */
   overflow-y: auto;
 }
+/* 以下规则应用于 .el-table .el-dropdown 选中的元素。 */
 .el-table .el-dropdown {
+  /* 设置 CSS 属性 vertical-align；取值 middle。 */
   vertical-align: middle;
 }
+/* 以下规则应用于 .week-task-chip 选中的元素。 */
 .week-task-chip {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
   align-items: flex-start;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置相邻布局条目之间的间隔；取值 4px。 */
   gap: 4px;
+  /* 设置内容与边框之间的内侧留白；取值 8px。 */
   padding: 8px;
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置边角圆弧大小；取值 6px。 */
   border-radius: 6px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置文字横向对齐方式；取值 left。 */
   text-align: left;
+  /* 设置宽度；取值 100%。 */
   width: 100%;
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
 }
+/* 以下规则应用于 .week-task-chip strong 选中的元素。 */
 .week-task-chip strong {
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置每行文字的高度；取值 18px。 */
   line-height: 18px;
+  /* 设置 CSS 属性 overflow-wrap；取值 anywhere。 */
   overflow-wrap: anywhere;
 }
+/* 以下规则应用于 .week-task-chip small 选中的元素。 */
 .week-task-chip small {
+  /* 设置字号；取值 11px。 */
   font-size: 11px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .plan-list-heading 选中的元素。 */
 .plan-list-heading {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置元素外侧留白；取值 24px 0 16px。 */
   margin: 24px 0 16px;
 }
+/* 以下规则应用于 .plan-list-heading h3 选中的元素。 */
 .plan-list-heading h3 {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .focus-card 选中的元素。 */
 .focus-card {
+  /* 设置边角圆弧大小；取值 16px。 */
   border-radius: 16px;
+  /* 设置元素投影；取值 none。 */
   box-shadow: none;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置内容与边框之间的内侧留白；取值 32px。 */
   padding: 32px;
 }
+/* 以下规则应用于 .focus-clock 选中的元素。 */
 .focus-clock {
+  /* 设置字号；取值 clamp(48px, 6vw, 64px)。 */
   font-size: clamp(48px, 6vw, 64px);
+  /* 设置每行文字的高度；取值 1.1。 */
   line-height: 1.1;
+  /* 设置字重；取值 600。 */
   font-weight: 600;
+  /* 设置字符之间的间距；取值 -0.04em。 */
   letter-spacing: -0.04em;
+  /* 设置元素外侧留白；取值 40px 0 16px。 */
   margin: 40px 0 16px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .focus-clock.idle 选中的元素。 */
 .focus-clock.idle {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-tertiary)。 */
   color: var(--aw-text-tertiary);
 }
+/* 以下规则应用于 .focus-card .eyebrow 选中的元素。 */
 .focus-card .eyebrow {
+  /* 设置文字横向对齐方式；取值 center。 */
   text-align: center;
 }
+/* 以下规则应用于 .focus-card .toolbar 选中的元素。 */
 .focus-card .toolbar {
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
 }
+/* 以下规则应用于 .focus-card .toolbar > .el-button 选中的元素。 */
 .focus-card .toolbar > .el-button {
+  /* 限制最小高度；取值 40px。 */
   min-height: 40px;
+  /* 设置内容与边框之间的内侧留白；取值 8px 24px。 */
   padding: 8px 24px;
 }
+/* 以下规则应用于 .execution-bar 选中的元素。 */
 .execution-bar {
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
+  /* 设置元素投影；取值 var(—aw-shadow-float)。 */
   box-shadow: var(--aw-shadow-float);
+  /* 设置边框颜色；取值 var(—aw-border-strong)。 */
   border-color: var(--aw-border-strong);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置下侧定位距离；取值 20px。 */
   bottom: 20px;
+  /* 设置右侧定位距离；取值 24px。 */
   right: 24px;
+  /* 设置内容与边框之间的内侧留白；取值 12px 16px。 */
   padding: 12px 16px;
 }
+/* 以下规则应用于 .execution-bar-label 选中的元素。 */
 .execution-bar-label {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */
   color: var(--aw-text);
 }
+/* 以下规则应用于 .execution-bar-label strong 选中的元素。 */
 .execution-bar-label strong {
+  /* 设置字号；取值 18px。 */
   font-size: 18px;
+  /* 设置每行文字的高度；取值 26px。 */
   line-height: 26px;
 }
+/* 以下规则应用于 .running-dot 选中的元素。 */
 .running-dot {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-success)。 */
   background: var(--aw-success);
 }
+/* 以下规则应用于 .habit-check-row 选中的元素。 */
 .habit-check-row {
+  /* 设置边角圆弧大小；取值 var(—aw-radius-input)。 */
   border-radius: var(--aw-radius-input);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置边框颜色；取值 var(—aw-border)。 */
   border-color: var(--aw-border);
+  /* 设置内容与边框之间的内侧留白；取值 16px。 */
   padding: 16px;
 }
+/* 以下规则应用于 .habit-check-row.checked 选中的元素。 */
 .habit-check-row.checked {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-success-soft)。 */
   background: var(--aw-success-soft);
 }
+/* 以下规则应用于 .habit-group + .habit-group 选中的元素。 */
 .habit-group + .habit-group {
+  /* 设置上方外侧留白；取值 24px。 */
   margin-top: 24px;
 }
+/* 以下规则应用于 .habit-group .section-heading h3 选中的元素。 */
 .habit-group .section-heading h3 {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .habit-row-copy 选中的元素。 */
 .habit-row-copy {
+  /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */
   flex: 1;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .habit-check-row .toolbar 选中的元素。 */
 .habit-check-row .toolbar {
+  /* 设置元素外侧留白；取值 0。 */
   margin: 0;
 }
+/* 以下规则应用于 .selected-task 选中的元素。 */
 .selected-task {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */
   display: inline-flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .notice-list 选中的元素。 */
 .notice-list {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 条目的排列方向；取值 column。 */
   flex-direction: column;
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
 }
+/* 以下规则应用于 .notice-row 选中的元素。 */
 .notice-row {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 16px。 */
   gap: 16px;
+  /* 设置内容与边框之间的内侧留白；取值 20px。 */
   padding: 20px;
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
 }
+/* 以下规则应用于 .notice-row.unread 选中的元素。 */
 .notice-row.unread {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-brand-soft)。 */
   background: var(--aw-brand-soft);
+  /* 设置边框颜色；取值 color-mix(in srgb, var(—aw-brand) 24%, var(—aw-border))。 */
   border-color: color-mix(in srgb, var(--aw-brand) 24%, var(--aw-border));
 }
+/* 以下规则应用于 .notice-icon 选中的元素。 */
 .notice-icon {
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */
   color: var(--aw-brand);
+  /* 设置顶部内侧留白；取值 4px。 */
   padding-top: 4px;
 }
+/* 以下规则应用于 .notice-copy 选中的元素。 */
 .notice-copy {
+  /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */
   flex: 1;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .notice-copy .el-button 选中的元素。 */
 .notice-copy .el-button {
+  /* 决定空白和换行如何保留；取值 normal。 */
   white-space: normal;
+  /* 设置文字横向对齐方式；取值 left。 */
   text-align: left;
+  /* 设置高度；取值 auto。 */
   height: auto;
 }
+/* 以下规则应用于 .notice-copy h3 选中的元素。 */
 .notice-copy h3 {
+  /* 设置元素外侧留白；取值 0 0 4px。 */
   margin: 0 0 4px;
+  /* 设置字号；取值 16px。 */
   font-size: 16px;
+  /* 设置每行文字的高度；取值 24px。 */
   line-height: 24px;
 }
+/* 以下规则应用于 .notice-copy p 选中的元素。 */
 .notice-copy p {
+  /* 设置元素外侧留白；取值 8px 0。 */
   margin: 8px 0;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
+  /* 设置 CSS 属性 overflow-wrap；取值 anywhere。 */
   overflow-wrap: anywhere;
 }
+/* 以下规则应用于 .notice-actions 选中的元素。 */
 .notice-actions {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
   align-items: flex-start;
 }
+/* 以下规则应用于 .notice-meta 选中的元素。 */
 .notice-meta {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
   align-items: center;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
+  /* 设置相邻布局条目之间的间隔；取值 12px。 */
   gap: 12px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 639px)。 */
 @media (max-width: 639px) {
+  /* 以下规则应用于 .notice-row 选中的元素。 */
   .notice-row {
+    /* 设置内容与边框之间的内侧留白；取值 16px。 */
     padding: 16px;
+    /* 决定一行放不下时是否换行；取值 wrap。 */
     flex-wrap: wrap;
+    /* 设置相邻布局条目之间的间隔；取值 12px。 */
     gap: 12px;
   }
+  /* 以下规则应用于 .notice-actions 选中的元素。 */
   .notice-actions {
+    /* 设置计算伸缩前的基础尺寸；取值 100%。 */
     flex-basis: 100%;
+    /* 设置条目在主方向上的对齐与空余空间分配；取值 flex-end。 */
     justify-content: flex-end;
   }
+  /* 以下规则应用于 .habit-check-row > .toolbar 选中的元素。 */
   .habit-check-row > .toolbar {
+    /* 设置宽度；取值 100%。 */
     width: 100%;
+    /* 设置条目在主方向上的对齐与空余空间分配；取值 flex-end。 */
     justify-content: flex-end;
   }
 }
+/* 以下规则应用于 .habit-check-row strong 选中的元素。 */
 .habit-check-row strong {
+  /* 设置字重；取值 500。 */
   font-weight: 500;
+  /* 设置字号；取值 14px。 */
   font-size: 14px;
 }
+/* 以下规则应用于 .habit-check-row .habit-indicator 选中的元素。 */
 .habit-check-row .habit-indicator {
+  /* 设置宽度；取值 36px。 */
   width: 36px;
+  /* 设置高度；取值 36px。 */
   height: 36px;
+  /* 设置边角圆弧大小；取值 var(—aw-radius-input)。 */
   border-radius: var(--aw-radius-input);
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-accent)。 */
   color: var(--aw-accent);
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-success-soft)。 */
   background: var(--aw-success-soft);
 }
+/* 以下规则应用于 .report-chart 选中的元素。 */
 .report-chart {
+  /* 限制最小高度；取值 260px。 */
   min-height: 260px;
 }
+/* 以下规则应用于 .chart-panel 选中的元素。 */
 .chart-panel {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
 }
+/* 以下规则应用于 .duration-block, .criteria, .notice-content, .inset-metric 选中的元素。 */
 .duration-block,
 .criteria,
 .notice-content,
 .inset-metric {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface-muted)。 */
   background: var(--aw-surface-muted);
+  /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */
   border: 1px solid var(--aw-border);
 }
+/* 以下规则应用于 .inline-error 选中的元素。 */
 .inline-error {
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-danger-soft)。 */
   background: var(--aw-danger-soft);
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-danger)。 */
   color: var(--aw-danger);
 }
+/* 以下规则应用于 .timeline-fact 选中的元素。 */
 .timeline-fact {
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
+  /* 设置背景颜色、图片或渐变；取值 var(—aw-surface)。 */
   background: var(--aw-surface);
 }
+/* 以下规则应用于 .record-meta 选中的元素。 */
 .record-meta {
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */
   display: flex;
+  /* 决定一行放不下时是否换行；取值 wrap。 */
   flex-wrap: wrap;
+  /* 设置相邻布局条目之间的间隔；取值 8px。 */
   gap: 8px;
+  /* 设置字号；取值 12px。 */
   font-size: 12px;
+  /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */
   color: var(--aw-text-secondary);
 }
+/* 以下规则应用于 .el-table__empty-text .aw-empty 选中的元素。 */
 .el-table__empty-text .aw-empty {
+  /* 设置内容与边框之间的内侧留白；取值 24px 16px。 */
   padding: 24px 16px;
 }
+/* 以下规则应用于 .el-table__empty-text 选中的元素。 */
 .el-table__empty-text {
+  /* 设置每行文字的高度；取值 normal。 */
   line-height: normal;
+  /* 设置宽度；取值 100%。 */
   width: 100%;
 }
+/* 以下规则应用于 .el-table__empty-text .aw-empty-icon 选中的元素。 */
 .el-table__empty-text .aw-empty-icon {
+  /* 设置宽度；取值 40px。 */
   width: 40px;
+  /* 设置高度；取值 40px。 */
   height: 40px;
+  /* 设置边角圆弧大小；取值 12px。 */
   border-radius: 12px;
 }
+/* 以下规则应用于 .el-table__empty-text .aw-empty p 选中的元素。 */
 .el-table__empty-text .aw-empty p {
+  /* 限制最大宽度；取值 320px。 */
   max-width: 320px;
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(min-width: 1440px)。 */
 @media (min-width: 1440px) {
+  /* 以下规则应用于 .content 选中的元素。 */
   .content {
+    /* 设置内容与边框之间的内侧留白；取值 28px 32px。 */
     padding: 28px 32px;
   }
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 1199px)。 */
 @media (max-width: 1199px) {
+  /* 以下规则应用于 .goal-grid 选中的元素。 */
   .goal-grid {
+    /* 设置网格列数和各列宽度；取值 repeat(2, minmax(0, 1fr))。 */
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* 以下规则应用于 .content 选中的元素。 */
   .content {
+    /* 设置内容与边框之间的内侧留白；取值 20px。 */
     padding: 20px;
   }
+  /* 以下规则应用于 .metrics-grid.four 选中的元素。 */
   .metrics-grid.four {
+    /* 设置网格列数和各列宽度；取值 repeat(2, minmax(0, 1fr))。 */
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* 以下规则应用于 .dashboard-grid 选中的元素。 */
   .dashboard-grid {
+    /* 设置网格列数和各列宽度；取值 1fr。 */
     grid-template-columns: 1fr;
+    /* 设置相邻布局条目之间的间隔；取值 0。 */
     gap: 0;
   }
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 899px)。 */
 @media (max-width: 899px) {
+  /* 以下规则应用于 .sidebar, .sidebar.collapsed 选中的元素。 */
   .sidebar,
   .sidebar.collapsed {
+    /* 决定元素是否参与普通排版，以及按谁定位；取值 fixed。 */
     position: fixed;
+    /* 设置宽度；取值 var(—aw-sidebar-width)。 */
     width: var(--aw-sidebar-width) !important;
+    /* 设置重叠时的前后层级；取值 1200。 */
     z-index: 1200;
+    /* 设置左侧定位距离；取值 0。 */
     left: 0;
+    /* 设置上侧定位距离；取值 0。 */
     top: 0;
+    /* 设置下侧定位距离；取值 0。 */
     bottom: 0;
+    /* 设置高度；取值 100dvh。 */
     height: 100dvh;
+    /* 设置内容与边框之间的内侧留白；取值 20px 12px。 */
     padding: 20px 12px;
   }
+  /* 以下规则应用于 .sidebar.collapsed 选中的元素。 */
   .sidebar.collapsed {
+    /* 对显示位置、角度或缩放做变换；取值 translateX(-100%)。 */
     transform: translateX(-100%);
   }
+  /* 以下规则应用于 .sidebar:not(.collapsed) 选中的元素。 */
   .sidebar:not(.collapsed) {
+    /* 对显示位置、角度或缩放做变换；取值 translateX(0)。 */
     transform: translateX(0);
   }
+  /* 以下规则应用于 .sidebar .logo 选中的元素。 */
   .sidebar .logo {
+    /* 设置字号；取值 18px。 */
     font-size: 18px;
   }
+  /* 以下规则应用于 .sidebar .logo::after 选中的元素。 */
   .sidebar .logo::after {
+    /* 为伪元素提供要显示的内容；取值 none。 */
     content: none;
   }
+  /* 以下规则应用于 .sidebar-backdrop 选中的元素。 */
   .sidebar-backdrop {
+    /* 决定元素采用普通块、行内、Flex 或网格布局；取值 block。 */
     display: block;
+    /* 决定元素是否参与普通排版，以及按谁定位；取值 fixed。 */
     position: fixed;
+    /* 同时设置四个方向的定位距离；取值 0。 */
     inset: 0;
+    /* 设置重叠时的前后层级；取值 1199。 */
     z-index: 1199;
+    /* 设置边框宽度、线型与颜色；取值 0。 */
     border: 0;
   }
+  /* 以下规则应用于 .workspace 选中的元素。 */
   .workspace {
+    /* 设置宽度；取值 100%。 */
     width: 100%;
   }
+  /* 以下规则应用于 .topbar 选中的元素。 */
   .topbar {
+    /* 设置内容与边框之间的内侧留白；取值 0 20px。 */
     padding: 0 20px;
+    /* 设置高度；取值 64px。 */
     height: 64px;
+    /* 限制最小高度；取值 64px。 */
     min-height: 64px;
+    /* 决定一行放不下时是否换行；取值 nowrap。 */
     flex-wrap: nowrap;
   }
+  /* 以下规则应用于 .auth-layout 选中的元素。 */
   .auth-layout {
+    /* 设置网格列数和各列宽度；取值 1fr。 */
     grid-template-columns: 1fr;
+    /* 限制最大宽度；取值 440px。 */
     max-width: 440px;
+    /* 设置相邻布局条目之间的间隔；取值 24px。 */
     gap: 24px;
   }
+  /* 以下规则应用于 .auth-intro 选中的元素。 */
   .auth-intro {
+    /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */
     display: none;
   }
+  /* 以下规则应用于 .theme-label 选中的元素。 */
   .theme-label {
+    /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */
     display: none;
   }
+  /* 以下规则应用于 .top-actions 选中的元素。 */
   .top-actions {
+    /* 设置相邻布局条目之间的间隔；取值 8px。 */
     gap: 8px;
   }
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 639px)。 */
 @media (max-width: 639px) {
+  /* 以下规则应用于 .content 选中的元素。 */
   .content {
+    /* 设置内容与边框之间的内侧留白；取值 16px。 */
     padding: 16px;
   }
+  /* 以下规则应用于 .card 选中的元素。 */
   .card {
+    /* 设置内容与边框之间的内侧留白；取值 16px。 */
     padding: 16px;
+    /* 设置下方外侧留白；取值 16px。 */
     margin-bottom: 16px;
   }
+  /* 以下规则应用于 .topbar 选中的元素。 */
   .topbar {
+    /* 设置内容与边框之间的内侧留白；取值 0 12px。 */
     padding: 0 12px;
+    /* 设置相邻布局条目之间的间隔；取值 8px。 */
     gap: 8px;
   }
+  /* 以下规则应用于 .topbar .el-breadcrumb 选中的元素。 */
   .topbar .el-breadcrumb {
+    /* 设置字号；取值 12px。 */
     font-size: 12px;
   }
+  /* 以下规则应用于 .topbar .el-breadcrumb__item:not(:last-child) 选中的元素。 */
   .topbar .el-breadcrumb__item:not(:last-child) {
+    /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */
     display: none;
   }
+  /* 以下规则应用于 .top-actions 选中的元素。 */
   .top-actions {
+    /* 设置相邻布局条目之间的间隔；取值 4px。 */
     gap: 4px;
   }
+  /* 以下规则应用于 .user-trigger > span:last-child 选中的元素。 */
   .user-trigger > span:last-child {
+    /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */
     display: none;
   }
+  /* 以下规则应用于 .page-heading 选中的元素。 */
   .page-heading {
+    /* 设置下方外侧留白；取值 20px。 */
     margin-bottom: 20px;
   }
+  /* 以下规则应用于 .aw-page-header 选中的元素。 */
   .aw-page-header {
+    /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
     align-items: flex-start;
+    /* 设置 Flex 条目的排列方向；取值 column。 */
     flex-direction: column;
+    /* 设置相邻布局条目之间的间隔；取值 12px。 */
     gap: 12px;
   }
+  /* 以下规则应用于 .personal-hero h2, .growth-hero h2 选中的元素。 */
   .personal-hero h2,
   .growth-hero h2 {
+    /* 设置字号；取值 20px。 */
     font-size: 20px;
+    /* 设置每行文字的高度；取值 28px。 */
     line-height: 28px;
   }
+  /* 以下规则应用于 .metrics-grid, .metrics-grid.four, .stats, .goal-grid, .report-charts 选中的元素。 */
   .metrics-grid,
   .metrics-grid.four,
   .stats,
   .goal-grid,
   .report-charts {
+    /* 设置网格列数和各列宽度；取值 1fr。 */
     grid-template-columns: 1fr;
+    /* 设置相邻布局条目之间的间隔；取值 12px。 */
     gap: 12px;
   }
+  /* 以下规则应用于 .metric.card 选中的元素。 */
   .metric.card {
+    /* 设置内容与边框之间的内侧留白；取值 16px。 */
     padding: 16px;
   }
+  /* 以下规则应用于 .dashboard-focus-copy 选中的元素。 */
   .dashboard-focus-copy {
+    /* 设置相邻布局条目之间的间隔；取值 12px。 */
     gap: 12px;
   }
+  /* 以下规则应用于 .dashboard-focus .toolbar 选中的元素。 */
   .dashboard-focus .toolbar {
+    /* 设置宽度；取值 100%。 */
     width: 100%;
   }
+  /* 以下规则应用于 .dashboard-focus .toolbar .el-button 选中的元素。 */
   .dashboard-focus .toolbar .el-button {
+    /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */
     flex: 1;
   }
+  /* 以下规则应用于 .form-grid 选中的元素。 */
   .form-grid {
+    /* 设置网格列数和各列宽度；取值 1fr。 */
     grid-template-columns: 1fr;
   }
+  /* 以下规则应用于 .toolbar > .el-input, .toolbar > .el-select, .toolbar .el-date-editor 选中的元素。 */
   .toolbar > .el-input,
   .toolbar > .el-select,
   .toolbar .el-date-editor {
+    /* 设置宽度；取值 100%。 */
     width: 100%;
+    /* 限制最大宽度；取值 100%。 */
     max-width: 100%;
   }
+  /* 以下规则应用于 .week-strip 选中的元素。 */
   .week-strip {
+    /* 设置网格列数和各列宽度；取值 1fr。 */
     grid-template-columns: 1fr;
   }
+  /* 以下规则应用于 .day-tile 选中的元素。 */
   .day-tile {
+    /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 flex-start。 */
     align-items: flex-start;
+    /* 设置 Flex 条目的排列方向；取值 row。 */
     flex-direction: row;
+    /* 决定一行放不下时是否换行；取值 wrap。 */
     flex-wrap: wrap;
+    /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
     justify-content: space-between;
+    /* 设置内容与边框之间的内侧留白；取值 12px。 */
     padding: 12px;
   }
+  /* 以下规则应用于 .day-tile-open 选中的元素。 */
   .day-tile-open {
+    /* 设置 Flex 条目的排列方向；取值 row。 */
     flex-direction: row;
+    /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */
     justify-content: space-between;
+    /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */
     align-items: center;
+    /* 设置相邻布局条目之间的间隔；取值 8px。 */
     gap: 8px;
   }
+  /* 以下规则应用于 .week-task-list 选中的元素。 */
   .week-task-list {
+    /* 设置宽度；取值 100%。 */
     width: 100%;
+    /* 设置上方外侧留白；取值 4px。 */
     margin-top: 4px;
   }
+  /* 以下规则应用于 .focus-card 选中的元素。 */
   .focus-card {
+    /* 设置内容与边框之间的内侧留白；取值 24px 16px。 */
     padding: 24px 16px;
   }
+  /* 以下规则应用于 .focus-card .toolbar .el-button 选中的元素。 */
   .focus-card .toolbar .el-button {
+    /* 设置内容与边框之间的内侧留白；取值 8px 16px。 */
     padding: 8px 16px;
   }
+  /* 以下规则应用于 .execution-bar 选中的元素。 */
   .execution-bar {
+    /* 设置左侧定位距离；取值 12px。 */
     left: 12px;
+    /* 设置右侧定位距离；取值 12px。 */
     right: 12px;
+    /* 设置下侧定位距离；取值 max(12px, env(safe-area-inset-bottom))。 */
     bottom: max(12px, env(safe-area-inset-bottom));
+    /* 设置相邻布局条目之间的间隔；取值 8px。 */
     gap: 8px;
   }
+  /* 以下规则应用于 .has-execution .content 选中的元素。 */
   .has-execution .content {
+    /* 设置底部内侧留白；取值 180px。 */
     padding-bottom: 180px;
   }
+  /* 以下规则应用于 .auth-page 选中的元素。 */
   .auth-page {
+    /* 设置内容与边框之间的内侧留白；取值 72px 16px 24px。 */
     padding: 72px 16px 24px;
   }
+  /* 以下规则应用于 .auth-card 选中的元素。 */
   .auth-card {
+    /* 设置内容与边框之间的内侧留白；取值 24px。 */
     padding: 24px;
   }
+  /* 以下规则应用于 .auth-theme 选中的元素。 */
   .auth-theme {
+    /* 设置上侧定位距离；取值 16px。 */
     top: 16px;
+    /* 设置右侧定位距离；取值 16px。 */
     right: 16px;
   }
+  /* 以下规则应用于 .el-descriptions__table 选中的元素。 */
   .el-descriptions__table {
+    /* 设置 CSS 属性 table-layout；取值 fixed。 */
     table-layout: fixed;
+    /* 决定长单词或连续文字何时允许折行；取值 break-word。 */
     word-break: break-word;
   }
+  /* 以下规则应用于 .view-density 选中的元素。 */
   .view-density {
+    /* 设置左侧外侧留白；取值 0。 */
     margin-left: 0;
   }
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(prefers-reduced-motion: reduce)。 */
 @media (prefers-reduced-motion: reduce) {
+  /* 以下规则应用于 *, *::before, *::after 选中的元素。 */
   *,
   *::before,
   *::after {
+    /* 设置 CSS 属性 animation-duration；取值 0.01ms。 */
     animation-duration: 0.01ms !important;
+    /* 设置属性变化时的过渡；取值 none。 */
     transition: none !important;
+    /* 设置 CSS 属性 scroll-behavior；取值 auto。 */
     scroll-behavior: auto !important;
   }
+  /* 以下规则应用于 .day-tile:hover:not(:disabled), .el-button:not(.is-disabled):active 选中的元素。 */
   .day-tile:hover:not(:disabled),
   .el-button:not(.is-disabled):active {
+    /* 对显示位置、角度或缩放做变换；取值 none。 */
     transform: none;
   }
 }
 
 /* 空图表保留尺寸，避免将无分母的完成率误画成零。 */
+/* 以下规则应用于 .report-chart-wrap 选中的元素。 */
 .report-chart-wrap {
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 relative。 */
   position: relative;
+  /* 限制最小宽度；取值 0。 */
   min-width: 0;
 }
+/* 以下规则应用于 .report-chart.is-empty 选中的元素。 */
 .report-chart.is-empty {
+  /* 设置 CSS 属性 visibility；取值 hidden。 */
   visibility: hidden;
 }
+/* 以下规则应用于 .chart-empty-state 选中的元素。 */
 .chart-empty-state {
+  /* 决定元素是否参与普通排版，以及按谁定位；取值 absolute。 */
   position: absolute;
+  /* 同时设置四个方向的定位距离；取值 0。 */
   inset: 0;
+  /* 决定元素采用普通块、行内、Flex 或网格布局；取值 grid。 */
   display: grid;
+  /* 设置 CSS 属性 place-items；取值 center。 */
   place-items: center;
 }

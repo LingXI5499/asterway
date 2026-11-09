@@ -1,53 +1,97 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.agent.mapper.PlanCommitMapper。 -->
 <mapper namespace="com.asterway.agent.mapper.PlanCommitMapper">
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findByKeyForUpdate，resultType=java.util.Map。 -->
     <select id="findByKeyForUpdate" resultType="java.util.Map">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,run_id,plan_version_id,idempotency_key,request_hash,status,attempts,
+            <!-- 继续列出本次使用的字段：错误编码（error_code）、错误消息（error_message）。 -->
             result::text AS result_json,error_code,error_message
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM agent.plan_commit WHERE idempotency_key=#{idempotencyKey} FOR UPDATE
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findConfirmedPlan，resultType=java.util.Map。 -->
     <select id="findConfirmedPlan" resultType="java.util.Map">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT p.snapshot::text AS snapshot_json, p.status AS plan_status,
+            <!-- 继续列出本次使用的字段：r状态作为方案运行状态（r.status AS run_status）、r中的最新方案版本号编号（r.latest_plan_version_id）。 -->
             r.status AS run_status, r.latest_plan_version_id,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             r.expires_at &lt;= clock_timestamp() AS expired
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM agent.plan_version p
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN agent.workflow_run r ON r.id=p.run_id AND r.user_id=p.user_id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN agent.conversation c ON c.id=r.conversation_id AND c.user_id=r.user_id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE p.id=#{planVersionId} AND p.run_id=#{runId} AND p.user_id=#{userId}
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND c.deleted_at IS NULL AND c.status='ACTIVE'
+        <!-- 继续列出本次使用的字段：p。 -->
         FOR UPDATE OF r,p
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert，parameterType=map。 -->
     <insert id="insert" parameterType="map" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        <!-- 向 agent.plan_commit 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO agent.plan_commit(user_id,run_id,plan_version_id,idempotency_key,request_hash,
+            <!-- 继续列出本次使用的字段：状态（status）、尝试次数（attempts）。 -->
             status,attempts,result)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{runId},#{planVersionId},#{idempotencyKey},#{requestHash},'PENDING',0,'{}'::jsonb)
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=markRunning。 -->
     <update id="markRunning">
+        <!-- 先定义可复用的临时查询结果，后续语句继续引用它。 -->
         WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE agent.plan_commit SET status='RUNNING',attempts=attempts+1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             started_at=GREATEST(stamp.at,created_at,updated_at),finished_at=NULL,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             error_code=NULL,error_message=NULL,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=GREATEST(stamp.at,created_at,updated_at),version=version+1
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stamp
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND status IN ('PENDING','FAILED') AND attempts&lt;#{maxAttempts}
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=markSucceeded。 -->
     <update id="markSucceeded">
+        <!-- 先定义可复用的临时查询结果，后续语句继续引用它。 -->
         WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE agent.plan_commit SET status='SUCCEEDED',
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             finished_at=GREATEST(stamp.at,created_at,updated_at,started_at),
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             result=#{resultJson}::jsonb,error_code=NULL,error_message=NULL,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=GREATEST(stamp.at,created_at,updated_at,started_at),version=version+1
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stamp
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND status='RUNNING'
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=markFailed。 -->
     <update id="markFailed">
+        <!-- 先定义可复用的临时查询结果，后续语句继续引用它。 -->
         WITH stamp AS MATERIALIZED (SELECT clock_timestamp() AS at)
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE agent.plan_commit SET status='FAILED',
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             started_at=GREATEST(stamp.at,created_at,updated_at),
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             finished_at=GREATEST(stamp.at,created_at,updated_at),attempts=attempts+1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             error_code=#{errorCode},error_message=#{errorMessage},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=GREATEST(stamp.at,created_at,updated_at),version=version+1
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM stamp
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id} AND status IN ('PENDING','FAILED') AND attempts&lt;10
     </update>
 </mapper>

@@ -1,122 +1,242 @@
+/* 定义工作区的页面样式，具体选择器说明哪些元素应用这些显示规则。 */
 /* 工作区共用布局。页面共享主题，业务内容保持各自的阅读密度。 */
-html { font-size: 14px; }
-body { font-size: 14px; line-height: 20px; -webkit-font-smoothing: antialiased; }
-button, input, textarea, select { font-family: var(--aw-font); }
-h1, h2, h3 { text-wrap: balance; }
-h2 { line-height: 28px; }
-strong { font-weight: 600; }
-.shell { min-height: 100dvh; }
-.sidebar, .sidebar.collapsed { padding: 16px 12px 12px; background: var(--aw-sidebar); border: 0; overflow: hidden; }
-.sidebar-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; margin-bottom: 24px; }
-.sidebar .logo, .sidebar.collapsed .logo { gap: 8px; padding: 0 4px; overflow: visible; }
-.brand-symbol { width: 28px; height: 28px; background: var(--aw-text); color: var(--aw-bg); border-radius: 8px; font-size: 18px; line-height: 28px; }
-.brand-copy { font-size: 18px; line-height: 28px; letter-spacing: -0.04em; }
-.brand-copy small { font-size: 12px; line-height: 16px; letter-spacing: 0; font-weight: 400; }
-.sidebar-close.icon-button { width: 28px; height: 32px; padding: 4px; color: var(--aw-text-secondary); }
-.sidebar-scroll { min-height: 0; min-width: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
-.sidebar .workspace-nav { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-.nav-group { min-width: 0; }
-.nav-group-label { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--aw-text-secondary); letter-spacing: 0; margin: 8px 12px; }
-.sidebar .workspace-nav-link { display: flex; align-items: center; gap: 12px; height: 36px; padding: 8px 12px; margin: 2px 0; border-radius: 8px; font-size: 14px; line-height: 20px; color: var(--aw-text); white-space: nowrap; }
-.sidebar .workspace-nav-link:hover, .sidebar .workspace-nav-link.router-link-active, .sidebar .workspace-nav-link.selected { color: var(--aw-text); background: color-mix(in srgb, var(--aw-text) 7%, transparent); }
-.sidebar .workspace-nav-link.selected { font-weight: 600; }
-.workspace-nav-link .aw-icon { color: var(--aw-text-secondary); }
-.workspace-nav-link.selected .aw-icon { color: var(--aw-brand); }
-.sidebar.collapsed .workspace-nav-link { justify-content: center; padding: 8px; }
-.sidebar-conversations { min-width: 0; flex-shrink: 0; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--aw-border); }
-.sidebar-scroll { scrollbar-color: var(--aw-border-strong) transparent; }
-.sidebar-resize-handle { position: absolute; top: 0; right: 0; bottom: 0; width: 8px; z-index: 3; cursor: col-resize; touch-action: none; outline-offset: -2px; }
-.sidebar-resize-handle::after { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 2px; background: transparent; }
-.sidebar-resize-handle:hover::after, .sidebar-resize-handle:focus-visible::after, .is-resizing .sidebar-resize-handle::after { background: var(--aw-brand); }
-.is-resizing, .is-resizing * { cursor: col-resize !important; user-select: none !important; }
-.sidebar-new-chat { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; margin: 0 0 16px; border: 1px solid var(--aw-border-strong); border-radius: 8px; background: transparent; color: var(--aw-text); font-size: 14px; line-height: 20px; cursor: pointer; text-align: left; }
-.sidebar-new-chat > :last-child { margin-left: auto; color: var(--aw-text-secondary); }
-.sidebar-new-chat:hover { background: var(--aw-bg); }
-.sidebar-new-chat:disabled { opacity: .5; cursor: not-allowed; }
-.sidebar-account { flex-shrink: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--aw-border); }
-.sidebar-account .el-dropdown { width: 100%; }
-.sidebar-user { display: flex; align-items: center; gap: 12px; padding: 8px; width: 100%; border: 0; background: transparent; border-radius: 8px; color: var(--aw-text); text-align: left; cursor: pointer; }
-.sidebar-user:hover { background: color-mix(in srgb, var(--aw-text) 5%, transparent); }
-.sidebar-user-copy { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 14px; line-height: 20px; }
-.sidebar-user-copy strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sidebar-user-copy small { color: var(--aw-text-secondary); font-size: 12px; line-height: 16px; }
-.avatar { background: var(--aw-border); color: var(--aw-text); font-size: 14px; line-height: 20px; }
-.sidebar.collapsed .sidebar-user { padding: 4px; }
-.topbar { height: var(--aw-topbar-height); min-height: var(--aw-topbar-height); padding: 0 24px; background: var(--aw-bg); border: 0; gap: 12px; }
-.topbar .el-breadcrumb { font-size: 14px; line-height: 20px; }
-.top-actions { gap: 8px; }
-.icon-button { border-radius: 8px; }
-.workspace-title { display: inline-flex; align-items: center; gap: 16px; font-weight: 600; font-size: 14px; line-height: 20px; }
-.workspace-title-caption { color: var(--aw-text-secondary); font-size: 12px; line-height: 16px; font-weight: 400; }
-.workspace { min-height: 100dvh; }
-.content { max-width: 1440px; padding: 16px 32px 32px; }
-.aw-page-header { margin-bottom: 24px; }
-.aw-page-header h1 { margin: 0; font-size: 24px; line-height: 32px; }
-.aw-page-header p { font-size: 14px; line-height: 20px; }
-.workspace-section-tabs { display: flex; gap: 8px; overflow-x: auto; margin: 0 0 24px; padding: 4px; width: fit-content; max-width: 100%; border: 1px solid var(--aw-border); border-radius: 12px; scrollbar-width: none; }
-.workspace-section-tabs a { flex-shrink: 0; padding: 8px 16px; border-radius: 8px; font-size: 14px; line-height: 20px; color: var(--aw-text-secondary); }
-.workspace-section-tabs a:hover { background: var(--aw-surface-muted); color: var(--aw-text); }
-.workspace-section-tabs a.selected { background: var(--aw-text); color: var(--aw-bg); }
-.card, .goal-card, .chart-panel, .el-card { border-radius: 12px; box-shadow: none; }
-.card, .goal-card { padding: 24px; }
-.card { margin-bottom: 16px; }
-.personal-hero, .growth-hero { background: transparent; padding: 0 0 24px; border: 0; border-radius: 0; margin-bottom: 16px; }
-.personal-hero h2, .growth-hero h2 { font-size: 20px; line-height: 28px; margin: 8px 0; }
-.personal-hero p, .growth-hero p { font-size: 14px; line-height: 20px; }
-.eyebrow { color: var(--aw-text-secondary); letter-spacing: 0; font-size: 12px; line-height: 16px; }
-.metric.card, .stat.card { padding: 16px 24px; }
-.metric > strong, .stat > strong { font-size: 30px; line-height: 36px; }
-.metric > span, .stat > span, .metric p { font-size: 12px; line-height: 16px; }
-.section-heading { margin-bottom: 16px; }
-.section-heading .toolbar { margin: 0; }
-.toolbar { margin-bottom: 16px; }
-.el-button { border-radius: 8px; font-size: 14px; line-height: 20px; font-weight: 500; padding: 8px 12px; }
-.el-button.is-text, .el-button.is-link { padding: 4px 8px; }
-.el-button--small { font-size: 12px; line-height: 16px; }
-.el-table { --el-table-header-bg-color: var(--aw-surface); }
-.el-table th.el-table__cell { font-size: 12px; line-height: 16px; font-weight: 500; }
-.el-table .cell { line-height: 20px; }
-.el-table__row:last-child td.el-table__cell { border-bottom: 0; }
-.el-input__wrapper, .el-select__wrapper, .el-textarea__inner { font-size: 14px; line-height: 20px; }
-.el-dialog, .el-message-box { box-shadow: var(--aw-shadow-float); }
-.assistant-shell { height: 100dvh; min-height: 0; overflow: hidden; }
-.assistant-shell .workspace { display: flex; flex-direction: column; height: 100dvh; min-height: 0; }
-.assistant-shell .topbar { flex-shrink: 0; }
-.assistant-shell .content, .assistant-shell.has-execution .content { flex: 1; min-height: 0; max-width: none; padding: 0; margin: 0; overflow: hidden; }
-.agent-resource-trigger > span { display: inline-flex; align-items: center; gap: 8px; }
-.agent-resource-drawer { background: var(--aw-bg); }
-.agent-resource-drawer .el-drawer__header { margin: 0; padding: 24px 24px 16px; }
-.agent-resource-drawer .el-drawer__title { font-size: 18px; line-height: 28px; }
-.agent-resource-drawer .el-drawer__body { padding: 16px 24px 24px; }
-.agent-resource-drawer .el-card__body { padding: 16px; }
-.agent-resource-drawer .el-form--inline { display: flex; gap: 8px; flex-wrap: wrap; }
-.agent-resource-drawer .el-form--inline .el-form-item { margin: 0 0 16px; max-width: 100%; }
-.agent-resource-drawer .el-date-editor { max-width: 100%; }
-.agent-resource-drawer .el-pagination { margin-top: 16px; }
-.agent-resource-drawer h2 { font-size: 20px; line-height: 28px; }
-.global-assistant-entry { position: fixed; right: 24px; bottom: 24px; z-index: 200; display: inline-flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: var(--aw-text); color: var(--aw-bg); box-shadow: var(--aw-shadow-float); font-size: 14px; line-height: 20px; font-weight: 500; }
-.global-assistant-entry:hover { transform: translateY(-2px); }
-.has-execution .global-assistant-entry { bottom: 112px; }
-@media (prefers-reduced-motion: no-preference) { .global-assistant-entry { transition: transform 300ms var(--aw-motion); } }
-@media (max-width: 1199px) { .content { padding: 16px 24px 24px; } }
+/* 以下规则应用于 html 选中的元素。 */
+html { /* 设置字号；取值 14px。 */ font-size: 14px; }
+/* 以下规则应用于 body 选中的元素。 */
+body { /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置 CSS 属性 -webkit-font-smoothing；取值 antialiased。 */ -webkit-font-smoothing: antialiased; }
+/* 以下规则应用于 button, input, textarea, select 选中的元素。 */
+button, input, textarea, select { /* 设置字体选择顺序；取值 var(—aw-font)。 */ font-family: var(--aw-font); }
+/* 以下规则应用于 h1, h2, h3 选中的元素。 */
+h1, h2, h3 { /* 设置 CSS 属性 text-wrap；取值 balance。 */ text-wrap: balance; }
+/* 以下规则应用于 h2 选中的元素。 */
+h2 { /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; }
+/* 以下规则应用于 strong 选中的元素。 */
+strong { /* 设置字重；取值 600。 */ font-weight: 600; }
+/* 以下规则应用于 .shell 选中的元素。 */
+.shell { /* 限制最小高度；取值 100dvh。 */ min-height: 100dvh; }
+/* 以下规则应用于 .sidebar, .sidebar.collapsed 选中的元素。 */
+.sidebar, .sidebar.collapsed { /* 设置内容与边框之间的内侧留白；取值 16px 12px 12px。 */ padding: 16px 12px 12px; /* 设置背景颜色、图片或渐变；取值 var(—aw-sidebar)。 */ background: var(--aw-sidebar); /* 设置边框宽度、线型与颜色；取值 0。 */ border: 0; /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */ overflow: hidden; }
+/* 以下规则应用于 .sidebar-brand 选中的元素。 */
+.sidebar-brand { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置条目在主方向上的对齐与空余空间分配；取值 space-between。 */ justify-content: space-between; /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; /* 设置下方外侧留白；取值 24px。 */ margin-bottom: 24px; }
+/* 以下规则应用于 .sidebar .logo, .sidebar.collapsed .logo 选中的元素。 */
+.sidebar .logo, .sidebar.collapsed .logo { /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; /* 设置内容与边框之间的内侧留白；取值 0 4px。 */ padding: 0 4px; /* 决定内容超出边界时显示、裁切还是滚动；取值 visible。 */ overflow: visible; }
+/* 以下规则应用于 .brand-symbol 选中的元素。 */
+.brand-symbol { /* 设置宽度；取值 28px。 */ width: 28px; /* 设置高度；取值 28px。 */ height: 28px; /* 设置背景颜色、图片或渐变；取值 var(—aw-text)。 */ background: var(--aw-text); /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-bg)。 */ color: var(--aw-bg); /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置字号；取值 18px。 */ font-size: 18px; /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; }
+/* 以下规则应用于 .brand-copy 选中的元素。 */
+.brand-copy { /* 设置字号；取值 18px。 */ font-size: 18px; /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; /* 设置字符之间的间距；取值 -0.04em。 */ letter-spacing: -0.04em; }
+/* 以下规则应用于 .brand-copy small 选中的元素。 */
+.brand-copy small { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; /* 设置字符之间的间距；取值 0。 */ letter-spacing: 0; /* 设置字重；取值 400。 */ font-weight: 400; }
+/* 以下规则应用于 .sidebar-close.icon-button 选中的元素。 */
+.sidebar-close.icon-button { /* 设置宽度；取值 28px。 */ width: 28px; /* 设置高度；取值 32px。 */ height: 32px; /* 设置内容与边框之间的内侧留白；取值 4px。 */ padding: 4px; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); }
+/* 以下规则应用于 .sidebar-scroll 选中的元素。 */
+.sidebar-scroll { /* 限制最小高度；取值 0。 */ min-height: 0; /* 限制最小宽度；取值 0。 */ min-width: 0; /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */ flex: 1; /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 条目的排列方向；取值 column。 */ flex-direction: column; /* 决定纵向超出时的处理；取值 auto。 */ overflow-y: auto; /* 决定横向超出时的处理；取值 hidden。 */ overflow-x: hidden; /* 设置 CSS 属性 scrollbar-width；取值 thin。 */ scrollbar-width: thin; }
+/* 以下规则应用于 .sidebar .workspace-nav 选中的元素。 */
+.sidebar .workspace-nav { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 条目的排列方向；取值 column。 */ flex-direction: column; /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; }
+/* 以下规则应用于 .nav-group 选中的元素。 */
+.nav-group { /* 限制最小宽度；取值 0。 */ min-width: 0; }
+/* 以下规则应用于 .nav-group-label 选中的元素。 */
+.nav-group-label { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; /* 设置字重；取值 500。 */ font-weight: 500; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); /* 设置字符之间的间距；取值 0。 */ letter-spacing: 0; /* 设置元素外侧留白；取值 8px 12px。 */ margin: 8px 12px; }
+/* 以下规则应用于 .sidebar .workspace-nav-link 选中的元素。 */
+.sidebar .workspace-nav-link { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 12px。 */ gap: 12px; /* 设置高度；取值 36px。 */ height: 36px; /* 设置内容与边框之间的内侧留白；取值 8px 12px。 */ padding: 8px 12px; /* 设置元素外侧留白；取值 2px 0。 */ margin: 2px 0; /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); /* 决定空白和换行如何保留；取值 nowrap。 */ white-space: nowrap; }
+/* 以下规则应用于 .sidebar .workspace-nav-link:hover, .sidebar .workspace-nav-link.router-link-active, .sidebar .workspace-nav-link.selected 选中的元素。 */
+.sidebar .workspace-nav-link:hover, .sidebar .workspace-nav-link.router-link-active, .sidebar .workspace-nav-link.selected { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); /* 设置背景颜色、图片或渐变；取值 color-mix(in srgb, var(—aw-text) 7%, transparent)。 */ background: color-mix(in srgb, var(--aw-text) 7%, transparent); }
+/* 以下规则应用于 .sidebar .workspace-nav-link.selected 选中的元素。 */
+.sidebar .workspace-nav-link.selected { /* 设置字重；取值 600。 */ font-weight: 600; }
+/* 以下规则应用于 .workspace-nav-link .aw-icon 选中的元素。 */
+.workspace-nav-link .aw-icon { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); }
+/* 以下规则应用于 .workspace-nav-link.selected .aw-icon 选中的元素。 */
+.workspace-nav-link.selected .aw-icon { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-brand)。 */ color: var(--aw-brand); }
+/* 以下规则应用于 .sidebar.collapsed .workspace-nav-link 选中的元素。 */
+.sidebar.collapsed .workspace-nav-link { /* 设置条目在主方向上的对齐与空余空间分配；取值 center。 */ justify-content: center; /* 设置内容与边框之间的内侧留白；取值 8px。 */ padding: 8px; }
+/* 以下规则应用于 .sidebar-conversations 选中的元素。 */
+.sidebar-conversations { /* 限制最小宽度；取值 0。 */ min-width: 0; /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; /* 设置顶部内侧留白；取值 16px。 */ padding-top: 16px; /* 设置上方外侧留白；取值 16px。 */ margin-top: 16px; /* 设置顶部边框；取值 1px solid var(—aw-border)。 */ border-top: 1px solid var(--aw-border); }
+/* 以下规则应用于 .sidebar-scroll 选中的元素。 */
+.sidebar-scroll { /* 设置 CSS 属性 scrollbar-color；取值 var(—aw-border-strong) transparent。 */ scrollbar-color: var(--aw-border-strong) transparent; }
+/* 以下规则应用于 .sidebar-resize-handle 选中的元素。 */
+.sidebar-resize-handle { /* 决定元素是否参与普通排版，以及按谁定位；取值 absolute。 */ position: absolute; /* 设置上侧定位距离；取值 0。 */ top: 0; /* 设置右侧定位距离；取值 0。 */ right: 0; /* 设置下侧定位距离；取值 0。 */ bottom: 0; /* 设置宽度；取值 8px。 */ width: 8px; /* 设置重叠时的前后层级；取值 3。 */ z-index: 3; /* 设置鼠标移上来时的指针形状；取值 col-resize。 */ cursor: col-resize; /* 设置 CSS 属性 touch-action；取值 none。 */ touch-action: none; /* 设置轮廓线与边界的距离；取值 -2px。 */ outline-offset: -2px; }
+/* 以下规则应用于 .sidebar-resize-handle::after 选中的元素。 */
+.sidebar-resize-handle::after { /* 为伪元素提供要显示的内容；取值 ''。 */ content: ''; /* 决定元素是否参与普通排版，以及按谁定位；取值 absolute。 */ position: absolute; /* 设置上侧定位距离；取值 0。 */ top: 0; /* 设置下侧定位距离；取值 0。 */ bottom: 0; /* 设置右侧定位距离；取值 0。 */ right: 0; /* 设置宽度；取值 2px。 */ width: 2px; /* 设置背景颜色、图片或渐变；取值 transparent。 */ background: transparent; }
+/* 以下规则应用于 .sidebar-resize-handle:hover::after, .sidebar-resize-handle:focus-visible::after, .is-resizing .sidebar-resize-handle::after 选中的元素。 */
+.sidebar-resize-handle:hover::after, .sidebar-resize-handle:focus-visible::after, .is-resizing .sidebar-resize-handle::after { /* 设置背景颜色、图片或渐变；取值 var(—aw-brand)。 */ background: var(--aw-brand); }
+/* 以下规则应用于 .is-resizing, .is-resizing * 选中的元素。 */
+.is-resizing, .is-resizing * { /* 设置鼠标移上来时的指针形状；取值 col-resize。 */ cursor: col-resize !important; /* 决定文字能否被拖选；取值 none。 */ user-select: none !important; }
+/* 以下规则应用于 .sidebar-new-chat 选中的元素。 */
+.sidebar-new-chat { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 12px。 */ gap: 12px; /* 设置宽度；取值 100%。 */ width: 100%; /* 设置内容与边框之间的内侧留白；取值 8px 12px。 */ padding: 8px 12px; /* 设置元素外侧留白；取值 0 0 16px。 */ margin: 0 0 16px; /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border-strong)。 */ border: 1px solid var(--aw-border-strong); /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置背景颜色、图片或渐变；取值 transparent。 */ background: transparent; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置鼠标移上来时的指针形状；取值 pointer。 */ cursor: pointer; /* 设置文字横向对齐方式；取值 left。 */ text-align: left; }
+/* 以下规则应用于 .sidebar-new-chat > :last-child 选中的元素。 */
+.sidebar-new-chat > :last-child { /* 设置左侧外侧留白；取值 auto。 */ margin-left: auto; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); }
+/* 以下规则应用于 .sidebar-new-chat:hover 选中的元素。 */
+.sidebar-new-chat:hover { /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */ background: var(--aw-bg); }
+/* 以下规则应用于 .sidebar-new-chat:disabled 选中的元素。 */
+.sidebar-new-chat:disabled { /* 设置整体透明度；取值 .5。 */ opacity: .5; /* 设置鼠标移上来时的指针形状；取值 not-allowed。 */ cursor: not-allowed; }
+/* 以下规则应用于 .sidebar-account 选中的元素。 */
+.sidebar-account { /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; /* 设置顶部内侧留白；取值 12px。 */ padding-top: 12px; /* 设置上方外侧留白；取值 12px。 */ margin-top: 12px; /* 设置顶部边框；取值 1px solid var(—aw-border)。 */ border-top: 1px solid var(--aw-border); }
+/* 以下规则应用于 .sidebar-account .el-dropdown 选中的元素。 */
+.sidebar-account .el-dropdown { /* 设置宽度；取值 100%。 */ width: 100%; }
+/* 以下规则应用于 .sidebar-user 选中的元素。 */
+.sidebar-user { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 12px。 */ gap: 12px; /* 设置内容与边框之间的内侧留白；取值 8px。 */ padding: 8px; /* 设置宽度；取值 100%。 */ width: 100%; /* 设置边框宽度、线型与颜色；取值 0。 */ border: 0; /* 设置背景颜色、图片或渐变；取值 transparent。 */ background: transparent; /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); /* 设置文字横向对齐方式；取值 left。 */ text-align: left; /* 设置鼠标移上来时的指针形状；取值 pointer。 */ cursor: pointer; }
+/* 以下规则应用于 .sidebar-user:hover 选中的元素。 */
+.sidebar-user:hover { /* 设置背景颜色、图片或渐变；取值 color-mix(in srgb, var(—aw-text) 5%, transparent)。 */ background: color-mix(in srgb, var(--aw-text) 5%, transparent); }
+/* 以下规则应用于 .sidebar-user-copy 选中的元素。 */
+.sidebar-user-copy { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 条目的排列方向；取值 column。 */ flex-direction: column; /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */ flex: 1; /* 限制最小宽度；取值 0。 */ min-width: 0; /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .sidebar-user-copy strong 选中的元素。 */
+.sidebar-user-copy strong { /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */ overflow: hidden; /* 决定空白和换行如何保留；取值 nowrap。 */ white-space: nowrap; /* 决定文字被截断时是否显示省略号；取值 ellipsis。 */ text-overflow: ellipsis; }
+/* 以下规则应用于 .sidebar-user-copy small 选中的元素。 */
+.sidebar-user-copy small { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; }
+/* 以下规则应用于 .avatar 选中的元素。 */
+.avatar { /* 设置背景颜色、图片或渐变；取值 var(—aw-border)。 */ background: var(--aw-border); /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .sidebar.collapsed .sidebar-user 选中的元素。 */
+.sidebar.collapsed .sidebar-user { /* 设置内容与边框之间的内侧留白；取值 4px。 */ padding: 4px; }
+/* 以下规则应用于 .topbar 选中的元素。 */
+.topbar { /* 设置高度；取值 var(—aw-topbar-height)。 */ height: var(--aw-topbar-height); /* 限制最小高度；取值 var(—aw-topbar-height)。 */ min-height: var(--aw-topbar-height); /* 设置内容与边框之间的内侧留白；取值 0 24px。 */ padding: 0 24px; /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */ background: var(--aw-bg); /* 设置边框宽度、线型与颜色；取值 0。 */ border: 0; /* 设置相邻布局条目之间的间隔；取值 12px。 */ gap: 12px; }
+/* 以下规则应用于 .topbar .el-breadcrumb 选中的元素。 */
+.topbar .el-breadcrumb { /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .top-actions 选中的元素。 */
+.top-actions { /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; }
+/* 以下规则应用于 .icon-button 选中的元素。 */
+.icon-button { /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; }
+/* 以下规则应用于 .workspace-title 选中的元素。 */
+.workspace-title { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */ display: inline-flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 16px。 */ gap: 16px; /* 设置字重；取值 600。 */ font-weight: 600; /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .workspace-title-caption 选中的元素。 */
+.workspace-title-caption { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; /* 设置字重；取值 400。 */ font-weight: 400; }
+/* 以下规则应用于 .workspace 选中的元素。 */
+.workspace { /* 限制最小高度；取值 100dvh。 */ min-height: 100dvh; }
+/* 以下规则应用于 .content 选中的元素。 */
+.content { /* 限制最大宽度；取值 1440px。 */ max-width: 1440px; /* 设置内容与边框之间的内侧留白；取值 16px 32px 32px。 */ padding: 16px 32px 32px; }
+/* 以下规则应用于 .aw-page-header 选中的元素。 */
+.aw-page-header { /* 设置下方外侧留白；取值 24px。 */ margin-bottom: 24px; }
+/* 以下规则应用于 .aw-page-header h1 选中的元素。 */
+.aw-page-header h1 { /* 设置元素外侧留白；取值 0。 */ margin: 0; /* 设置字号；取值 24px。 */ font-size: 24px; /* 设置每行文字的高度；取值 32px。 */ line-height: 32px; }
+/* 以下规则应用于 .aw-page-header p 选中的元素。 */
+.aw-page-header p { /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .workspace-section-tabs 选中的元素。 */
+.workspace-section-tabs { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; /* 决定横向超出时的处理；取值 auto。 */ overflow-x: auto; /* 设置元素外侧留白；取值 0 0 24px。 */ margin: 0 0 24px; /* 设置内容与边框之间的内侧留白；取值 4px。 */ padding: 4px; /* 设置宽度；取值 fit-content。 */ width: fit-content; /* 限制最大宽度；取值 100%。 */ max-width: 100%; /* 设置边框宽度、线型与颜色；取值 1px solid var(—aw-border)。 */ border: 1px solid var(--aw-border); /* 设置边角圆弧大小；取值 12px。 */ border-radius: 12px; /* 设置 CSS 属性 scrollbar-width；取值 none。 */ scrollbar-width: none; }
+/* 以下规则应用于 .workspace-section-tabs a 选中的元素。 */
+.workspace-section-tabs a { /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; /* 设置内容与边框之间的内侧留白；取值 8px 16px。 */ padding: 8px 16px; /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); }
+/* 以下规则应用于 .workspace-section-tabs a:hover 选中的元素。 */
+.workspace-section-tabs a:hover { /* 设置背景颜色、图片或渐变；取值 var(—aw-surface-muted)。 */ background: var(--aw-surface-muted); /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text)。 */ color: var(--aw-text); }
+/* 以下规则应用于 .workspace-section-tabs a.selected 选中的元素。 */
+.workspace-section-tabs a.selected { /* 设置背景颜色、图片或渐变；取值 var(—aw-text)。 */ background: var(--aw-text); /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-bg)。 */ color: var(--aw-bg); }
+/* 以下规则应用于 .card, .goal-card, .chart-panel, .el-card 选中的元素。 */
+.card, .goal-card, .chart-panel, .el-card { /* 设置边角圆弧大小；取值 12px。 */ border-radius: 12px; /* 设置元素投影；取值 none。 */ box-shadow: none; }
+/* 以下规则应用于 .card, .goal-card 选中的元素。 */
+.card, .goal-card { /* 设置内容与边框之间的内侧留白；取值 24px。 */ padding: 24px; }
+/* 以下规则应用于 .card 选中的元素。 */
+.card { /* 设置下方外侧留白；取值 16px。 */ margin-bottom: 16px; }
+/* 以下规则应用于 .personal-hero, .growth-hero 选中的元素。 */
+.personal-hero, .growth-hero { /* 设置背景颜色、图片或渐变；取值 transparent。 */ background: transparent; /* 设置内容与边框之间的内侧留白；取值 0 0 24px。 */ padding: 0 0 24px; /* 设置边框宽度、线型与颜色；取值 0。 */ border: 0; /* 设置边角圆弧大小；取值 0。 */ border-radius: 0; /* 设置下方外侧留白；取值 16px。 */ margin-bottom: 16px; }
+/* 以下规则应用于 .personal-hero h2, .growth-hero h2 选中的元素。 */
+.personal-hero h2, .growth-hero h2 { /* 设置字号；取值 20px。 */ font-size: 20px; /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; /* 设置元素外侧留白；取值 8px 0。 */ margin: 8px 0; }
+/* 以下规则应用于 .personal-hero p, .growth-hero p 选中的元素。 */
+.personal-hero p, .growth-hero p { /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .eyebrow 选中的元素。 */
+.eyebrow { /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-text-secondary)。 */ color: var(--aw-text-secondary); /* 设置字符之间的间距；取值 0。 */ letter-spacing: 0; /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; }
+/* 以下规则应用于 .metric.card, .stat.card 选中的元素。 */
+.metric.card, .stat.card { /* 设置内容与边框之间的内侧留白；取值 16px 24px。 */ padding: 16px 24px; }
+/* 以下规则应用于 .metric > strong, .stat > strong 选中的元素。 */
+.metric > strong, .stat > strong { /* 设置字号；取值 30px。 */ font-size: 30px; /* 设置每行文字的高度；取值 36px。 */ line-height: 36px; }
+/* 以下规则应用于 .metric > span, .stat > span, .metric p 选中的元素。 */
+.metric > span, .stat > span, .metric p { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; }
+/* 以下规则应用于 .section-heading 选中的元素。 */
+.section-heading { /* 设置下方外侧留白；取值 16px。 */ margin-bottom: 16px; }
+/* 以下规则应用于 .section-heading .toolbar 选中的元素。 */
+.section-heading .toolbar { /* 设置元素外侧留白；取值 0。 */ margin: 0; }
+/* 以下规则应用于 .toolbar 选中的元素。 */
+.toolbar { /* 设置下方外侧留白；取值 16px。 */ margin-bottom: 16px; }
+/* 以下规则应用于 .el-button 选中的元素。 */
+.el-button { /* 设置边角圆弧大小；取值 8px。 */ border-radius: 8px; /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置字重；取值 500。 */ font-weight: 500; /* 设置内容与边框之间的内侧留白；取值 8px 12px。 */ padding: 8px 12px; }
+/* 以下规则应用于 .el-button.is-text, .el-button.is-link 选中的元素。 */
+.el-button.is-text, .el-button.is-link { /* 设置内容与边框之间的内侧留白；取值 4px 8px。 */ padding: 4px 8px; }
+/* 以下规则应用于 .el-button—small 选中的元素。 */
+.el-button--small { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; }
+/* 以下规则应用于 .el-table 选中的元素。 */
+.el-table { /* 声明主题变量 —el-table-header-bg-color，供其他样式统一引用；取值 var(—aw-surface)。 */ --el-table-header-bg-color: var(--aw-surface); }
+/* 以下规则应用于 .el-table th.el-table__cell 选中的元素。 */
+.el-table th.el-table__cell { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; /* 设置字重；取值 500。 */ font-weight: 500; }
+/* 以下规则应用于 .el-table .cell 选中的元素。 */
+.el-table .cell { /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .el-table__row:last-child td.el-table__cell 选中的元素。 */
+.el-table__row:last-child td.el-table__cell { /* 设置底部边框；取值 0。 */ border-bottom: 0; }
+/* 以下规则应用于 .el-input__wrapper, .el-select__wrapper, .el-textarea__inner 选中的元素。 */
+.el-input__wrapper, .el-select__wrapper, .el-textarea__inner { /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; }
+/* 以下规则应用于 .el-dialog, .el-message-box 选中的元素。 */
+.el-dialog, .el-message-box { /* 设置元素投影；取值 var(—aw-shadow-float)。 */ box-shadow: var(--aw-shadow-float); }
+/* 以下规则应用于 .assistant-shell 选中的元素。 */
+.assistant-shell { /* 设置高度；取值 100dvh。 */ height: 100dvh; /* 限制最小高度；取值 0。 */ min-height: 0; /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */ overflow: hidden; }
+/* 以下规则应用于 .assistant-shell .workspace 选中的元素。 */
+.assistant-shell .workspace { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置 Flex 条目的排列方向；取值 column。 */ flex-direction: column; /* 设置高度；取值 100dvh。 */ height: 100dvh; /* 限制最小高度；取值 0。 */ min-height: 0; }
+/* 以下规则应用于 .assistant-shell .topbar 选中的元素。 */
+.assistant-shell .topbar { /* 设置空间不足时条目缩小的比例；取值 0。 */ flex-shrink: 0; }
+/* 以下规则应用于 .assistant-shell .content, .assistant-shell.has-execution .content 选中的元素。 */
+.assistant-shell .content, .assistant-shell.has-execution .content { /* 设置条目如何占用、伸展或压缩可用空间；取值 1。 */ flex: 1; /* 限制最小高度；取值 0。 */ min-height: 0; /* 限制最大宽度；取值 none。 */ max-width: none; /* 设置内容与边框之间的内侧留白；取值 0。 */ padding: 0; /* 设置元素外侧留白；取值 0。 */ margin: 0; /* 决定内容超出边界时显示、裁切还是滚动；取值 hidden。 */ overflow: hidden; }
+/* 以下规则应用于 .agent-resource-trigger > span 选中的元素。 */
+.agent-resource-trigger > span { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */ display: inline-flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; }
+/* 以下规则应用于 .agent-resource-drawer 选中的元素。 */
+.agent-resource-drawer { /* 设置背景颜色、图片或渐变；取值 var(—aw-bg)。 */ background: var(--aw-bg); }
+/* 以下规则应用于 .agent-resource-drawer .el-drawer__header 选中的元素。 */
+.agent-resource-drawer .el-drawer__header { /* 设置元素外侧留白；取值 0。 */ margin: 0; /* 设置内容与边框之间的内侧留白；取值 24px 24px 16px。 */ padding: 24px 24px 16px; }
+/* 以下规则应用于 .agent-resource-drawer .el-drawer__title 选中的元素。 */
+.agent-resource-drawer .el-drawer__title { /* 设置字号；取值 18px。 */ font-size: 18px; /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; }
+/* 以下规则应用于 .agent-resource-drawer .el-drawer__body 选中的元素。 */
+.agent-resource-drawer .el-drawer__body { /* 设置内容与边框之间的内侧留白；取值 16px 24px 24px。 */ padding: 16px 24px 24px; }
+/* 以下规则应用于 .agent-resource-drawer .el-card__body 选中的元素。 */
+.agent-resource-drawer .el-card__body { /* 设置内容与边框之间的内侧留白；取值 16px。 */ padding: 16px; }
+/* 以下规则应用于 .agent-resource-drawer .el-form—inline 选中的元素。 */
+.agent-resource-drawer .el-form--inline { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 flex。 */ display: flex; /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; /* 决定一行放不下时是否换行；取值 wrap。 */ flex-wrap: wrap; }
+/* 以下规则应用于 .agent-resource-drawer .el-form—inline .el-form-item 选中的元素。 */
+.agent-resource-drawer .el-form--inline .el-form-item { /* 设置元素外侧留白；取值 0 0 16px。 */ margin: 0 0 16px; /* 限制最大宽度；取值 100%。 */ max-width: 100%; }
+/* 以下规则应用于 .agent-resource-drawer .el-date-editor 选中的元素。 */
+.agent-resource-drawer .el-date-editor { /* 限制最大宽度；取值 100%。 */ max-width: 100%; }
+/* 以下规则应用于 .agent-resource-drawer .el-pagination 选中的元素。 */
+.agent-resource-drawer .el-pagination { /* 设置上方外侧留白；取值 16px。 */ margin-top: 16px; }
+/* 以下规则应用于 .agent-resource-drawer h2 选中的元素。 */
+.agent-resource-drawer h2 { /* 设置字号；取值 20px。 */ font-size: 20px; /* 设置每行文字的高度；取值 28px。 */ line-height: 28px; }
+/* 以下规则应用于 .global-assistant-entry 选中的元素。 */
+.global-assistant-entry { /* 决定元素是否参与普通排版，以及按谁定位；取值 fixed。 */ position: fixed; /* 设置右侧定位距离；取值 24px。 */ right: 24px; /* 设置下侧定位距离；取值 24px。 */ bottom: 24px; /* 设置重叠时的前后层级；取值 200。 */ z-index: 200; /* 决定元素采用普通块、行内、Flex 或网格布局；取值 inline-flex。 */ display: inline-flex; /* 设置 Flex 或网格条目在交叉方向上的对齐；取值 center。 */ align-items: center; /* 设置相邻布局条目之间的间隔；取值 12px。 */ gap: 12px; /* 设置内容与边框之间的内侧留白；取值 12px 16px。 */ padding: 12px 16px; /* 设置边角圆弧大小；取值 16px。 */ border-radius: 16px; /* 设置背景颜色、图片或渐变；取值 var(—aw-text)。 */ background: var(--aw-text); /* 设置文字或继承该颜色的图形颜色；取值 var(—aw-bg)。 */ color: var(--aw-bg); /* 设置元素投影；取值 var(—aw-shadow-float)。 */ box-shadow: var(--aw-shadow-float); /* 设置字号；取值 14px。 */ font-size: 14px; /* 设置每行文字的高度；取值 20px。 */ line-height: 20px; /* 设置字重；取值 500。 */ font-weight: 500; }
+/* 以下规则应用于 .global-assistant-entry:hover 选中的元素。 */
+.global-assistant-entry:hover { /* 对显示位置、角度或缩放做变换；取值 translateY(-2px)。 */ transform: translateY(-2px); }
+/* 以下规则应用于 .has-execution .global-assistant-entry 选中的元素。 */
+.has-execution .global-assistant-entry { /* 设置下侧定位距离；取值 112px。 */ bottom: 112px; }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(prefers-reduced-motion: no-preference)。 */
+@media (prefers-reduced-motion: no-preference) { /* 以下规则应用于 .global-assistant-entry 选中的元素。 */ .global-assistant-entry { /* 设置属性变化时的过渡；取值 transform 300ms var(—aw-motion)。 */ transition: transform 300ms var(--aw-motion); } }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 1199px)。 */
+@media (max-width: 1199px) { /* 以下规则应用于 .content 选中的元素。 */ .content { /* 设置内容与边框之间的内侧留白；取值 16px 24px 24px。 */ padding: 16px 24px 24px; } }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 899px)。 */
 @media (max-width: 899px) {
-  .sidebar, .sidebar.collapsed { width: min(320px, 88vw) !important; padding: 16px 12px 12px; }
-  .sidebar.collapsed .logo { font-size: 18px; }
-  .sidebar.collapsed .workspace-nav-link { justify-content: flex-start; padding: 8px 12px; }
-  .sidebar.collapsed .sidebar-user { padding: 8px; }
-  .sidebar-backdrop { z-index: 1100; }
-  .workspace { width: 100%; }
-  .topbar { padding: 0 16px; flex-wrap: nowrap; }
-  .content { padding: 16px; }
-  .workspace-title-caption { display: none; }
-  .card, .goal-card { padding: 16px; }
-  .assistant-shell .content { padding: 0; }
+  /* 以下规则应用于 .sidebar, .sidebar.collapsed 选中的元素。 */
+  .sidebar, .sidebar.collapsed { /* 设置宽度；取值 min(320px, 88vw)。 */ width: min(320px, 88vw) !important; /* 设置内容与边框之间的内侧留白；取值 16px 12px 12px。 */ padding: 16px 12px 12px; }
+  /* 以下规则应用于 .sidebar.collapsed .logo 选中的元素。 */
+  .sidebar.collapsed .logo { /* 设置字号；取值 18px。 */ font-size: 18px; }
+  /* 以下规则应用于 .sidebar.collapsed .workspace-nav-link 选中的元素。 */
+  .sidebar.collapsed .workspace-nav-link { /* 设置条目在主方向上的对齐与空余空间分配；取值 flex-start。 */ justify-content: flex-start; /* 设置内容与边框之间的内侧留白；取值 8px 12px。 */ padding: 8px 12px; }
+  /* 以下规则应用于 .sidebar.collapsed .sidebar-user 选中的元素。 */
+  .sidebar.collapsed .sidebar-user { /* 设置内容与边框之间的内侧留白；取值 8px。 */ padding: 8px; }
+  /* 以下规则应用于 .sidebar-backdrop 选中的元素。 */
+  .sidebar-backdrop { /* 设置重叠时的前后层级；取值 1100。 */ z-index: 1100; }
+  /* 以下规则应用于 .workspace 选中的元素。 */
+  .workspace { /* 设置宽度；取值 100%。 */ width: 100%; }
+  /* 以下规则应用于 .topbar 选中的元素。 */
+  .topbar { /* 设置内容与边框之间的内侧留白；取值 0 16px。 */ padding: 0 16px; /* 决定一行放不下时是否换行；取值 nowrap。 */ flex-wrap: nowrap; }
+  /* 以下规则应用于 .content 选中的元素。 */
+  .content { /* 设置内容与边框之间的内侧留白；取值 16px。 */ padding: 16px; }
+  /* 以下规则应用于 .workspace-title-caption 选中的元素。 */
+  .workspace-title-caption { /* 决定元素采用普通块、行内、Flex 或网格布局；取值 none。 */ display: none; }
+  /* 以下规则应用于 .card, .goal-card 选中的元素。 */
+  .card, .goal-card { /* 设置内容与边框之间的内侧留白；取值 16px。 */ padding: 16px; }
+  /* 以下规则应用于 .assistant-shell .content 选中的元素。 */
+  .assistant-shell .content { /* 设置内容与边框之间的内侧留白；取值 0。 */ padding: 0; }
 }
+/* 仅在指定屏幕或设备条件成立时使用这一组样式：(max-width: 639px)。 */
 @media (max-width: 639px) {
-  .topbar .el-breadcrumb { font-size: 12px; line-height: 16px; }
-  .topbar { gap: 8px; }
-  .aw-page-header { margin-bottom: 16px; }
-  .aw-page-header h1 { font-size: 24px; line-height: 32px; }
-  .agent-resource-drawer .el-drawer__body { padding: 16px; }
-  .agent-resource-drawer .el-drawer__header { padding: 16px; }
+  /* 以下规则应用于 .topbar .el-breadcrumb 选中的元素。 */
+  .topbar .el-breadcrumb { /* 设置字号；取值 12px。 */ font-size: 12px; /* 设置每行文字的高度；取值 16px。 */ line-height: 16px; }
+  /* 以下规则应用于 .topbar 选中的元素。 */
+  .topbar { /* 设置相邻布局条目之间的间隔；取值 8px。 */ gap: 8px; }
+  /* 以下规则应用于 .aw-page-header 选中的元素。 */
+  .aw-page-header { /* 设置下方外侧留白；取值 16px。 */ margin-bottom: 16px; }
+  /* 以下规则应用于 .aw-page-header h1 选中的元素。 */
+  .aw-page-header h1 { /* 设置字号；取值 24px。 */ font-size: 24px; /* 设置每行文字的高度；取值 32px。 */ line-height: 32px; }
+  /* 以下规则应用于 .agent-resource-drawer .el-drawer__body 选中的元素。 */
+  .agent-resource-drawer .el-drawer__body { /* 设置内容与边框之间的内侧留白；取值 16px。 */ padding: 16px; }
+  /* 以下规则应用于 .agent-resource-drawer .el-drawer__header 选中的元素。 */
+  .agent-resource-drawer .el-drawer__header { /* 设置内容与边框之间的内侧留白；取值 16px。 */ padding: 16px; }
 }

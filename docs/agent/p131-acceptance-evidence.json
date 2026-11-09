@@ -1,0 +1,194 @@
+{
+  "stage": "P1.3.1",
+  "recordedAt": "2026-11-05T22:10:00+08:00",
+  "acceptanceUser": "agentaccept01（普通用户，本地开发库，公开注册流程创建）",
+  "runtime": {
+    "pythonHealth": {
+      "success": true,
+      "service": "asterway-agent",
+      "status": "running",
+      "phase": "P1.3",
+      "capabilities": [
+        "chat",
+        "sse",
+        "conversation",
+        "tools"
+      ]
+    },
+    "pythonProcess": {
+      "path": "[local path omitted]",
+      "pid": 38520,
+      "startTime": "2026-11-05T22:07:39.3109138+08:00"
+    },
+    "javaProcess": {
+      "startTime": "2026-11-05T19:07:45.8338722+08:00",
+      "pid": 39916
+    },
+    "frontendProcess": {
+      "startTime": "2026-11-05T19:47:16.9798923+08:00",
+      "pid": 18988
+    },
+    "branch": "feature/LingXI-develop",
+    "head": "964e350a429ff78ceff902de7bb85427302093e0"
+  },
+  "validations": {
+    "pythonRuff": "PASS",
+    "pythonCompile": "PASS",
+    "pythonImportAndToolSchemas": "PASS（重启后运行进程加载最新源码）",
+    "frontendBuild": "PASS（npm run build，1.41 秒；保留既有大于 500 kB 分块提示）",
+    "pythonRestartAndHealth": "PASS（phase=P1.3，capabilities 含 tools）",
+    "databaseConstraintIntegrity": "PASS（无 updated_at < created_at 等时间违反）",
+    "strictTestFrameworksAdded": false,
+    "browserUiExecutedByDeveloper": false
+  },
+  "toolDeterministicChecks": {
+    "today_overview": {
+      "dateMatchesJava": "PASS",
+      "timeZoneMatchesAccount": "PASS",
+      "todayTasksCount": "PASS",
+      "weekUndatedCount": "PASS",
+      "habitDueCount": "PASS",
+      "todayTaskNamesMatch": "PASS",
+      "weekUndatedNamesMatch": "PASS",
+      "internalIdsHidden": "PASS"
+    },
+    "list_tasks_all": {
+      "totalMatches": "PASS",
+      "itemCountWithinLimit": "PASS"
+    },
+    "list_tasks_priority": {
+      "totalMatches": "PASS",
+      "namesMatch": "PASS",
+      "allHighPriority": "PASS"
+    },
+    "list_tasks_keyword": {
+      "totalMatches": "PASS",
+      "namesMatch": "PASS"
+    },
+    "list_tasks_empty": {
+      "totalZeroMatches": "PASS",
+      "noItems": "PASS",
+      "notError": "PASS"
+    },
+    "list_tasks_pagination": {
+      "oneItem": "PASS",
+      "totalNotTruncated": "PASS"
+    },
+    "invalid_priority": {
+      "isError": "PASS",
+      "messageMentionsParams": "PASS"
+    },
+    "invalid_limit": {
+      "isError": "PASS"
+    },
+    "unknown_tool": {
+      "isError": "PASS"
+    },
+    "no_permission": {
+      "isError": "PASS",
+      "deniedWithoutData": "PASS"
+    },
+    "timeout": {
+      "isError": "PASS",
+      "timeoutMessage": "PASS",
+      "boundedByConfig": "PASS"
+    },
+    "result_truncation": {
+      "withinLimit": "PASS",
+      "hasTruncationMarker": "PASS"
+    },
+    "registry": {
+      "twoTools": "PASS",
+      "limitMax20": "PASS"
+    },
+    "java_permission_guard": {
+      "revokedStatus403": "PASS",
+      "grantRestoredCount": "PASS"
+    }
+  },
+  "endToEnd": {
+    "real_model_calls_two_tools": "PASS",
+    "tool_chain_persisted_and_paired": "PASS",
+    "final_reply_saved_complete": "PASS",
+    "overview_matches_java": "PASS",
+    "task_tool_uses_real_data": "PASS",
+    "continuity_answer_names_high_priority_task": "PASS",
+    "context_rebuild_contains_tool_chain": "PASS",
+    "refresh_hides_internal_tool_messages": "PASS",
+    "refresh_user_message_count_matches_turns": "PASS",
+    "replay_same_request_no_new_turn": "PASS",
+    "empty_result_not_fabricated": "PASS",
+    "cancel_marks_turn_cancelled": "PASS",
+    "cancel_stream_terminates": "PASS",
+    "cancel_preserves_partial_text": "PASS",
+    "after_cancel_new_question_completes": "PASS",
+    "disconnect_turn_not_stuck_running": "PASS",
+    "disconnect_detail_has_no_running_turn": "PASS",
+    "disconnect_followup_works": "PASS",
+    "stale_login_rejected": "PASS",
+    "runtime_health_p1_3": "PASS",
+    "final_source_loaded": "PASS"
+  },
+  "summaryAcceptance": {
+    "summary_written": "PASS",
+    "summary_boundary_matches_complete_turn": "PASS",
+    "summary_boundary_is_even_message_number": "PASS",
+    "summary_covers_expected_prefix": "PASS",
+    "original_messages_retained": "PASS",
+    "public_history_still_available": "PASS",
+    "constraint_kept_in_summary": "PASS",
+    "recall_answer_mentions_90min": "PASS",
+    "context_includes_summary": "PASS"
+  },
+  "userIsolationAndManagementIdentity": {
+    "distinct_users": "PASS",
+    "cross_user_resources_404": "PASS",
+    "b_conversation_owned_by_b": "PASS",
+    "b_tool_data_has_no_a_tasks": "PASS",
+    "b_has_own_conversation_list": "PASS",
+    "b_conversation_list_only_own": "PASS",
+    "b_conversation_list_contains_own": "PASS",
+    "a_cannot_read_b_conversation": "PASS",
+    "management_identity_forbidden": "PASS",
+    "management_grant_restored": "PASS",
+    "user_b_works_after_restore": "PASS"
+  },
+  "currentExecution": {
+    "execution_started": "PASS",
+    "raw_current_execution_present": "PASS",
+    "tool_current_execution_matches_java": "PASS",
+    "tool_actual_seconds_matches_java": "PASS",
+    "real_seconds_recorded": "PASS",
+    "execution_finished": "PASS",
+    "current_execution_cleared": "PASS",
+    "history_seconds_retained": "PASS"
+  },
+  "defectAndRemediation": {
+    "symptom": "页面断连或取消时，终态清理事务在等待会话锁后使用事务开始时间，可能早于已写入的行时间，触发 ck_agent_turn_time / ck_agent_message_time，断连轮次停留在 RUNNING 并导致后续提问 409。",
+    "rootCause": "CURRENT_TIMESTAMP/now() 为事务开始时间；本机 WSL 时钟存在周期性回拨，事务开始后等待行锁再执行 UPDATE 时时间可能早于目标行 created_at/started_at。",
+    "fix": "Agent 持久化代码统一改用 clock_timestamp()，并取 GREATEST(clock_timestamp(), 行 created_at/started_at) 作为 updated_at/finished_at 等时间，保证时间约束单调；SQL 表结构与约束未修改。",
+    "files": [
+      "agent/app/repositories/turn_repository.py",
+      "agent/app/repositories/message_repository.py",
+      "agent/app/repositories/conversation_repository.py",
+      "agent/app/services/conversation_service.py",
+      "agent/app/services/turn_service.py"
+    ],
+    "regression": "修复后 P1.3.1 端到端 21 项全部通过；最终源码在 P1.3.2a 开发后再次回归仍全部通过。",
+    "evidence": "docs/agent/p131-acceptance-evidence.json（本文件），缺陷原始日志保存在本机未跟踪目录"
+  },
+  "evidence": {
+    "deterministicChecks": 14,
+    "endToEndAssertions": 21,
+    "summaryAssertions": 9,
+    "isolationAssertions": 11,
+    "currentExecutionAssertions": 8
+  },
+  "conclusion": "P1.3.1 技术验收通过：两个只读工具真实调用 Java 业务接口、SSE 事件、工具链落库、刷新恢复、重放、空结果、取消、断连清理、登录失效、用户隔离、管理身份拒绝与摘要行为均取得真实证据。浏览器界面体验与用户确认仍需用户执行。",
+  "notVerified": [
+    "浏览器页面上的视觉与交互体验（工具状态条、刷新恢复、停止按钮）由用户人工验收",
+    "生产网络环境下的真实 Java 超时（本阶段以 8 秒本地模拟 timeout 代码路径覆盖）",
+    "WSL 时钟跳变的多种并发组合（已通过时间下限表达式规避，未做压力穷举）",
+    "多实例部署下的生成/取消分布（当前单进程部署不进本期范围）"
+  ]
+}

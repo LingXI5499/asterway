@@ -1,13 +1,20 @@
 <!doctype html>
+<!-- 声明页面的根元素和语言。 -->
 <html lang="zh-CN">
+  <!-- 声明页面元信息、标题和资源。 -->
   <head>
+    <!-- 声明字符集、视口或分享检索信息。 -->
     <meta charset="UTF-8" />
+    <!-- 加载图标、字体或样式资源。 -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- 声明字符集、视口或分享检索信息。 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 声明字符集、视口或分享检索信息。 -->
     <meta
       name="description"
       content="Asterway 个人成长工作台，清晰规划目标、安排任务，记录真实投入与每天的坚持。"
     />
+    <!-- 加载页面启动脚本。 -->
     <script>
       // 在首屏绘制前应用展示偏好，避免深色主题出现浅色闪屏。
       (() => {
@@ -27,10 +34,14 @@
         document.documentElement.style.colorScheme = theme;
       })();
     </script>
+    <!-- 设置浏览器标签页显示的标题。 -->
     <title>Asterway</title>
   </head>
+  <!-- 页面实际显示内容的根容器。 -->
   <body>
+    <!-- 提供 Vue 应用挂载的容器。 -->
     <div id="app"></div>
+    <!-- 加载页面启动脚本。 -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

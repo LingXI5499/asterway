@@ -1,27 +1,45 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.RolePermissionMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.RolePermissionMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.RolePermissionEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.RolePermissionEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 role_id，对象属性 roleId。 -->
         <result column="role_id" property="roleId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 permission_id，对象属性 permissionId。 -->
         <result column="permission_id" property="permissionId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_by，对象属性 createdBy。 -->
         <result column="created_by" property="createdBy"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：角色编号（role_id）。 -->
         role_id,
+        <!-- 继续列出本次使用的字段：权限编号（permission_id）。 -->
         permission_id,
+        <!-- 继续列出本次使用的字段：创建时at（created_at）。 -->
         created_at,
+        <!-- 继续列出本次使用的字段：创建时按（created_by）。 -->
         created_by
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findIds，resultType=long。 -->
     <select id="findIds" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT permission_id FROM identity_role_permission WHERE role_id = #{roleId} ORDER BY permission_id
     </select>
+    <!-- 声明删除语句，是否逻辑删除以语句内容为准；id=deleteByOwner。 -->
     <delete id="deleteByOwner">
+        <!-- 按这里的条件物理删除记录；被删除行不会保留在查询结果中。 -->
         DELETE FROM identity_role_permission WHERE role_id = #{roleId}
     </delete>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert">
+        <!-- 向 identity_role_permission 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO identity_role_permission (role_id, permission_id, created_by)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{roleId}, #{permissionId}, #{actorId})
     </insert>
 </mapper>

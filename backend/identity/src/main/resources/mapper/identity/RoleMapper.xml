@@ -1,62 +1,110 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.RoleMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.RoleMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.RoleEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.RoleEntity">
+        <!-- 指定主键列与对象属性的对应关系；数据库列 id，对象属性 id。 -->
         <id column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 code，对象属性 code。 -->
         <result column="code" property="code"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 name，对象属性 name。 -->
         <result column="name" property="name"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 description，对象属性 description。 -->
         <result column="description" property="description"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_builtin，对象属性 builtin。 -->
         <result column="is_builtin" property="builtin"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 is_enabled，对象属性 enabled。 -->
         <result column="is_enabled" property="enabled"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_by，对象属性 createdBy。 -->
         <result column="created_by" property="createdBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_by，对象属性 updatedBy。 -->
         <result column="updated_by" property="updatedBy"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 deleted_at，对象属性 deletedAt。 -->
         <result column="deleted_at" property="deletedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：编号（id）。 -->
         id,
+        <!-- 继续列出本次使用的字段：编码（code）。 -->
         code,
+        <!-- 继续列出本次使用的字段：名称（name）。 -->
         name,
+        <!-- 继续列出本次使用的字段：说明（description）。 -->
         description,
+        <!-- 继续列出本次使用的字段：是否builtin（is_builtin）。 -->
         is_builtin,
+        <!-- 继续列出本次使用的字段：是否是否启用（is_enabled）。 -->
         is_enabled,
+        <!-- 继续列出本次使用的字段：版本号（version）。 -->
         version,
+        <!-- 继续列出本次使用的字段：创建时at（created_at）。 -->
         created_at,
+        <!-- 继续列出本次使用的字段：更新时at（updated_at）。 -->
         updated_at,
+        <!-- 继续列出本次使用的字段：创建时按（created_by）。 -->
         created_by,
+        <!-- 继续列出本次使用的字段：更新时按（updated_by）。 -->
         updated_by,
+        <!-- 继续列出本次使用的字段：删除标记at（deleted_at）。 -->
         deleted_at
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findAll，resultMap=entityMap。 -->
     <select id="findAll" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_role WHERE deleted_at IS NULL ORDER BY id
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_role WHERE deleted_at IS NULL ORDER BY id
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entityMap。 -->
     <select id="findById" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_role WHERE id = #{id} AND deleted_at IS NULL
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_role WHERE id = #{id} AND deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findCodesByUserId，resultType=string。 -->
     <select id="findCodesByUserId" resultType="string">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT r.code FROM identity_role r JOIN identity_user_role ur ON ur.role_id = r.id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE ur.user_id = #{userId} AND r.is_enabled AND r.deleted_at IS NULL ORDER BY r.id
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findAssignedCodes，resultType=string。 -->
     <select id="findAssignedCodes" resultType="string">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT r.code FROM identity_role r JOIN identity_user_role ur ON ur.role_id = r.id WHERE ur.user_id = #{userId}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockSecurityGate，resultType=long。 -->
     <select id="lockSecurityGate" resultType="long">
+        <!-- 读取后面列出的字段或计算结果；FOR UPDATE 会同时锁住对应记录。 -->
         SELECT id FROM identity_role WHERE code = 'SUPER_ADMIN' FOR UPDATE
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=countEnabledSuperAdmins，resultType=long。 -->
     <select id="countEnabledSuperAdmins" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(DISTINCT u.id) FROM identity_user u JOIN identity_user_role ur ON ur.user_id = u.id
+        <!-- 按这里的关联条件连接另一张表的记录。 -->
         JOIN identity_role r ON r.id = ur.role_id
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.code = 'SUPER_ADMIN' AND r.is_enabled AND r.deleted_at IS NULL AND u.is_enabled AND u.deleted_at IS NULL
     </select>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_role SET name = #{name}, description = #{description}, version = version + 1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_by = #{updatedBy}, updated_at = now() WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=advanceVersion。 -->
     <update id="advanceVersion">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_role SET version = version + 1, updated_by = #{actorId}, updated_at = now()
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id = #{id} AND version = #{version} AND deleted_at IS NULL
     </update>
 </mapper>

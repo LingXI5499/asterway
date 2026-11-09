@@ -1,33 +1,56 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.habit.mapper.HabitCategoryMapper。 -->
 <mapper namespace="com.asterway.habit.mapper.HabitCategoryMapper">
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filter。 -->
     <sql id="filter">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND deleted_at IS NULL
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.keyword != null and q.keyword !=。 -->
         <if test="q.keyword != null and q.keyword != ''">AND name ILIKE '%' || #{q.keyword} || '%'</if>
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=find，resultType=com.asterway.habit.entity.HabitCategoryEntity。 -->
     <select id="find" resultType="com.asterway.habit.entity.HabitCategoryEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,name,sort_order,version,created_at,updated_at,deleted_at FROM habit_category WHERE user_id=#{userId} AND id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.habit.entity.HabitCategoryEntity。 -->
     <select id="page" resultType="com.asterway.habit.entity.HabitCategoryEntity">
-        SELECT id,user_id,name,sort_order,version,created_at,updated_at,deleted_at FROM habit_category <include refid="filter"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT id,user_id,name,sort_order,version,created_at,updated_at,deleted_at FROM habit_category <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 --><include refid="filter"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY sort_order,id LIMIT #{q.size} OFFSET #{q.offset}
     </select>
-    <select id="count" resultType="long">SELECT count(*) FROM habit_category <include refid="filter"/></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
+    <select id="count" resultType="long">SELECT count(*) FROM habit_category <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 --><include refid="filter"/></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=nameExists，resultType=boolean。 -->
     <select id="nameExists" resultType="boolean">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT EXISTS(SELECT 1 FROM habit_category WHERE user_id=#{userId} AND deleted_at IS NULL
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND lower(name COLLATE "C")=lower(#{name} COLLATE "C")
+            <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=exceptId != null。 -->
             <if test="exceptId != null">AND id&lt;&gt;#{exceptId}</if>)
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 habit_category 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO habit_category(user_id,name,sort_order,created_at,updated_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{name},#{sortOrder},#{createdAt},#{updatedAt})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE habit_category SET name=#{name},sort_order=#{sortOrder},version=version+1,updated_at=#{updatedAt}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=softDelete。 -->
     <update id="softDelete">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE habit_category SET deleted_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
 </mapper>

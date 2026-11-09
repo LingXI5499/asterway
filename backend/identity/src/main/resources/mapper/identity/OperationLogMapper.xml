@@ -1,59 +1,109 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.OperationLogMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.OperationLogMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.OperationLogEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.OperationLogEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 actor_id，对象属性 actorId。 -->
         <result column="actor_id" property="actorId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 actor_username，对象属性 actorUsername。 -->
         <result column="actor_username" property="actorUsername"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 target_user_id，对象属性 targetUserId。 -->
         <result column="target_user_id" property="targetUserId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 resource_type，对象属性 resourceType。 -->
         <result column="resource_type" property="resourceType"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 resource_id，对象属性 resourceId。 -->
         <result column="resource_id" property="resourceId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 action_code，对象属性 actionCode。 -->
         <result column="action_code" property="actionCode"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 outcome，对象属性 outcome。 -->
         <result column="outcome" property="outcome"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 reason_code，对象属性 reasonCode。 -->
         <result column="reason_code" property="reasonCode"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 change_summary，对象属性 changeSummary。 -->
         <result column="change_summary" property="changeSummary"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 ip_address，对象属性 ipAddress。 -->
         <result column="ip_address" property="ipAddress"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 trace_id，对象属性 traceId。 -->
         <result column="trace_id" property="traceId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 occurred_at，对象属性 occurredAt。 -->
         <result column="occurred_at" property="occurredAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：编号（id）。 -->
         id,
+        <!-- 继续列出本次使用的字段：actor编号（actor_id）。 -->
         actor_id,
+        <!-- 继续列出本次使用的字段：actor用户名（actor_username）。 -->
         actor_username,
+        <!-- 继续列出本次使用的字段：目标值用户编号（target_user_id）。 -->
         target_user_id,
+        <!-- 继续列出本次使用的字段：resource类型（resource_type）。 -->
         resource_type,
+        <!-- 继续列出本次使用的字段：resource编号（resource_id）。 -->
         resource_id,
+        <!-- 继续列出本次使用的字段：操作编码（action_code）。 -->
         action_code,
+        <!-- 继续列出本次使用的字段：outcome。 -->
         outcome,
+        <!-- 继续列出本次使用的字段：原因编码（reason_code）。 -->
         reason_code,
+        <!-- 继续列出本次使用的字段：修改汇总（change_summary）。 -->
         change_summary,
+        <!-- 继续列出本次使用的字段：ipaddress（ip_address）。 -->
         ip_address,
+        <!-- 继续列出本次使用的字段：追踪标识编号（trace_id）。 -->
         trace_id,
+        <!-- 继续列出本次使用的字段：occurredat（occurred_at）。 -->
         occurred_at
     </sql>
 
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE true
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=regularOnly。 -->
         <if test="regularOnly">AND l.actor_id=#{actorId} AND l.target_user_id IS NOT NULL AND EXISTS (SELECT 1 FROM identity_user u WHERE u.id=l.target_user_id AND NOT EXISTS (SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id WHERE ur.user_id=u.id AND r.code IN ('ADMIN','SUPER_ADMIN')))</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=userId != null。 -->
         <if test="userId != null">AND l.target_user_id=#{userId}</if>
     </sql>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert">INSERT INTO identity_operation_log(actor_id,actor_username,target_user_id,resource_type,resource_id,action_code,outcome,reason_code,change_summary,ip_address,trace_id)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{actorId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{actorUsername},。 -->
             #{actorUsername},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{targetUserId},。 -->
             #{targetUserId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{resourceType},。 -->
             #{resourceType},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{resourceId},。 -->
             #{resourceId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{actionCode},。 -->
             #{actionCode},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{outcome},。 -->
             #{outcome},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{reasonCode},。 -->
             #{reasonCode},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{changeSummary}::jsonb,。 -->
             #{changeSummary}::jsonb,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{ipAddress}::inet,。 -->
             #{ipAddress}::inet,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{traceId})</insert>。 -->
             #{traceId})</insert>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findPage，resultMap=entityMap。 -->
     <select id="findPage" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_operation_log l <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_operation_log l <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY occurred_at DESC,id DESC LIMIT #{size} OFFSET #{offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
-        SELECT count(*) FROM identity_operation_log l <include refid="filters"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT count(*) FROM identity_operation_log l <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
     </select>
 </mapper>

@@ -1,19 +1,37 @@
+/* 以下规则应用于 :root 选中的元素。 */
+/* 定义凭据处理器的页面样式，具体选择器说明哪些元素应用这些显示规则。 */
 :root {
+  /* 声明主题变量 —aw-font，供其他样式统一引用；取值 "Geist Variable", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif。 */
   --aw-font:
     "Geist Variable", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  /* 声明主题变量 —aw-space-1，供其他样式统一引用；取值 4px。 */
   --aw-space-1: 4px;
+  /* 声明主题变量 —aw-space-2，供其他样式统一引用；取值 8px。 */
   --aw-space-2: 8px;
+  /* 声明主题变量 —aw-space-3，供其他样式统一引用；取值 12px。 */
   --aw-space-3: 12px;
+  /* 声明主题变量 —aw-space-4，供其他样式统一引用；取值 16px。 */
   --aw-space-4: 16px;
+  /* 声明主题变量 —aw-space-5，供其他样式统一引用；取值 16px。 */
   --aw-space-5: 16px;
+  /* 声明主题变量 —aw-space-6，供其他样式统一引用；取值 24px。 */
   --aw-space-6: 24px;
+  /* 声明主题变量 —aw-space-8，供其他样式统一引用；取值 32px。 */
   --aw-space-8: 32px;
+  /* 声明主题变量 —aw-space-10，供其他样式统一引用；取值 40px。 */
   --aw-space-10: 40px;
+  /* 声明主题变量 —aw-radius-input，供其他样式统一引用；取值 8px。 */
   --aw-radius-input: 8px;
+  /* 声明主题变量 —aw-radius-card，供其他样式统一引用；取值 12px。 */
   --aw-radius-card: 12px;
+  /* 声明主题变量 —aw-radius-dialog，供其他样式统一引用；取值 16px。 */
   --aw-radius-dialog: 16px;
+  /* 声明主题变量 —aw-sidebar-width，供其他样式统一引用；取值 256px。 */
   --aw-sidebar-width: 256px;
+  /* 声明主题变量 —aw-sidebar-collapsed，供其他样式统一引用；取值 64px。 */
   --aw-sidebar-collapsed: 64px;
+  /* 声明主题变量 —aw-topbar-height，供其他样式统一引用；取值 56px。 */
   --aw-topbar-height: 56px;
+  /* 声明主题变量 —aw-motion，供其他样式统一引用；取值 cubic-bezier(0.22, 1, 0.36, 1)。 */
   --aw-motion: cubic-bezier(0.22, 1, 0.36, 1);
 }

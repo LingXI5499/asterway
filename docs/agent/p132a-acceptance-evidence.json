@@ -1,0 +1,197 @@
+{
+  "stage": "P1.3.2a",
+  "recordedAt": "2026-11-05T22:10:00+08:00",
+  "scope": "目标列表/详情、阶段列表/详情、任务详情，以及 list_tasks 的目标与阶段筛选；仍为只读工具，不新增 Java 接口、SQL 或权限。",
+  "runtime": {
+    "pythonHealth": {
+      "success": true,
+      "service": "asterway-agent",
+      "status": "running",
+      "phase": "P1.3",
+      "capabilities": [
+        "chat",
+        "sse",
+        "conversation",
+        "tools"
+      ]
+    },
+    "pythonProcess": {
+      "path": "[local path omitted]",
+      "pid": 38520,
+      "startTime": "2026-11-05T22:07:39.3109138+08:00"
+    },
+    "toolCount": 7,
+    "readPathTemplates": [
+      "goals/\\d{1,19}",
+      "goals/\\d{1,19}/stages",
+      "stages/\\d{1,19}",
+      "tasks/\\d{1,19}"
+    ]
+  },
+  "validations": {
+    "pythonRuff": "PASS",
+    "pythonCompile": "PASS",
+    "pythonImportAndToolSchemas": "PASS（7 个工具）",
+    "frontendBuild": "PASS（前端未改动，重新构建通过）",
+    "pythonRestartAndHealth": "PASS",
+    "javaBuild": "未执行（本阶段未修改 Java 源码；运行中的 Java 服务提供既有只读接口）",
+    "sqlChanged": false,
+    "permissionsChanged": false,
+    "strictTestFrameworksAdded": false,
+    "browserUiExecutedByDeveloper": false
+  },
+  "toolDeterministicChecks": {
+    "list_goals": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "namesMatch": "PASS",
+      "noFabricatedStages": "PASS",
+      "hasIdForChaining": "PASS"
+    },
+    "list_goals_keyword": {
+      "totalOne": "PASS",
+      "nameMatches": "PASS"
+    },
+    "list_goals_pagination": {
+      "returnedOne": "PASS",
+      "totalNotTruncated": "PASS",
+      "hasMoreTrue": "PASS"
+    },
+    "list_goals_archived_empty": {
+      "totalZero": "PASS",
+      "noItems": "PASS",
+      "notError": "PASS"
+    },
+    "get_goal": {
+      "notError": "PASS",
+      "nameMatches": "PASS",
+      "statusMatches": "PASS",
+      "stageCountMatches": "PASS",
+      "stageIdsMatch": "PASS"
+    },
+    "list_stages": {
+      "notError": "PASS",
+      "totalMatches": "PASS",
+      "namesMatch": "PASS",
+      "noFabricatedTaskOverview": "PASS"
+    },
+    "list_stages_pagination": {
+      "returnedOne": "PASS",
+      "totalTwo": "PASS",
+      "hasMore": "PASS"
+    },
+    "get_stage": {
+      "notError": "PASS",
+      "nameMatches": "PASS",
+      "goalIdMatches": "PASS",
+      "taskIdsMatch": "PASS"
+    },
+    "get_task": {
+      "notError": "PASS",
+      "nameMatches": "PASS",
+      "priorityMatches": "PASS",
+      "statusMatches": "PASS",
+      "goalNameMatches": "PASS",
+      "stageNameMatches": "PASS",
+      "hasCompletionCriteria": "PASS"
+    },
+    "list_tasks_by_goal": {
+      "totalMatches": "PASS",
+      "namesMatch": "PASS",
+      "allGoalId": "PASS"
+    },
+    "list_tasks_by_stage": {
+      "totalMatches": "PASS"
+    },
+    "list_tasks_empty_stage": {
+      "totalZero": "PASS",
+      "notError": "PASS"
+    },
+    "invalid_goal_id": {
+      "isError": "PASS"
+    },
+    "invalid_limit": {
+      "isError": "PASS"
+    },
+    "invalid_stage_id_type": {
+      "isError": "PASS"
+    },
+    "unknown_tool": {
+      "isError": "PASS"
+    },
+    "path_guard": {
+      "allAllowed": "PASS",
+      "allRejected": "PASS"
+    },
+    "no_permission_get_goal": {
+      "isError": "PASS",
+      "mentionsPermission": "PASS"
+    },
+    "cross_user_isolation": {
+      "goal404": "PASS",
+      "stage404": "PASS",
+      "task404": "PASS",
+      "bGoalsEmpty": "PASS",
+      "bTasksEmpty": "PASS",
+      "noDataLeak": "PASS"
+    },
+    "registry": {
+      "sevenTools": "PASS",
+      "hasSchemas": "PASS",
+      "goalListLimitMax20": "PASS"
+    }
+  },
+  "endToEnd": {
+    "real_model_called_new_tools": "PASS",
+    "goal_round_used_goal_tool": "PASS",
+    "stage_round_used_stage_tool": "PASS",
+    "task_round_used_task_or_stage_tool": "PASS",
+    "task_detail_round_used_task_tool": "PASS",
+    "goals_answer_mentions_both_goals": "PASS",
+    "stages_answer_mentions_both_stages": "PASS",
+    "tasks_answer_mentions_task_names": "PASS",
+    "task_detail_answer_mentions_30_min": "PASS",
+    "empty_goal_answer_says_none": "PASS",
+    "goal_count_answer_is_two": "PASS",
+    "tool_chain_paired": "PASS",
+    "public_refresh_hides_tools": "PASS",
+    "context_rebuild_contains_tool_chain": "PASS",
+    "turn_count_matches_rounds": "PASS",
+    "no_internal_ids_in_replies": "PASS",
+    "list_goals_payload_total_two": "PASS"
+  },
+  "p131RegressionAfterChange": {
+    "real_model_calls_two_tools": "PASS",
+    "tool_chain_persisted_and_paired": "PASS",
+    "final_reply_saved_complete": "PASS",
+    "overview_matches_java": "PASS",
+    "task_tool_uses_real_data": "PASS",
+    "continuity_answer_names_high_priority_task": "PASS",
+    "context_rebuild_contains_tool_chain": "PASS",
+    "refresh_hides_internal_tool_messages": "PASS",
+    "refresh_user_message_count_matches_turns": "PASS",
+    "replay_same_request_no_new_turn": "PASS",
+    "empty_result_not_fabricated": "PASS",
+    "cancel_marks_turn_cancelled": "PASS",
+    "cancel_stream_terminates": "PASS",
+    "cancel_preserves_partial_text": "PASS",
+    "after_cancel_new_question_completes": "PASS",
+    "disconnect_turn_not_stuck_running": "PASS",
+    "disconnect_detail_has_no_running_turn": "PASS",
+    "disconnect_followup_works": "PASS",
+    "stale_login_rejected": "PASS",
+    "runtime_health_p1_3": "PASS",
+    "final_source_loaded": "PASS"
+  },
+  "evidence": {
+    "deterministicCheckGroups": 20,
+    "endToEndAssertions": 17
+  },
+  "conclusion": "P1.3.2a 编码与本地真实验收完成：5 个新工具与 list_tasks 扩展真实读取 Java 本人数据，模型可完成目标 → 阶段 → 任务链路查询，空结果、无权限、跨用户隔离与分页表现符合约定。等待用户验收后再进入 P1.3.2b。",
+  "notVerified": [
+    "浏览器页面上的实际问答体验与工具状态展示由用户人工验收",
+    "列表中超过 20 条目标/阶段时的真实分页翻页（工具固定只返回第一页并给出 total/hasMore，产品未提供翻页参数）",
+    "归档目标的真实数据结果（本库无归档数据，已验证空结果路径）",
+    "模型在 3 个工具轮 / 6 次调用上限边界下的组合查询稳定性（上限沿用 P1.3.1 配置，未单独构造超限对话）"
+  ]
+}

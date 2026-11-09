@@ -1,31 +1,53 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.identity.mapper.SettingMapper。 -->
 <mapper namespace="com.asterway.identity.mapper.SettingMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entityMap，type=com.asterway.identity.entity.SettingEntity。 -->
     <resultMap id="entityMap" type="com.asterway.identity.entity.SettingEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 setting_key，对象属性 settingKey。 -->
         <result column="setting_key" property="settingKey"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 setting_value，对象属性 settingValue。 -->
         <result column="setting_value" property="settingValue"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_by，对象属性 updatedBy。 -->
         <result column="updated_by" property="updatedBy"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">
+        <!-- 继续列出本次使用的字段：setting键（setting_key）。 -->
         setting_key,
+        <!-- 继续列出本次使用的字段：setting值（setting_value）。 -->
         setting_value,
+        <!-- 继续列出本次使用的字段：版本号（version）。 -->
         version,
+        <!-- 继续列出本次使用的字段：创建时at（created_at）。 -->
         created_at,
+        <!-- 继续列出本次使用的字段：更新时at（updated_at）。 -->
         updated_at,
+        <!-- 继续列出本次使用的字段：更新时按（updated_by）。 -->
         updated_by
     </sql>
 
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findAll，resultMap=entityMap。 -->
     <select id="findAll" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_setting ORDER BY setting_key
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_setting ORDER BY setting_key
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=lockRegistration，resultMap=entityMap。 -->
     <select id="lockRegistration" resultMap="entityMap">
-        SELECT <include refid="columns"/> FROM identity_setting WHERE setting_key='registration_enabled' FOR SHARE
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/> FROM identity_setting WHERE setting_key='registration_enabled' FOR SHARE
     </select>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE identity_setting SET setting_value=#{settingValue}::jsonb,version=version+1,updated_by=#{updatedBy},updated_at=now()
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE setting_key=#{settingKey} AND version=#{version}
     </update>
 </mapper>

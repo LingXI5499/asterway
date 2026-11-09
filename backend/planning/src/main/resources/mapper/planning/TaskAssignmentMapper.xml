@@ -1,75 +1,145 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.planning.mapper.TaskAssignmentMapper。 -->
 <mapper namespace="com.asterway.planning.mapper.TaskAssignmentMapper">
+    <!-- 声明查询列如何装入 Java 对象；id=entity，type=com.asterway.planning.entity.TaskAssignmentEntity。 -->
     <resultMap id="entity" type="com.asterway.planning.entity.TaskAssignmentEntity">
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 id，对象属性 id。 -->
         <result column="id" property="id"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 user_id，对象属性 userId。 -->
         <result column="user_id" property="userId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 task_id，对象属性 taskId。 -->
         <result column="task_id" property="taskId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 weekly_plan_id，对象属性 weeklyPlanId。 -->
         <result column="weekly_plan_id" property="weeklyPlanId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 daily_plan_id，对象属性 dailyPlanId。 -->
         <result column="daily_plan_id" property="dailyPlanId"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 sort_order，对象属性 sortOrder。 -->
         <result column="sort_order" property="sortOrder"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 assigned_at，对象属性 assignedAt。 -->
         <result column="assigned_at" property="assignedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 ended_at，对象属性 endedAt。 -->
         <result column="ended_at" property="endedAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 end_reason，对象属性 endReason。 -->
         <result column="end_reason" property="endReason"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 version，对象属性 version。 -->
         <result column="version" property="version"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 created_at，对象属性 createdAt。 -->
         <result column="created_at" property="createdAt"/>
+        <!-- 把数据库列装入对应的 Java 属性；数据库列 updated_at，对象属性 updatedAt。 -->
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=columns。 -->
     <sql id="columns">r.id,
+            <!-- 继续列出本次使用的字段：r中的用户编号（r.user_id）。 -->
             r.user_id,
+            <!-- 继续列出本次使用的字段：r中的任务编号（r.task_id）。 -->
             r.task_id,
+            <!-- 继续列出本次使用的字段：r中的每周方案编号（r.weekly_plan_id）。 -->
             r.weekly_plan_id,
+            <!-- 继续列出本次使用的字段：r中的每日方案编号（r.daily_plan_id）。 -->
             r.daily_plan_id,
+            <!-- 继续列出本次使用的字段：r中的排序顺序（r.sort_order）。 -->
             r.sort_order,
+            <!-- 继续列出本次使用的字段：r中的assignedat（r.assigned_at）。 -->
             r.assigned_at,
+            <!-- 继续列出本次使用的字段：r中的已结束at（r.ended_at）。 -->
             r.ended_at,
+            <!-- 继续列出本次使用的字段：r中的结束原因（r.end_reason）。 -->
             r.end_reason,
+            <!-- 继续列出本次使用的字段：r中的版本号（r.version）。 -->
             r.version,
+            <!-- 继续列出本次使用的字段：r中的创建时at（r.created_at）。 -->
             r.created_at,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：r.updated_at</sql>。 -->
             r.updated_at</sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filters。 -->
     <sql id="filters">WHERE r.user_id=#{userId}
-        <if test="q.taskId != null">AND r.task_id=#{q.taskId}</if><if test="q.weeklyPlanId != null">AND r.weekly_plan_id=#{q.weeklyPlanId}</if><if test="q.dailyPlanId != null">AND r.daily_plan_id=#{q.dailyPlanId}</if><if test="q.currentOnly">AND r.ended_at IS NULL</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.taskId != null。 -->
+        <if test="q.taskId != null">AND r.task_id=#{q.taskId}</if><!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.weeklyPlanId != null。 --><if test="q.weeklyPlanId != null">AND r.weekly_plan_id=#{q.weeklyPlanId}</if><!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.dailyPlanId != null。 --><if test="q.dailyPlanId != null">AND r.daily_plan_id=#{q.dailyPlanId}</if><!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.currentOnly。 --><if test="q.currentOnly">AND r.ended_at IS NULL</if>
     </sql>
-    <select id="findById" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=findById，resultMap=entity。 -->
+    <select id="findById" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task_assignment r
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.id=#{id}</select>
-    <select id="page" resultMap="entity">SELECT <include refid="columns"/>
-        FROM task_assignment r <include refid="filters"/>
-        ORDER BY <choose><when test="q.currentOnly">r.sort_order,r.id</when><otherwise>r.assigned_at DESC,r.id DESC</otherwise></choose>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultMap=entity。 -->
+    <select id="page" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
+        FROM task_assignment r <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
+        ORDER BY <!-- 按顺序选择第一条满足条件的 SQL 分支。 --><choose><!-- test 成立时采用这个 SQL 分支；test=q.currentOnly。 --><when test="q.currentOnly">r.sort_order,r.id</when><!-- 前面分支都不成立时采用这里的 SQL。 --><otherwise>r.assigned_at DESC,r.id DESC</otherwise></choose>
+        <!-- 限制本次最多返回的记录数，配合 OFFSET 实现分页。 -->
         LIMIT #{q.size}
+        <!-- 先跳过指定数量的记录，再取当前页内容。 -->
         OFFSET #{q.offset}</select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">SELECT count(*)
-        FROM task_assignment r <include refid="filters"/></select>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
+        FROM task_assignment r <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filters。 --><include refid="filters"/></select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO task_assignment (user_id,
+            <!-- 继续列出本次使用的字段：任务编号（task_id）。 -->
             task_id,
+            <!-- 继续列出本次使用的字段：每周方案编号（weekly_plan_id）。 -->
             weekly_plan_id,
+            <!-- 继续列出本次使用的字段：每日方案编号（daily_plan_id）。 -->
             daily_plan_id,
+            <!-- 继续列出本次使用的字段：排序顺序（sort_order）。 -->
             sort_order,
+            <!-- 继续列出本次使用的字段：assignedat（assigned_at）。 -->
             assigned_at,
+            <!-- 结束前面的条件表达式、循环或数据库程序块。 -->
             ended_at,
+            <!-- 结束前面的条件表达式、循环或数据库程序块。 -->
             end_reason)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES (#{userId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{taskId},。 -->
             #{taskId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{weeklyPlanId},。 -->
             #{weeklyPlanId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{dailyPlanId},。 -->
             #{dailyPlanId},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{sortOrder},。 -->
             #{sortOrder},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{assignedAt},。 -->
             #{assignedAt},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{endedAt},。 -->
             #{endedAt},
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：#{endReason})</insert>。 -->
             #{endReason})</insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">UPDATE task_assignment
+        <!-- 设置本次数据库会话或事务使用的参数。 -->
         SET ended_at=#{endedAt},
+            <!-- 结束前面的条件表达式、循环或数据库程序块。 -->
             end_reason=#{endReason},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             sort_order=#{sortOrder},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             version=version+1,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             updated_at=CURRENT_TIMESTAMP
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE id=#{id}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND version=#{version}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND ended_at IS NULL</update>
-    <select id="current" resultMap="entity">SELECT <include refid="columns"/>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=current，resultMap=entity。 -->
+    <select id="current" resultMap="entity">SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=columns。 --><include refid="columns"/>
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM task_assignment r
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE r.user_id=#{userId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.task_id=#{taskId}
+          <!-- 再增加一个必须同时满足的筛选条件。 -->
           AND r.ended_at IS NULL</select>
 </mapper>

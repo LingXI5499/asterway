@@ -1,50 +1,88 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.habit.mapper.HabitMapper。 -->
 <mapper namespace="com.asterway.habit.mapper.HabitMapper">
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filter。 -->
     <sql id="filter">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE h.user_id=#{userId} AND h.deleted_at IS NULL
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.keyword != null and q.keyword !=。 -->
         <if test="q.keyword != null and q.keyword != ''">AND r.name ILIKE '%' || #{q.keyword} || '%'</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.categoryId != null。 -->
         <if test="q.categoryId != null">AND r.category_id=#{q.categoryId}</if>
+        <!-- 按顺序选择第一条满足条件的 SQL 分支。 -->
         <choose>
+            <!-- test 成立时采用这个 SQL 分支；test=q.status != null and q.status !=。 -->
             <when test="q.status != null and q.status != ''">AND h.status=#{q.status}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=q.archived == true。 -->
             <when test="q.archived == true">AND h.status='ENDED'</when>
+            <!-- 前面分支都不成立时采用这里的 SQL。 -->
             <otherwise>AND h.status&lt;&gt;'ENDED'</otherwise>
         </choose>
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=find，resultType=com.asterway.habit.entity.HabitEntity。 -->
     <select id="find" resultType="com.asterway.habit.entity.HabitEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,status,current_revision_no,ended_at,history_locked_through,version,created_at,updated_at,deleted_at FROM habit WHERE user_id=#{userId} AND id=#{id}
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 habit 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO habit(user_id,status,current_revision_no,version,created_at,updated_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{status},#{currentRevisionNo},0,#{createdAt},#{updatedAt})
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=update。 -->
     <update id="update">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE habit SET status=#{status},current_revision_no=#{currentRevisionNo},ended_at=#{endedAt},
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             deleted_at=#{deletedAt},version=version+1,updated_at=#{updatedAt}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND deleted_at IS NULL
     </update>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=view，resultType=com.asterway.habit.vo.HabitVO。 -->
     <select id="view" resultType="com.asterway.habit.vo.HabitVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT h.id::text,h.status,h.current_revision_no AS revision_no,h.ended_at,h.history_locked_through,
+            <!-- 继续列出本次使用的字段：h中的版本号（h.version）、h中的创建时at（h.created_at）、h中的更新时at（h.updated_at）、r中的名称（r.name）、r中的说明（r.description）、r中的完成情况判断标准（r.completion_criteria）。 -->
             h.version,h.created_at,h.updated_at,r.id::text AS revision_id,r.name,r.description,r.completion_criteria,
+            <!-- 继续列出本次使用的字段：c名称作为分类名称（c.name AS category_name）。 -->
             r.category_id::text,c.name AS category_name,(c.deleted_at IS NOT NULL) AS category_deleted,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             r.cycle_type,r.weekday_mask,r.start_date,r.expected_time,(ci.id IS NOT NULL) AS checked_today FROM habit h JOIN habit_revision r ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN habit_category c ON c.id=r.category_id AND c.user_id=h.user_id
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN habit_checkin ci ON ci.user_id=h.user_id AND ci.habit_id=h.id AND ci.business_date=#{today} AND ci.cancelled_at IS NULL WHERE h.user_id=#{userId} AND h.id=#{id} AND h.deleted_at IS NULL
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.habit.vo.HabitVO。 -->
     <select id="page" resultType="com.asterway.habit.vo.HabitVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT h.id::text,h.status,h.current_revision_no AS revision_no,h.ended_at,h.history_locked_through,
+            <!-- 继续列出本次使用的字段：h中的版本号（h.version）、h中的创建时at（h.created_at）、h中的更新时at（h.updated_at）、r中的名称（r.name）、r中的说明（r.description）、r中的完成情况判断标准（r.completion_criteria）。 -->
             h.version,h.created_at,h.updated_at,r.id::text AS revision_id,r.name,r.description,r.completion_criteria,
+            <!-- 继续列出本次使用的字段：c名称作为分类名称（c.name AS category_name）。 -->
             r.category_id::text,c.name AS category_name,(c.deleted_at IS NOT NULL) AS category_deleted,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             r.cycle_type,r.weekday_mask,r.start_date,r.expected_time,(ci.id IS NOT NULL) AS checked_today FROM habit h JOIN habit_revision r ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
         LEFT JOIN habit_category c ON c.id=r.category_id AND c.user_id=h.user_id
-        LEFT JOIN habit_checkin ci ON ci.user_id=h.user_id AND ci.habit_id=h.id AND ci.business_date=#{today} AND ci.cancelled_at IS NULL <include refid="filter"/>
+        <!-- 按连接条件把关联记录合并进本次查询；LEFT JOIN 会保留左侧没有匹配项的记录。 -->
+        LEFT JOIN habit_checkin ci ON ci.user_id=h.user_id AND ci.habit_id=h.id AND ci.business_date=#{today} AND ci.cancelled_at IS NULL <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 --><include refid="filter"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY h.created_at DESC,h.id DESC LIMIT #{q.size} OFFSET #{q.offset}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
     <select id="count" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FROM habit h JOIN habit_revision r
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             ON r.habit_id=h.id AND r.user_id=h.user_id AND r.revision_no=h.current_revision_no
+        <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 -->
         <include refid="filter"/>
     </select>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=todayFacts。 -->
     <sql id="todayFacts"><![CDATA[
 
 WITH days AS (
@@ -81,20 +119,33 @@ WITH days AS (
     )
 )
     ]]></sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=today，resultType=com.asterway.habit.vo.HabitTodayVO。 -->
     <select id="today" resultType="com.asterway.habit.vo.HabitTodayVO">
+        <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=todayFacts。 -->
         <include refid="todayFacts"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT habit_id::text,revision_id::text,category_id::text,name,expected_time,status,checkin_id::text,done_count,due_count,
+            <!-- 继续补齐上面的 SQL 表达式、字段值或约束组合：(checkin_id IS NOT NULL AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through&lt;#{today})) AS can_cance…。 -->
             (checkin_id IS NOT NULL AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through&lt;#{today})) AS can_cancel,
+            <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
             (checkin_id IS NULL AND status='ACTIVE' AND deleted_at IS NULL AND (history_locked_through IS NULL OR history_locked_through&lt;#{today})) AS can_checkin
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM habit_days ORDER BY expected_time NULLS LAST,habit_id LIMIT #{size} OFFSET #{offset}
     </select>
-    <select id="todayCount" resultType="long"><include refid="todayFacts"/> SELECT count(*) FROM habit_days</select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=todayCount，resultType=long。 -->
+    <select id="todayCount" resultType="long"><!-- 把 refid 对应的公共 SQL 片段放到这里；refid=todayFacts。 --><include refid="todayFacts"/> SELECT count(*) FROM habit_days</select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=activeBatch，resultType=com.asterway.habit.entity.HabitEntity。 -->
     <select id="activeBatch" resultType="com.asterway.habit.entity.HabitEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT id,user_id,status,current_revision_no,ended_at,history_locked_through,version,created_at,updated_at,deleted_at FROM habit WHERE user_id=#{userId} AND deleted_at IS NULL
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND status='ACTIVE' AND id&gt;#{afterId} ORDER BY id LIMIT 100
     </select>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=sealHistory。 -->
     <update id="sealHistory">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE habit SET history_locked_through=#{through},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND (history_locked_through IS NULL OR history_locked_through&lt;#{through})
     </update>
 </mapper>

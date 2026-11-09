@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.statistics.mapper.StatisticsMapper。 -->
 <mapper namespace="com.asterway.statistics.mapper.StatisticsMapper">
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=firstDate，resultType=java.time.LocalDate。 -->
     <select id="firstDate" resultType="java.time.LocalDate"><![CDATA[
 SELECT min(d) FROM (
     SELECT (created_at AT TIME ZONE #{zone})::date AS d FROM goal WHERE user_id=#{userId}
@@ -11,17 +13,26 @@ SELECT min(d) FROM (
         JOIN execution_segment sg ON sg.execution_id=es.id WHERE es.user_id=#{userId}
 ) first_dates
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=scope，resultType=com.asterway.common.security.GrowthScopeData。 -->
     <select id="scope" resultType="com.asterway.common.security.GrowthScopeData">
+        <!-- 按顺序选择第一条满足条件的 SQL 分支。 -->
         <choose>
+            <!-- test 成立时采用这个 SQL 分支；test=type ==。 -->
             <when test="type == 'GOAL'">SELECT id,id AS goal_id FROM goal WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=type ==。 -->
             <when test="type == 'STAGE'">SELECT id,goal_id,id AS stage_id FROM stage WHERE user_id=#{userId} AND id=#{id}</when>
+            <!-- test 成立时采用这个 SQL 分支；test=type ==。 -->
             <when test="type == 'TASK'">
+                <!-- 读取后面列出的字段或计算结果。 -->
                 SELECT t.id,t.stage_id,s.goal_id FROM task t JOIN stage s ON s.id=t.stage_id AND s.user_id=t.user_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE t.user_id=#{userId} AND t.id=#{id}
             </when>
+            <!-- 前面分支都不成立时采用这里的 SQL。 -->
             <otherwise>SELECT NULL::bigint AS id WHERE false</otherwise>
         </choose>
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=execution，resultType=com.asterway.statistics.vo.StatisticsExecutionVO。 -->
     <select id="execution" resultType="com.asterway.statistics.vo.StatisticsExecutionVO"><![CDATA[
 WITH segments AS (
     SELECT es.id AS execution_id,es.status,sg.started_at,
@@ -48,6 +59,7 @@ SELECT floor(COALESCE(sum(total_ms),0)/1000)::bigint AS total_actual_seconds,
     max(started_at) FILTER (WHERE total_ms>0) AS last_execution_at
 FROM lengths
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=executionDays，resultType=com.asterway.statistics.vo.StatisticsExecutionDayVO。 -->
     <select id="executionDays" resultType="com.asterway.statistics.vo.StatisticsExecutionDayVO"><![CDATA[
 WITH days AS (
     SELECT (#{ctx.dateFrom}+n)::date AS business_date,(#{ctx.dateFrom}+n)::timestamp AT TIME ZONE #{ctx.timeZone} AS starts_at,
@@ -76,6 +88,7 @@ SELECT business_date,COALESCE(sum(milliseconds),0)::bigint AS actual_millisecond
     count(DISTINCT execution_id) FILTER (WHERE milliseconds>0 AND status='FINISHED') AS finished_sessions
 FROM clipped GROUP BY business_date ORDER BY business_date
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=habitTotals，resultType=com.asterway.statistics.vo.StatisticsHabitTotalsVO。 -->
     <select id="habitTotals" resultType="com.asterway.statistics.vo.StatisticsHabitTotalsVO"><![CDATA[
 
 WITH days AS (
@@ -113,6 +126,7 @@ WITH days AS (
 ) SELECT COALESCE(sum(done_count),0)::bigint AS done_count,COALESCE(sum(due_count),0)::bigint AS due_count,
         round(100.0*sum(done_count)/NULLIF(sum(due_count),0),2) AS completion_rate FROM habit_days
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=habitDays，resultType=com.asterway.statistics.vo.StatisticsHabitDayVO。 -->
     <select id="habitDays" resultType="com.asterway.statistics.vo.StatisticsHabitDayVO"><![CDATA[
 
 WITH days AS (
@@ -150,6 +164,7 @@ WITH days AS (
 ) SELECT business_date,COALESCE(sum(done_count),0)::bigint AS done_count,COALESCE(sum(due_count),0)::bigint AS due_count,
         round(100.0*sum(done_count)/NULLIF(sum(due_count),0),2) AS completion_rate FROM habit_days GROUP BY business_date ORDER BY business_date
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=habitGroups，resultType=com.asterway.statistics.vo.StatisticsHabitGroupVO。 -->
     <select id="habitGroups" resultType="com.asterway.statistics.vo.StatisticsHabitGroupVO"><![CDATA[
 
 WITH days AS (
@@ -198,6 +213,7 @@ LEFT JOIN habit_revision hr ON hr.habit_id=h.id AND hr.user_id=h.user_id AND hr.
 LEFT JOIN habit_category c ON #{groupBy}='CATEGORY' AND c.id=g.group_id AND c.user_id=#{ctx.userId}
 ORDER BY g.group_id NULLS FIRST LIMIT #{size} OFFSET #{offset}
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=habitGroupCount，resultType=long。 -->
     <select id="habitGroupCount" resultType="long"><![CDATA[
 
 WITH days AS (
@@ -236,6 +252,7 @@ WITH days AS (
     SELECT CASE WHEN #{groupBy}='HABIT' THEN habit_id ELSE category_id END FROM habit_days GROUP BY 1
 ) grouped
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=stateTotals，resultType=com.asterway.statistics.vo.StatisticsStateTotalsVO。 -->
     <select id="stateTotals" resultType="com.asterway.statistics.vo.StatisticsStateTotalsVO"><![CDATA[
 WITH events AS (SELECT 'GOAL' AS kind,h.goal_id AS object_id,h.event_type,h.after_status,h.occurred_at
         FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
@@ -251,6 +268,7 @@ WITH events AS (SELECT 'GOAL' AS kind,h.goal_id AS object_id,h.event_type,h.afte
     count(*) FILTER (WHERE e.kind='GOAL' AND e.event_type='RESTORED') AS goal_restore_actions FROM events e
     WHERE e.occurred_at>=#{ctx.fromInstant} AND e.occurred_at<#{ctx.toInstant}
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=stateDays，resultType=com.asterway.statistics.vo.StatisticsStateDayVO。 -->
     <select id="stateDays" resultType="com.asterway.statistics.vo.StatisticsStateDayVO"><![CDATA[
 WITH days AS (SELECT (#{ctx.dateFrom}::date+n)::date AS business_date
         FROM generate_series(0,#{ctx.dateTo}::date-#{ctx.dateFrom}::date) n), events AS (SELECT 'GOAL' AS kind,h.goal_id AS object_id,h.event_type,h.after_status,h.occurred_at
@@ -270,6 +288,7 @@ WITH days AS (SELECT (#{ctx.dateFrom}::date+n)::date AS business_date
         AND (e.occurred_at AT TIME ZONE #{ctx.timeZone})::date=d.business_date
     GROUP BY d.business_date ORDER BY d.business_date
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=timeline，resultType=com.asterway.statistics.vo.StatisticsTimelineVO。 -->
     <select id="timeline" resultType="com.asterway.statistics.vo.StatisticsTimelineVO"><![CDATA[
 WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.event_type,h.occurred_at,h.name_snapshot AS label
         FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
@@ -303,6 +322,7 @@ WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.e
     FROM events WHERE occurred_at>=#{ctx.fromInstant} AND occurred_at<#{ctx.toInstant}
     ORDER BY occurred_at DESC,kind,fact_id::bigint DESC,event_type LIMIT #{size} OFFSET #{offset}
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=timelineCount，resultType=long。 -->
     <select id="timelineCount" resultType="long"><![CDATA[
 WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.event_type,h.occurred_at,h.name_snapshot AS label
         FROM goal_state_history h WHERE h.user_id=#{ctx.userId} AND (#{ctx.goalId}::bigint IS NULL OR h.goal_id=#{ctx.goalId})
@@ -335,6 +355,7 @@ WITH events AS (SELECT 'GOAL' AS kind,h.id AS fact_id,h.goal_id AS object_id,h.e
         WHERE a.user_id=#{ctx.userId} AND a.ended_at IS NOT NULL AND (#{ctx.goalId}::bigint IS NULL OR s.goal_id=#{ctx.goalId}) AND (#{ctx.stageId}::bigint IS NULL OR s.id=#{ctx.stageId}) AND (#{ctx.taskId}::bigint IS NULL OR t.id=#{ctx.taskId})) SELECT count(*) FROM events
     WHERE occurred_at>=#{ctx.fromInstant} AND occurred_at<#{ctx.toInstant}
     ]]></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=objects，resultType=com.asterway.statistics.vo.StatisticsObjectVO。 -->
     <select id="objects" resultType="com.asterway.statistics.vo.StatisticsObjectVO"><![CDATA[
 SELECT 'GOAL' AS kind,status,count(*) AS object_count FROM goal
     WHERE user_id=#{ctx.userId} AND deleted_at IS NULL AND archived_at IS NULL AND (#{ctx.goalId}::bigint IS NULL OR id=#{ctx.goalId}) GROUP BY status

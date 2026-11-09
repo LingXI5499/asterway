@@ -1,53 +1,104 @@
+/* 以下规则应用于 :root, :root[data-theme="light"] 选中的元素。 */
+/* 定义themes的页面样式，具体选择器说明哪些元素应用这些显示规则。 */
 :root,
 :root[data-theme="light"] {
+  /* 声明主题变量 —aw-brand，供其他样式统一引用；取值 #a95638。 */
   --aw-brand: #a95638;
+  /* 声明主题变量 —aw-brand-hover，供其他样式统一引用；取值 #91472f。 */
   --aw-brand-hover: #91472f;
+  /* 声明主题变量 —aw-brand-soft，供其他样式统一引用；取值 #f2e7df。 */
   --aw-brand-soft: #f2e7df;
+  /* 声明主题变量 —aw-accent，供其他样式统一引用；取值 #567564。 */
   --aw-accent: #567564;
+  /* 声明主题变量 —aw-bg，供其他样式统一引用；取值 #faf9f5。 */
   --aw-bg: #faf9f5;
+  /* 声明主题变量 —aw-surface，供其他样式统一引用；取值 #ffffff。 */
   --aw-surface: #ffffff;
+  /* 声明主题变量 —aw-surface-muted，供其他样式统一引用；取值 #f1f0ea。 */
   --aw-surface-muted: #f1f0ea;
+  /* 声明主题变量 —aw-sidebar，供其他样式统一引用；取值 #efeee8。 */
   --aw-sidebar: #efeee8;
+  /* 声明主题变量 —aw-text，供其他样式统一引用；取值 #2c2c28。 */
   --aw-text: #2c2c28;
+  /* 声明主题变量 —aw-text-secondary，供其他样式统一引用；取值 #70706a。 */
   --aw-text-secondary: #70706a;
+  /* 声明主题变量 —aw-text-tertiary，供其他样式统一引用；取值 #7d7c75。 */
   --aw-text-tertiary: #7d7c75;
+  /* 声明主题变量 —aw-border，供其他样式统一引用；取值 #e6e4dc。 */
   --aw-border: #e6e4dc;
+  /* 声明主题变量 —aw-border-strong，供其他样式统一引用；取值 #d1cec3。 */
   --aw-border-strong: #d1cec3;
+  /* 声明主题变量 —aw-success，供其他样式统一引用；取值 #1b7855。 */
   --aw-success: #1b7855;
+  /* 声明主题变量 —aw-warning，供其他样式统一引用；取值 #966316。 */
   --aw-warning: #966316;
+  /* 声明主题变量 —aw-danger，供其他样式统一引用；取值 #bd4050。 */
   --aw-danger: #bd4050;
+  /* 声明主题变量 —aw-info，供其他样式统一引用；取值 #4f709e。 */
   --aw-info: #4f709e;
+  /* 声明主题变量 —aw-success-soft，供其他样式统一引用；取值 #eaf6f0。 */
   --aw-success-soft: #eaf6f0;
+  /* 声明主题变量 —aw-warning-soft，供其他样式统一引用；取值 #fcf4e6。 */
   --aw-warning-soft: #fcf4e6;
+  /* 声明主题变量 —aw-danger-soft，供其他样式统一引用；取值 #fceef0。 */
   --aw-danger-soft: #fceef0;
+  /* 声明主题变量 —aw-overlay，供其他样式统一引用；取值 #22221e66。 */
   --aw-overlay: #22221e66;
+  /* 声明主题变量 —aw-shadow，供其他样式统一引用；取值 0 2px 8px #2c2c2806。 */
   --aw-shadow: 0 2px 8px #2c2c2806;
+  /* 声明主题变量 —aw-shadow-float，供其他样式统一引用；取值 0 16px 48px #2c2c2820。 */
   --aw-shadow-float: 0 16px 48px #2c2c2820;
+  /* 声明主题变量 —aw-on-brand，供其他样式统一引用；取值 #ffffff。 */
   --aw-on-brand: #ffffff;
 }
+/* 以下规则应用于 :root[data-theme="dark"] 选中的元素。 */
 :root[data-theme="dark"] {
+  /* 声明主题变量 —aw-brand，供其他样式统一引用；取值 #dfa384。 */
   --aw-brand: #dfa384;
+  /* 声明主题变量 —aw-brand-hover，供其他样式统一引用；取值 #edb69a。 */
   --aw-brand-hover: #edb69a;
+  /* 声明主题变量 —aw-brand-soft，供其他样式统一引用；取值 #313131。 */
   --aw-brand-soft: #313131;
+  /* 声明主题变量 —aw-accent，供其他样式统一引用；取值 #9ab5a2。 */
   --aw-accent: #9ab5a2;
+  /* 声明主题变量 —aw-bg，供其他样式统一引用；取值 #1f1f1f。 */
   --aw-bg: #1f1f1f;
+  /* 声明主题变量 —aw-surface，供其他样式统一引用；取值 #272727。 */
   --aw-surface: #272727;
+  /* 声明主题变量 —aw-surface-muted，供其他样式统一引用；取值 #313131。 */
   --aw-surface-muted: #313131;
+  /* 声明主题变量 —aw-sidebar，供其他样式统一引用；取值 #181818。 */
   --aw-sidebar: #181818;
+  /* 声明主题变量 —aw-text，供其他样式统一引用；取值 #ecebe5。 */
   --aw-text: #ecebe5;
+  /* 声明主题变量 —aw-text-secondary，供其他样式统一引用；取值 #b3b1a8。 */
   --aw-text-secondary: #b3b1a8;
+  /* 声明主题变量 —aw-text-tertiary，供其他样式统一引用；取值 #9d9b93。 */
   --aw-text-tertiary: #9d9b93;
+  /* 声明主题变量 —aw-border，供其他样式统一引用；取值 #383838。 */
   --aw-border: #383838;
+  /* 声明主题变量 —aw-border-strong，供其他样式统一引用；取值 #50504c。 */
   --aw-border-strong: #50504c;
+  /* 声明主题变量 —aw-success，供其他样式统一引用；取值 #55bd91。 */
   --aw-success: #55bd91;
+  /* 声明主题变量 —aw-warning，供其他样式统一引用；取值 #e4b35f。 */
   --aw-warning: #e4b35f;
+  /* 声明主题变量 —aw-danger，供其他样式统一引用；取值 #e47d88。 */
   --aw-danger: #e47d88;
+  /* 声明主题变量 —aw-info，供其他样式统一引用；取值 #83a8d4。 */
   --aw-info: #83a8d4;
+  /* 声明主题变量 —aw-success-soft，供其他样式统一引用；取值 #1b3835。 */
   --aw-success-soft: #1b3835;
+  /* 声明主题变量 —aw-warning-soft，供其他样式统一引用；取值 #3b3427。 */
   --aw-warning-soft: #3b3427;
+  /* 声明主题变量 —aw-danger-soft，供其他样式统一引用；取值 #3d2936。 */
   --aw-danger-soft: #3d2936;
+  /* 声明主题变量 —aw-overlay，供其他样式统一引用；取值 #04081099。 */
   --aw-overlay: #04081099;
+  /* 声明主题变量 —aw-shadow，供其他样式统一引用；取值 0 8px 24px #0000001a。 */
   --aw-shadow: 0 8px 24px #0000001a;
+  /* 声明主题变量 —aw-shadow-float，供其他样式统一引用；取值 0 16px 48px #00000045。 */
   --aw-shadow-float: 0 16px 48px #00000045;
+  /* 声明主题变量 —aw-on-brand，供其他样式统一引用；取值 #181818。 */
   --aw-on-brand: #181818;
 }

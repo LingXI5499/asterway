@@ -1,78 +1,138 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 把 Java Mapper 方法对应到 SQL，定义字段映射、筛选条件和读写语句。 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 把这份 SQL 绑定到 namespace 指定的 Java Mapper 接口；namespace=com.asterway.notification.mapper.NotificationMessageMapper。 -->
 <mapper namespace="com.asterway.notification.mapper.NotificationMessageMapper">
+    <!-- 定义可被其他语句复用的 SQL 片段；id=viewColumns。 -->
     <sql id="viewColumns">
+        <!-- 继续列出本次使用的字段：n中的condition轮（n.condition_round）、n中的消息类型（n.message_type）、n中的标题（n.title）、n中的内容（n.content）、n中的读取at（n.read_at）、n中的handle状态（n.handle_status）、n中的handledat（n.handled_at）。 -->
         n.id::text,n.goal_id::text,n.condition_round,n.message_type,n.title,n.content,n.read_at,n.handle_status,n.handled_at,
+        <!-- 继续列出本次使用的字段：n中的版本号（n.version）、n中的创建时at（n.created_at）、n中的更新时at（n.updated_at）、g版本号作为目标版本号（g.version AS goal_version）。 -->
         n.version,n.created_at,n.updated_at,g.version AS goal_version,
+        <!-- 给字段或条件设置这里的值，沿用前面的所属人、状态与版本筛选规则。 -->
         COALESCE(n.handle_status='PENDING' AND g.completion_condition_met AND g.completion_round=n.condition_round
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND g.status&lt;&gt;'COMPLETED' AND g.archived_at IS NULL AND g.deleted_at IS NULL,false) AS can_handle
     </sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=viewFrom。 -->
     <sql id="viewFrom">FROM notification_message n LEFT JOIN goal g ON g.id=n.goal_id AND g.user_id=n.user_id</sql>
+    <!-- 定义可被其他语句复用的 SQL 片段；id=filter。 -->
     <sql id="filter">
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE n.user_id=#{userId}
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.unread == true。 -->
         <if test="q.unread == true">AND n.read_at IS NULL AND n.handle_status&lt;&gt;'INVALIDATED'</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.unread == false。 -->
         <if test="q.unread == false">AND n.read_at IS NOT NULL</if>
+        <!-- 只有 test 条件成立，才把里面这段 SQL 拼入最终语句；test=q.handleStatus != null and q.handleStatus !=。 -->
         <if test="q.handleStatus != null and q.handleStatus != ''">AND n.handle_status=#{q.handleStatus}</if>
     </sql>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=find，resultType=com.asterway.notification.entity.NotificationMessageEntity。 -->
     <select id="find" resultType="com.asterway.notification.entity.NotificationMessageEntity">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT n.id,n.user_id,n.goal_id,n.condition_round,n.message_type,n.title,n.content,n.read_at,n.handle_status,n.handled_at,n.version,n.created_at,n.updated_at FROM notification_message n WHERE n.user_id=#{userId} AND n.id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=view，resultType=com.asterway.notification.vo.NotificationMessageVO。 -->
     <select id="view" resultType="com.asterway.notification.vo.NotificationMessageVO">
-        SELECT <include refid="viewColumns"/> <include refid="viewFrom"/> WHERE n.user_id=#{userId} AND n.id=#{id}
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewColumns。 --><include refid="viewColumns"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewFrom。 --><include refid="viewFrom"/> WHERE n.user_id=#{userId} AND n.id=#{id}
     </select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=page，resultType=com.asterway.notification.vo.NotificationMessageVO。 -->
     <select id="page" resultType="com.asterway.notification.vo.NotificationMessageVO">
-        SELECT <include refid="viewColumns"/> <include refid="viewFrom"/> <include refid="filter"/>
+        <!-- 读取后面列出的字段或计算结果。 -->
+        SELECT <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewColumns。 --><include refid="viewColumns"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=viewFrom。 --><include refid="viewFrom"/> <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 --><include refid="filter"/>
+        <!-- 按列出的字段排序，ASC 为升序，DESC 为降序。 -->
         ORDER BY n.created_at DESC,n.id DESC LIMIT #{q.size} OFFSET #{q.offset}
     </select>
-    <select id="count" resultType="long">SELECT count(*) FROM notification_message n <include refid="filter"/></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=count，resultType=long。 -->
+    <select id="count" resultType="long">SELECT count(*) FROM notification_message n <!-- 把 refid 对应的公共 SQL 片段放到这里；refid=filter。 --><include refid="filter"/></select>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=unread，resultType=long。 -->
     <select id="unread" resultType="long">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT count(*) FROM notification_message WHERE user_id=#{userId} AND read_at IS NULL AND handle_status&lt;&gt;'INVALIDATED'
     </select>
+    <!-- 声明新增语句，按配置回填数据库生成的编号；id=insert。 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        <!-- 向 notification_message 写入新记录，字段顺序与后面的值一一对应。 -->
         INSERT INTO notification_message(user_id,goal_id,condition_round,message_type,title,content,created_at,updated_at)
+        <!-- 按 INSERT 声明的字段顺序提供要写入的值。 -->
         VALUES(#{userId},#{goalId},#{conditionRound},'GOAL_COMPLETION_CONFIRM',#{title},#{content},#{createdAt},#{updatedAt})
+        <!-- 遇到相同唯一键时按后面的规则复用或更新，不重复插入。 -->
         ON CONFLICT(user_id,goal_id,condition_round) DO NOTHING
     </insert>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=markRead。 -->
     <update id="markRead">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE notification_message SET read_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND read_at IS NULL
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=markAllRead。 -->
     <update id="markAllRead">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE notification_message SET read_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND read_at IS NULL AND handle_status&lt;&gt;'INVALIDATED'
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=handle。 -->
     <update id="handle">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE notification_message SET handle_status=#{status},handled_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{id} AND version=#{version} AND handle_status='PENDING'
     </update>
+    <!-- 声明读取语句，id 对应 Mapper 方法名；id=condition，resultType=com.asterway.notification.vo.GoalConditionVO。 -->
     <select id="condition" resultType="com.asterway.notification.vo.GoalConditionVO">
+        <!-- 读取后面列出的字段或计算结果。 -->
         SELECT g.id AS goal_id,g.name,g.status,g.archived_at,g.deleted_at,g.completion_condition_met,g.completion_round,g.version,
+            <!-- 这一行提供一条初始化记录或一个允许的组合，值的顺序对应前面声明的字段。 -->
             (g.deleted_at IS NULL AND g.archived_at IS NULL AND g.status&lt;&gt;'COMPLETED'
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND COALESCE(u.is_enabled,false) AND u.deleted_at IS NULL
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND EXISTS(SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE ur.user_id=u.id AND r.code='USER' AND r.is_enabled AND r.deleted_at IS NULL)
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND NOT EXISTS(SELECT 1 FROM identity_user_role ur JOIN identity_role r ON r.id=ur.role_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE ur.user_id=u.id AND r.code IN('ADMIN','SUPER_ADMIN') AND r.is_enabled AND r.deleted_at IS NULL)
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND EXISTS(SELECT 1 FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=g.user_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE s.goal_id=g.id AND s.user_id=g.user_id AND s.deleted_at IS NULL AND t.deleted_at IS NULL)
+            <!-- 再增加一个必须同时满足的筛选条件。 -->
             AND NOT EXISTS(SELECT 1 FROM stage s JOIN task t ON t.stage_id=s.id AND t.user_id=g.user_id
+                <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
                 WHERE s.goal_id=g.id AND s.user_id=g.user_id AND s.deleted_at IS NULL AND t.deleted_at IS NULL AND t.status&lt;&gt;'COMPLETED')) AS qualifies
+        <!-- 指定本次查询主要读取的表或子查询。 -->
         FROM goal g LEFT JOIN identity_user u ON u.id=g.user_id WHERE g.user_id=#{userId} AND g.id=#{goalId}
     </select>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=updateCondition。 -->
     <update id="updateCondition">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE goal SET completion_condition_met=#{met},completion_round=#{round},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND id=#{goalId} AND version=#{version}
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=invalidateGoal。 -->
     <update id="invalidateGoal">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE notification_message SET handle_status='INVALIDATED',handled_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND goal_id=#{goalId} AND handle_status='PENDING' AND condition_round&lt;&gt;#{keepRound}
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=clearUserConditions。 -->
     <update id="clearUserConditions">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE goal SET completion_condition_met=false,version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND completion_condition_met
     </update>
+    <!-- 声明修改语句，更新范围由 SQL 条件限定；id=invalidateUser。 -->
     <update id="invalidateUser">
+        <!-- 按后续条件修改指定记录；没有被条件选中的记录不变。 -->
         UPDATE notification_message SET handle_status='INVALIDATED',handled_at=#{now},version=version+1,updated_at=#{now}
+        <!-- 只处理符合这里条件的记录，其他记录不进入本次查询或修改。 -->
         WHERE user_id=#{userId} AND handle_status='PENDING'
     </update>
 </mapper>

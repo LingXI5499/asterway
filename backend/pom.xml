@@ -1,125 +1,227 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!-- 声明 Maven 模块、依赖和编译打包规则，供导入工程及构建时使用。 -->
+<!-- 声明这个 Maven 工程的整体配置。 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 声明 POM 使用的模型格式版本。 -->
     <modelVersion>4.0.0</modelVersion>
+    <!-- 从指定父工程继承统一版本和构建规则。 -->
     <parent>
+        <!-- 声明依赖或工程所属组织标识。 -->
         <groupId>org.springframework.boot</groupId>
+        <!-- 声明当前工程、依赖或插件的名称。 -->
         <artifactId>spring-boot-starter-parent</artifactId>
+        <!-- 指定使用的版本号。 -->
         <version>3.5.16</version>
+        <!-- 指定寻找本地父 POM 的相对位置；空值表示按仓库坐标解析。 -->
         <relativePath />
     </parent>
+    <!-- 声明依赖或工程所属组织标识。 -->
     <groupId>com.asterway</groupId>
+    <!-- 声明当前工程、依赖或插件的名称。 -->
     <artifactId>asterway-backend</artifactId>
+    <!-- 指定使用的版本号。 -->
     <version>0.1.0-SNAPSHOT</version>
+    <!-- 指定打包方式；pom 为聚合工程，jar 为 Java 库或应用。 -->
     <packaging>pom</packaging>
+    <!-- 设置 name 对应的工程或映射参数。 -->
     <name>asterway-backend</name>
+    <!-- 列出需要一起构建的子模块。 -->
     <modules>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>common</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>identity</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>goal</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>stage</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>task</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>planning</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>execution</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>habit</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>dashboard</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>statistics</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>notification</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>agent</module>
+        <!-- 把这个子目录加入 Maven 聚合构建。 -->
         <module>app</module>
     </modules>
+    <!-- 集中声明下面会复用的版本和编译参数。 -->
     <properties>
+        <!-- 声明项目使用的 Java 版本。 -->
         <java.version>17</java.version>
+        <!-- 限制编译目标平台，避免意外使用更高版本的 Java API。 -->
         <maven.compiler.release>17</maven.compiler.release>
+        <!-- 设置 project.build.sourceEncoding 对应的工程或映射参数。 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 设置 project.reporting.outputEncoding 对应的工程或映射参数。 -->
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- 设置 mybatis-starter.version 对应的工程或映射参数。 -->
         <mybatis-starter.version>3.0.5</mybatis-starter.version>
+        <!-- 设置 springdoc.version 对应的工程或映射参数。 -->
         <springdoc.version>2.8.17</springdoc.version>
+        <!-- 设置 bouncycastle.version 对应的工程或映射参数。 -->
         <bouncycastle.version>1.80</bouncycastle.version>
     </properties>
+    <!-- 统一依赖版本；这里本身不会把依赖加入模块。 -->
     <dependencyManagement>
+        <!-- 列出当前模块实际需要的依赖。 -->
         <dependencies>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>org.mybatis.spring.boot</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>mybatis-spring-boot-starter</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${mybatis-starter.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>org.springdoc</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${springdoc.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>org.bouncycastle</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>bcprov-jdk18on</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${bouncycastle.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>common</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>identity</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>goal</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>stage</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>task</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>planning</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>execution</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>habit</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>dashboard</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>statistics</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>notification</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
+            <!-- 声明下面这项外部库或工程依赖。 -->
             <dependency>
+                <!-- 声明依赖或工程所属组织标识。 -->
                 <groupId>com.asterway</groupId>
+                <!-- 声明当前工程、依赖或插件的名称。 -->
                 <artifactId>agent</artifactId>
+                <!-- 指定使用的版本号。 -->
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <!-- 声明编译、资源处理与打包步骤。 -->
     <build>
+        <!-- 集中配置插件默认规则，供子模块按需采用。 -->
         <pluginManagement>
+            <!-- 列出本模块使用的构建插件。 -->
             <plugins>
+                <!-- 声明一个构建插件及其参数。 -->
                 <plugin>
+                    <!-- 声明依赖或工程所属组织标识。 -->
                     <groupId>org.springframework.boot</groupId>
+                    <!-- 声明当前工程、依赖或插件的名称。 -->
                     <artifactId>spring-boot-maven-plugin</artifactId>
                 </plugin>
             </plugins>
